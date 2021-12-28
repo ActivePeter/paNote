@@ -101,44 +101,70 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Stack(
                     children: [
                       Positioned(
-                          left: dx,
-                          top: dy,
-                          child: Draggable(
-                            child: Container(
-                              width: 100,
-                              height: 100,
-                              color: Colors.yellow,
-                            ),
-                            feedback: Text('data'),
-                            onDragEnd: (s) {
-                              if (!scaling) {
-                                var v1 =
-                                    v.Vector4(s.offset.dx, s.offset.dy, 0, 0);
-                                print(v1);
-                                print(matrix);
+                        left: dx,
+                        top: dy,
+                        child: dragCard(),
+                        // Draggable(
+                        //   child: Container(
+                        //     width: 100,
+                        //     height: 100,
+                        //     color: Colors.yellow,
+                        //   ),
+                        //   feedback: Container(
+                        //     width: 100 * scale,
+                        //     height: 100 * scale,
+                        //     color: Colors.green,
+                        //   ),
+                        //   onDragEnd: (s) {
+                        //     if (!scaling) {
+                        //       var v1 =
+                        //           v.Vector4(s.offset.dx, s.offset.dy, 0, 0);
+                        //       print(v1);
+                        //       print(matrix);
 
-                                var m = Matrix4.inverted(matrix);
-                                print(m);
-                                var a = m.transform(
-                                    v.Vector4(s.offset.dx, s.offset.dy, 0, 0));
+                        //       var m = Matrix4.inverted(matrix);
+                        //       print(m);
+                        //       var a = m.transform(
+                        //           v.Vector4(s.offset.dx, s.offset.dy, 0, 0));
 
-                                print(a);
+                        //       print(a);
 
-                                setState(() {
-                                  dx = m.row0[0] * v1.x + m.row0[3];
-                                  print(m.row1);
-                                  dy = m.row1[1] * v1.y + m.row1[3];
-                                  print(dx);
-                                  print(dy);
-                                  print(" ");
-                                });
-                              }
-                            },
-                          ))
+                        //       setState(() {
+                        //         dx = m.row0[0] * v1.x + m.row0[3];
+                        //         print(m.row1);
+                        //         dy = m.row1[1] * v1.y + m.row1[3];
+                        //         print(dx);
+                        //         print(dy);
+                        //         print(" ");
+                        //       });
+                        //     }
+                        //   },
+                        // )
+                      )
                     ],
                   )),
             ),
           ],
+        ));
+  }
+
+  Listener dragCard() {
+    return Listener(
+        onPointerMove: (s) {
+          if (!scaling) {
+            setState(() {
+              dx += s.delta.dx / scale;
+              dy += s.delta.dy / scale;
+            });
+          }
+        },
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: Container(
+            width: 100,
+            height: 100,
+            color: Colors.yellow,
+          ),
         ));
   }
 
