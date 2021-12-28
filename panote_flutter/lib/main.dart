@@ -1,4 +1,8 @@
+import 'dart:ffi';
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -49,6 +53,15 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  // Pos pos = Pos();
+  // Offset offset = Offset(0, 0);
+  double dx = 0, dy = 0;
+  double map_dx = 0, map_dy = 0;
+  bool scaling = false;
+  double scale = 1;
+  double scale_dx = 0, scale_dy = 0;
+  bool dragging = false;
+  Matrix4 matrix = Matrix4.identity();
 
   void _incrementCounter() {
     setState(() {
@@ -66,6 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
+    // Initialize a stream for the KeyEvents:
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
@@ -75,27 +89,137 @@ class _MyHomePageState extends State<MyHomePage> {
       //   // the App.build method, and use it to set our appbar title.
       //   title: Text(widget.title),
       // ),
-      body: 
-      Stack(
-          children: const <Widget>[
-            Positioned(
-                child: Icon(Icons.home, size: 40, color: Colors.black),
-                left: -10,
-                top: 0),
-            Positioned(
-                child: Icon(Icons.search, size: 40, color: Colors.pink),
-                left: 0.4),
-            Positioned(
-                child: Icon(Icons.settings, size: 40, color: Colors.blue),
-                bottom: 1),
-            Text(
-              'xx',
-              // style: T,
-            ),
-          ],
-          alignment: Alignment.center,
-        ),
+      body: Listener(
+          onPointerSignal: (s) {
+            if (s is PointerScrollEvent) {
+              var scale2 = scale;
+              print("object $s.scrollDelta");
+              scale2 += s.scrollDelta.dy / 150;
+              if (scale2 > 1.1) {
+                scale2 = 1.1;
+              }
+              if (scale2 < 0.3) {
+                scale2 = 0.3;
+              }
+              scale_dx = s.localPosition.dx;
+              scale_dy = s.localPosition.dy;
 
+              var dscale = scale2 / scale;
+              scale = scale2;
+
+              setState(() {
+                matrix =
+                    // ..multiply(Matrix4.identity()
+                    // ..scale(dscale)
+                    // ..translate()
+                    // );
+                    (Matrix4.identity()..translate(scale_dx, scale_dy))
+                      ..multiply(Matrix4.identity()..scale(dscale))
+                      ..multiply(
+                          Matrix4.identity()..translate(-scale_dx, -scale_dy))
+                      ..multiply(matrix);
+                // matrix
+                //   ..translate(s.localDelta.dx, s.localDelta.dy)
+                //   ..scale(1.0)
+                //   ..scale(scale2)
+                //   ..translate(-s.localDelta.dx, -s.localDelta.dy);
+                // scale = scale2;
+              });
+            }
+
+            // if (s is PointerDownEvent) {
+            // dragging = s.down;
+            // }
+          },
+          onPointerDown: (s) {
+            if (s.down) {
+              dragging = true;
+            }
+          },
+          onPointerUp: (s) {
+            if (!s.down) {
+              dragging = false;
+            }
+          },
+          onPointerMove: (s) {
+            print('move $s');
+            setState(() {
+              map_dx += s.delta.dx;
+              map_dy += s.delta.dy;
+              matrix.translate(s.delta.dx / scale, s.delta.dy / scale);
+            });
+          },
+          child: Container(
+              color: Colors.red,
+              constraints: BoxConstraints(
+                  minWidth: double.infinity, minHeight: double.infinity),
+              child: Stack(
+                children: [
+                  Transform(
+                      transform: matrix
+                      //matrix,
+                      // Matrix4.identity()
+                      //   ..translate(map_dx, map_dy)
+                      //   ..multiply(Matrix4.identity()
+                      //     // ..r
+                      //     // ..translate(scale_dx, scale_dy)
+                      //     ..scale(scale))
+                      ,
+                      // ..translate(-scale_dx, -scale_dy)),
+                      child: Container(
+                          width: 200, height: 200, color: Colors.blue)),
+                ],
+              ))),
+
+      //   Stack(
+      //   children: <Widget>[
+      //     Transform(
+      //       transform: Matrix4.identity()..translate(map_dx, map_dy),
+      //       child: Listener(
+      //           onPointerSignal: (ps) {
+      //             if (ps is PointerScrollEvent) {
+      //               // do something when scrolled
+
+      //               print('Scrolled');
+      //             }
+      //           },
+      //           child: RawKeyboardListener(
+      //             focusNode: FocusNode(),
+      //             onKey: (event) {
+      //               setState(() {
+      //                 scaling = event.isKeyPressed(LogicalKeyboardKey.alt) ||
+      //                     event.isKeyPressed(LogicalKeyboardKey.altLeft) ||
+      //                     event.isKeyPressed(LogicalKeyboardKey.altRight);
+      //               });
+      //             },
+      //             child: Stack(
+      //               children: [
+      //                 Positioned(
+      //                   left: dx,
+      //                   top: dy,
+      //                   child: Draggable(
+      //                     child: Text(scaling ? 'xx' : 'alt'),
+      //                     feedback: Text('data'),
+      //                     onDragEnd: (details) {
+      //                       setState(() {
+      //                         dx = details.offset.dx;
+      //                         dy = details.offset.dy;
+      //                       });
+      //                     },
+      //                   ),
+      //                 ),
+      //               ],
+      //             ),
+      //           )),
+      //     )
+
+      //     // Text(
+      //     //   'xx',
+      //     //   // style: T,
+      //     // ),
+      //   ],
+      //   alignment: Alignment.center,
+      // ),
 
       // Center(
       //   // Center is a layout widget. It takes a single child and positions it
