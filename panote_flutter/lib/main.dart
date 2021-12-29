@@ -161,9 +161,16 @@ class _MyHomePageState extends State<MyHomePage> {
         child: MouseRegion(
           cursor: SystemMouseCursors.click,
           child: Container(
-            width: 100,
-            height: 100,
+            width: 200,
+            height: 200,
             color: Colors.yellow,
+            child: TextField(
+              decoration: new InputDecoration(
+                  // labelText: "请输入密码",
+                  // icon: Icon(Icons.lock),
+                  // helperText: "带图标和label的密码输入框",
+                  ),
+            ),
           ),
         ));
   }
