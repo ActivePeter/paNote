@@ -10,7 +10,7 @@ Window {
     property double painterX: 0
     property double painterY: 0
     property double _scale: 1
-
+    property var moving_target : null
 
 
     MouseArea{
@@ -34,7 +34,8 @@ Window {
 //            dragging=true
         }
         onReleased: {
-//            dragging=false
+            moving_target=null
+//            console.debug("moving_target null")
         }
 
         onMouseXChanged:{
@@ -43,7 +44,9 @@ Window {
 //                lMouseX=mouse.x
             }
             else{
-                child_rec1.rec_x+=(mouse.x-lMouseX)/_scale
+                if(moving_target){
+                    moving_target.rec_x+=(mouse.x-lMouseX)/_scale
+                }
             }
             lMouseX=mouse.x
         }
@@ -52,7 +55,10 @@ Window {
                 painterY+=mouse.y-lMouseY
             }
             else{
-                child_rec1.rec_y+=(mouse.y-lMouseY)/_scale
+                if(moving_target){
+//                    moving_target.rec_x+=(mouse.x-lMouseX)/_scale
+                    moving_target.rec_y+=(mouse.y-lMouseY)/_scale
+                }
             }
 
             lMouseY=mouse.y
@@ -94,14 +100,15 @@ Window {
                 anchors.fill: parent;
                 acceptedButtons: Qt.LeftButton | Qt.RightButton;
 
+
                 onPressed: {
                     mouse.accepted = false
                     if(mouse.modifiers===Qt.NoModifier){
-
+                        moving_target=parent
                     }
                 }
                 onMouseXChanged: {
-                mouse.accepted = false
+                    mouse.accepted = false
                 }
                 onMouseYChanged: {
                     mouse.accepted = false
