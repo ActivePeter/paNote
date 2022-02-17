@@ -39,6 +39,7 @@ export default {
       var width = element.offsetWidth;
       var height = element.offsetHeight;
       console.log("Size: " + width + "x" + height);
+      //根据画布区域大小计算白边尺寸
       if (width > 100) {
         _this.edge_size_w = width - 80;
       } else {
