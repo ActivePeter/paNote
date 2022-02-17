@@ -10,6 +10,7 @@
   "dependencies": {
     "core-js": "^3.6.5",
     "element-plus": "^2.0.2",
+    "element-resize-detector": "^1.2.4",
     "vue": "^3.0.0"
   },
   "devDependencies": {
