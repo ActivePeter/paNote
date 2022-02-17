@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@editorjs/editorjs": "^2.23.2",
     "core-js": "^3.6.5",
     "element-plus": "^2.0.2",
     "element-resize-detector": "^1.2.4",
