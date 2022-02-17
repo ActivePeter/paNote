@@ -22,6 +22,7 @@
     </div>
   </div>
 </template>
+
 <script>
 import ElementResizeDetectorMaker from "element-resize-detector";
 
@@ -30,6 +31,7 @@ export default {
   mounted() {
     window.addEventListener("keyup", this.handle_key_up);
     window.addEventListener("keydown", this.handle_key_down);
+
     window.addEventListener("mousewheel", this.handle_scroll);
     window.addEventListener("mouseup", this.handle_mouse_up);
     window.addEventListener("mousemove", this.handle_mouse_move);
@@ -121,6 +123,7 @@ export default {
   props: {},
 };
 </script>
+
 <style scoped>
 .info {
   float: left;
