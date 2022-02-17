@@ -10,27 +10,45 @@
 
 - anki有较好的复习策略，但是平台限制 以及 笔记形式太局限
 
-The note apps always can't fit my
+---
 
-#### 目前构思
+In the process of  preparing for the Postgraduate entrance examination, the note apps always can't fit my requirements
+
+-  Note softwares like marginnote can help us  organize the frame of mind
+  - but its review card function does not work as well as anki's
+  - the layout of marginnote changes itself, which is not good for position memory
+
+
+
+#### 目前构思/Current design
 
 - 笔记形式采取类似marginnote的
-
 - 创建记忆卡片需要变得更加无缝，
   - 可以直接将笔记的分块拖入卡片
   - 也可以直接将某个笔记快变成卡片标题
-  
-- 卡片标签继承自笔记卡片，筛选的时候
+- 卡片标签继承自笔记块，筛选的时候可以利用标签筛选
 
-  
+----
 
-#### 目前最大的瓶颈
+- We took the similar note format of marginnote
+- The process of creating review card should be more fluent
+  - Available to drag the note bar into a card
+  - Available to turn a note bar into a card's title
+- Card's tag should be extended from note bar，(tag will be used for filtrate the review card)
 
-- anki的算法拿不到，
+
+
+#### 目前最大的瓶颈/The biggest bottleneck right now
+
+- Anki的算法比较难啃，暂时考虑用插件的形式来做
+
+---
+
+- It's hard to reproduce the anki's review algorithm. (anki-addon is the temporary solution
 
 
 
-#### todo
+#### Todo
 
 - 1.画布拖拽
 - 2.内部元素拖拽
