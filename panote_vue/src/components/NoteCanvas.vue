@@ -1,7 +1,9 @@
 <template>
   <div class="note_canvas">
-    <div class="content" :style="{ transform: 'scale(' + scale + ')' }">
-      content
+    <div class="range">
+      <div class="content" :style="{ transform: 'scale(' + scale + ')' }">
+        content
+      </div>
     </div>
     <div class="info">
       scroll_enabled:{{ scroll_enabled }} scale: {{ scale }}
@@ -63,6 +65,10 @@ export default {
 <style scoped>
 .info {
   float: left;
+}
+.range {
+  height: 100%;
+  overflow: scroll;
 }
 .content {
   position: relative;
