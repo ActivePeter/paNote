@@ -33,6 +33,10 @@ export default {
     window.addEventListener("mousewheel", this.handle_scroll);
     window.addEventListener("mouseup", this.handle_mouse_up);
     window.addEventListener("mousemove", this.handle_mouse_move);
+    this.$refs.range_ref.addEventListener(
+      "mousewheel",
+      this.handle_range_scroll
+    );
     let erd = ElementResizeDetectorMaker();
     let _this = this;
     erd.listenTo(this.$refs.range_ref, function (element) {
@@ -63,6 +67,11 @@ export default {
     };
   },
   methods: {
+    handle_range_scroll(event) {
+      if (this.scroll_enabled) {
+        event.preventDefault();
+      }
+    },
     handle_key_up(val) {
       if (val.key == "b") {
         console.log("handle_key_up", val);
