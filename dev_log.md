@@ -12,3 +12,9 @@
 
     [安装 | Vue CLI (vuejs.org)](https://cli.vuejs.org/zh/guide/installation.html)
 
+  - 2.安装element组件库
+
+    [安装 | Element Plus (gitee.io)](https://element-plus.gitee.io/zh-CN/guide/installation.html#hello-world)
+
+  - 
+
