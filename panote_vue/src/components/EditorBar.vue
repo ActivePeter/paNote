@@ -17,7 +17,8 @@ export default {
   props: {},
 };
 
-const editor = new EditorJS();
+
+const editor = new EditorJS();// eslint-disable-line no-unused-vars
 
 </script>
 
