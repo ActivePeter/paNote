@@ -1,5 +1,5 @@
 <template>
-  <div class="editor_bar"></div>
+  <div class="editor_bar">editor_bar</div>
 </template>
 
 <script>
@@ -15,4 +15,7 @@ export default {
 </script>
 
 <style scoped>
+.editor_bar {
+  background: gray;
+}
 </style>

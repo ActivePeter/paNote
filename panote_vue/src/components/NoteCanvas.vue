@@ -14,6 +14,7 @@
         }"
       >
         content
+        <EditorBar />
       </div>
     </div>
     <div class="info">
@@ -25,9 +26,12 @@
 
 <script>
 import ElementResizeDetectorMaker from "element-resize-detector";
-
+import EditorBar from "./EditorBar.vue";
 export default {
   name: "NoteCanvas",
+  components: {
+    EditorBar,
+  },
   mounted() {
     window.addEventListener("keyup", this.handle_key_up);
     window.addEventListener("keydown", this.handle_key_down);
