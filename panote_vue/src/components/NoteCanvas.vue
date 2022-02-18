@@ -7,22 +7,37 @@
       @mouseup="handle_mouse_up"
     >
       <div
-        class="content"
+        class="content_padding"
         :style="{
-          transform: 'scale(' + scale + ')',
-          margin: edge_size_h + 'px ' + edge_size_w + 'px',
+          padding:
+            edge_size_h +
+            padding_add_up +
+            'px ' +
+            (edge_size_w + padding_add_right) +
+            'px ' +
+            (edge_size_h + padding_add_down) +
+            'px ' +
+            (edge_size_w + padding_add_left) +
+            'px',
         }"
       >
-        content
-        <EditorBar />
-        <EditorBarMove
-          v-for="(item, i) in editor_bars"
-          :key="i"
-          :ebid="i"
-          class="editor_bar_move"
-          :style="{ top: item.pos_y + 'px', left: item.pos_x + 'px' }"
-          @start_drag="editor_bar_start_drag"
-        />
+        <div
+          class="content"
+          :style="{
+            transform: 'scale(' + scale + ')',
+          }"
+        >
+          content
+          <EditorBar />
+          <EditorBarMove
+            v-for="(item, i) in editor_bars"
+            :key="i"
+            :ebid="i"
+            class="editor_bar_move"
+            :style="{ top: item.pos_y + 'px', left: item.pos_x + 'px' }"
+            @start_drag="editor_bar_start_drag"
+          />
+        </div>
       </div>
     </div>
     <div class="info">
@@ -45,7 +60,7 @@ export default {
   },
   mounted() {
     this.mouse_recorder = NoteCanvasFunc.new_mouse_recorder();
-
+    this.chunk_helper = NoteCanvasFunc.new_chunk_helper();
     window.addEventListener("keyup", this.handle_key_up);
     window.addEventListener("keydown", this.handle_key_down);
 
@@ -91,6 +106,14 @@ export default {
         },
       ],
       mouse_recorder: null,
+      padding_add_up: 0,
+      padding_add_down: 0,
+      padding_add_left: 0,
+      padding_add_right: 0,
+      chunk_helper: null,
+      non_empty_chunks: {
+        "0,0": 1,
+      },
     };
   },
   methods: {
@@ -138,10 +161,12 @@ export default {
         if (this.moving_obj != null) {
           let bar_data = this.editor_bars[this.moving_obj.ebid];
 
-          bar_data.pos_x += delta.dx / this.scale;
-          bar_data.pos_y += delta.dy / this.scale;
-
-          console.log("bar_data", bar_data);
+          this.editor_bar_set_new_pos(
+            bar_data,
+            bar_data.pos_x + delta.dx / this.scale,
+            bar_data.pos_y + delta.dy / this.scale
+          );
+          //   console.log("bar_data", bar_data);
         }
       }
     },
@@ -163,8 +188,58 @@ export default {
     final_set_scale(scale) {
       this.scale = scale;
     },
+    change_padding(u, d, r, l) {
+      console.log("change padding", u, d, r, l);
+      let dl = l - this.padding_add_left;
+      let dh = u - this.padding_add_up;
+
+      this.padding_add_up = u;
+      this.padding_add_down = d;
+      this.padding_add_right = r;
+      this.padding_add_left = l;
+
+      if (dl != 0) {
+        console.log("dr", this.$refs.range_ref.scrollLeft, dl);
+        this.$refs.range_ref.scrollLeft += dl;
+      }
+
+      //   console.log(u, this.padding_add_up);
+      //   console.log(l, this.padding_add_left);
+      if (dh != 0) {
+        console.log("dh", this.$refs.range_ref.scrollTop, dh);
+        this.$refs.range_ref.scrollTop += dh;
+      }
+    },
+    editor_bar_set_new_pos(eb, x, y) {
+      let old_ck = this.chunk_helper.calc_chunk_pos(eb.pos_x, eb.pos_y);
+      eb.pos_x = x;
+      eb.pos_y = y;
+      let ck = this.chunk_helper.calc_chunk_pos(x, y);
+      if (old_ck != ck) {
+        console.log("ck", ck);
+
+        this.chunk_helper.move_chunk(this.non_empty_chunks, old_ck, ck);
+        console.log(this.non_empty_chunks);
+        this.change_padding(
+          this.chunk_helper.chunk_min_y * -400,
+          this.chunk_helper.chunk_max_y * 400,
+          this.chunk_helper.chunk_max_x * 300,
+          this.chunk_helper.chunk_min_x * -300
+        );
+        console.log(
+          this.padding_add_up,
+          this.padding_add_down,
+          this.padding_add_left,
+          this.padding_add_right
+        );
+      }
+
+      //   let ebw = 100;
+      //   let ebh = 100;
+      //超出原有范围需要重新设置背景面板的size
+    },
     editor_bar_start_drag(event, eb) {
-      console.log(eb);
+      //   console.log(eb);
       this.mouse_recorder.call_before_move(event.screenX, event.screenY);
       event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
       this.moving_obj = eb;
