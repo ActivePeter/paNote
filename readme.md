@@ -17,6 +17,7 @@ In the process of  preparing for the Postgraduate entrance examination, the note
 -  Note softwares like marginnote can help us  organize the frame of mind
   - but its review card function does not work as well as anki's
   - the layout of marginnote changes itself, which is not good for position memory
+- 
 
 
 

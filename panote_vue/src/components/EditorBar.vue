@@ -17,5 +17,7 @@ export default {
 <style scoped>
 .editor_bar {
   background: gray;
+  width: 100px;
+  height: 100px;
 }
 </style>

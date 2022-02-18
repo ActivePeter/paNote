@@ -15,6 +15,14 @@
       >
         content
         <EditorBar />
+        <EditorBarMove
+          v-for="(item, i) in editor_bars"
+          :key="i"
+          :ebid="i"
+          class="editor_bar_move"
+          :style="{ top: item.pos_y + 'px', left: item.pos_x + 'px' }"
+          @start_drag="editor_bar_start_drag"
+        />
       </div>
     </div>
     <div class="info">
@@ -27,12 +35,17 @@
 <script>
 import ElementResizeDetectorMaker from "element-resize-detector";
 import EditorBar from "./EditorBar.vue";
+import EditorBarMove from "./EditorBarMoveTest.vue";
+import NoteCanvasFunc from "./NoteCanvasFunc.js";
 export default {
   name: "NoteCanvas",
   components: {
     EditorBar,
+    EditorBarMove,
   },
   mounted() {
+    this.mouse_recorder = NoteCanvasFunc.new_mouse_recorder();
+
     window.addEventListener("keyup", this.handle_key_up);
     window.addEventListener("keydown", this.handle_key_down);
 
@@ -70,6 +83,14 @@ export default {
       dragging: false,
       edge_size_w: 100,
       edge_size_h: 100,
+      moving_obj: null,
+      editor_bars: [
+        {
+          pos_x: 0,
+          pos_y: 0,
+        },
+      ],
+      mouse_recorder: null,
     };
   },
   methods: {
@@ -96,18 +117,37 @@ export default {
         this.scale_canvas(val.deltaY);
       }
     },
-    handle_mouse_down() {
+    handle_mouse_down(event) {
+      this.mouse_recorder.call_before_move(event.screenX, event.screenY);
+      console.log("note canvase mouse down");
       this.dragging = true;
     },
     handle_mouse_move(val) {
-      if (val.buttons == 1 && this.scroll_enabled) {
-        console.log(val);
-      } else {
-        this.dragging = false;
+      if (val.buttons != 0) {
+        //有按键按下
+        this.mouse_recorder.update_pos_on_move(val.screenX, val.screenY);
+        let delta = this.mouse_recorder.get_delta();
+
+        //拖拽画布
+        if (val.buttons == 1 && this.scroll_enabled) {
+          console.log(val);
+        } else {
+          this.dragging = false;
+        }
+        //拖拽文本块
+        if (this.moving_obj != null) {
+          let bar_data = this.editor_bars[this.moving_obj.ebid];
+
+          bar_data.pos_x += delta.dx / this.scale;
+          bar_data.pos_y += delta.dy / this.scale;
+
+          console.log("bar_data", bar_data);
+        }
       }
     },
     handle_mouse_up() {
       this.dragging = false;
+      this.moving_obj = null;
     },
     scale_canvas(dir) {
       let scale_bak = this.scale;
@@ -122,6 +162,12 @@ export default {
     },
     final_set_scale(scale) {
       this.scale = scale;
+    },
+    editor_bar_start_drag(event, eb) {
+      console.log(eb);
+      this.mouse_recorder.call_before_move(event.screenX, event.screenY);
+      event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
+      this.moving_obj = eb;
     },
   },
   props: {},
@@ -140,5 +186,8 @@ export default {
   background-color: rgb(255, 200, 200);
   height: 400px;
   width: 300px;
+}
+.editor_bar_move {
+  position: absolute;
 }
 </style>
