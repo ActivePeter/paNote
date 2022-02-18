@@ -28,6 +28,15 @@
           }"
         >
           content
+          <div
+            class="content_chunk_range"
+            :style="{
+              right: -padding_add_right + 'px',
+              left: -padding_add_left + 'px',
+              top: -padding_add_up + 'px',
+              bottom: -padding_add_down + 'px',
+            }"
+          ></div>
           <EditorBar />
           <EditorBarMove
             v-for="(item, i) in editor_bars"
@@ -141,14 +150,22 @@ export default {
       }
     },
     handle_mouse_down(event) {
-      this.mouse_recorder.call_before_move(event.screenX, event.screenY);
+      this.mouse_recorder.call_before_move(
+        event.clientX,
+        event.clientY
+        //   event.screenX, event.screenY
+      );
       console.log("note canvase mouse down");
       this.dragging = true;
     },
     handle_mouse_move(val) {
       if (val.buttons != 0) {
         //有按键按下
-        this.mouse_recorder.update_pos_on_move(val.screenX, val.screenY);
+        this.mouse_recorder.update_pos_on_move(
+          val.clientX,
+          val.clientY
+          //   event.screenX, event.screenY
+        );
         let delta = this.mouse_recorder.get_delta();
 
         //拖拽画布
@@ -240,7 +257,11 @@ export default {
     },
     editor_bar_start_drag(event, eb) {
       //   console.log(eb);
-      this.mouse_recorder.call_before_move(event.screenX, event.screenY);
+      this.mouse_recorder.call_before_move(
+        event.clientX,
+        event.clientY
+        //   event.screenX, event.screenY
+      );
       event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
       this.moving_obj = eb;
     },
@@ -264,5 +285,9 @@ export default {
 }
 .editor_bar_move {
   position: absolute;
+}
+.content_chunk_range {
+  position: absolute;
+  border: 1px solid #000;
 }
 </style>
