@@ -7,21 +7,23 @@
       @mouseup="handle_mouse_up"
     >
       <div
+        ref="content_padding_ref"
         class="content_padding"
         :style="{
           padding:
             edge_size_h +
-            padding_add_up +
+            padding_add_up * scale +
             'px ' +
-            (edge_size_w + padding_add_right) +
+            (edge_size_w + padding_add_right * scale) +
             'px ' +
-            (edge_size_h + padding_add_down) +
+            (edge_size_h + padding_add_down * scale) +
             'px ' +
-            (edge_size_w + padding_add_left) +
+            (edge_size_w + padding_add_left * scale) +
             'px',
         }"
       >
         <div
+          ref="content_ref"
           class="content"
           :style="{
             transform: 'scale(' + scale + ')',
@@ -76,12 +78,15 @@ export default {
     window.addEventListener("mousewheel", this.handle_scroll);
     window.addEventListener("mouseup", this.handle_mouse_up);
     window.addEventListener("mousemove", this.handle_mouse_move);
+
+    this.$refs.range_ref.addEventListener("scroll", this.handle_scroll_bar);
     this.$refs.range_ref.addEventListener(
       "mousewheel",
       this.handle_range_scroll
     );
-    let erd = ElementResizeDetectorMaker();
     let _this = this;
+    let erd = ElementResizeDetectorMaker();
+
     erd.listenTo(this.$refs.range_ref, function (element) {
       var width = element.offsetWidth;
       var height = element.offsetHeight;
@@ -108,6 +113,8 @@ export default {
       edge_size_w: 100,
       edge_size_h: 100,
       moving_obj: null,
+      //   record_content_rect: null, //for moving
+
       editor_bars: [
         {
           pos_x: 0,
@@ -126,6 +133,64 @@ export default {
     };
   },
   methods: {
+    update_moving_obj_pos() {
+      let bar_data = this.editor_bars[this.moving_obj.ebid];
+      let origin_pos = this.get_content_origin_pos();
+      //   var bar_pos = this.get_moving_obj_pos();
+      let dx =
+        this.mouse_recorder.mouse_cur_x -
+        origin_pos.x -
+        this.moving_obj.drag_on_x * this.scale;
+      let dy =
+        this.mouse_recorder.mouse_cur_y -
+        origin_pos.y -
+        this.moving_obj.drag_on_y * this.scale;
+      //   console.log("canvas dx dy", dx, dy, bar_pos);
+      this.editor_bar_set_new_pos(bar_data, dx / this.scale, dy / this.scale);
+    },
+    handle_scroll_bar(event) {
+      if (
+        this.moving_obj != null
+        //   && this.record_content_rect != null
+      ) {
+        console.log(event);
+        // let rct = this.get_content_origin_pos(); //this.$refs.content_ref.getBoundingClientRect();
+        // let dy = rct.y - this.record_content_rect.y;
+        // let dx = rct.x - this.record_content_rect.x;
+        // if (dx != 0 || dy != 0) {
+        //   //画布产生偏移，
+        //   let bar_data = this.editor_bars[this.moving_obj.ebid];
+        this.update_moving_obj_pos();
+        //   this.editor_bar_set_new_pos(
+        //     bar_data,
+        //     bar_data.pos_x - dx / this.scale,
+        //     bar_data.pos_y - dy / this.scale
+        //   );
+        // }
+        // let bar_data = this.editor_bars[this.moving_obj.ebid];
+        // let rct = this.$refs.content_padding_ref.getBoundingClientRect();
+        // let mov_rct = this.moving_obj.getBoundingClientRect();
+        // console.log(
+        //   "mouse moving obj",
+        //   this.mouse_recorder,
+        //   rct,
+        //   mov_rct,
+        //   bar_data,
+        //   this.moving_obj.drag_on_x,
+        //   this.moving_obj.drag_on_y
+        // );
+        // let bar_data = this.editor_bars[this.moving_obj.ebid];
+        // this.editor_bar_set_new_pos(
+        //   bar_data,
+        //   bar_data.pos_x + event.deltaX / this.scale,
+        //   bar_data.pos_y + event.deltaY / this.scale
+        // );
+        // this.record_content_rect = this.$refs.content_ref
+      }
+      {
+        // this.record_content_rect = this.get_content_origin_pos();
+      }
+    },
     handle_range_scroll(event) {
       if (this.scroll_enabled) {
         event.preventDefault();
@@ -144,15 +209,16 @@ export default {
       }
     },
     handle_scroll(val) {
+      //   console.log("handle_scroll", val);
       if (this.scroll_enabled) {
-        console.log("handle_scroll", val);
         this.scale_canvas(val.deltaY);
       }
     },
     handle_mouse_down(event) {
+      //   let cp = this.get_canvas_client_pos();
       this.mouse_recorder.call_before_move(
-        event.clientX,
-        event.clientY
+        event.clientX, // + cp.x,
+        event.clientY //+ cp.y
         //   event.screenX, event.screenY
       );
       console.log("note canvase mouse down");
@@ -161,12 +227,13 @@ export default {
     handle_mouse_move(val) {
       if (val.buttons != 0) {
         //有按键按下
+        // let cp = this.get_canvas_client_pos();
         this.mouse_recorder.update_pos_on_move(
-          val.clientX,
-          val.clientY
+          val.clientX, //+ cp.x,
+          val.clientY //+ cp.y
           //   event.screenX, event.screenY
         );
-        let delta = this.mouse_recorder.get_delta();
+        // let delta = this.mouse_recorder.get_delta();
 
         //拖拽画布
         if (val.buttons == 1 && this.scroll_enabled) {
@@ -176,13 +243,14 @@ export default {
         }
         //拖拽文本块
         if (this.moving_obj != null) {
-          let bar_data = this.editor_bars[this.moving_obj.ebid];
+          this.update_moving_obj_pos();
+          //   let bar_data = this.editor_bars[this.moving_obj.ebid];
 
-          this.editor_bar_set_new_pos(
-            bar_data,
-            bar_data.pos_x + delta.dx / this.scale,
-            bar_data.pos_y + delta.dy / this.scale
-          );
+          //   this.editor_bar_set_new_pos(
+          //     bar_data,
+          //     bar_data.pos_x + delta.dx / this.scale,
+          //     bar_data.pos_y + delta.dy / this.scale
+          //   );
           //   console.log("bar_data", bar_data);
         }
       }
@@ -190,6 +258,13 @@ export default {
     handle_mouse_up() {
       this.dragging = false;
       this.moving_obj = null;
+    },
+    get_canvas_client_pos() {
+      let r = this.$refs.range_ref.getBoundingClientRect();
+      return {
+        y: r.top, //- this.$refs.range_ref.scrollTop,
+        x: r.left, // - this.$refs.range_ref.scrollLeft,
+      };
     },
     scale_canvas(dir) {
       let scale_bak = this.scale;
@@ -200,6 +275,9 @@ export default {
       }
       if (scale_bak < 3 && scale_bak > 0.1) {
         this.final_set_scale(scale_bak);
+      }
+      if (this.moving_obj) {
+        this.update_moving_obj_pos();
       }
     },
     final_set_scale(scale) {
@@ -217,16 +295,50 @@ export default {
 
       if (dl != 0) {
         console.log("dr", this.$refs.range_ref.scrollLeft, dl);
-        this.$refs.range_ref.scrollLeft += dl;
+        this.$refs.range_ref.scrollLeft += dl * this.scale;
       }
 
       //   console.log(u, this.padding_add_up);
       //   console.log(l, this.padding_add_left);
       if (dh != 0) {
         console.log("dh", this.$refs.range_ref.scrollTop, dh);
-        this.$refs.range_ref.scrollTop += dh;
+        this.$refs.range_ref.scrollTop += dh * this.scale;
       }
     },
+    get_content_origin_pos() {
+      let range_rec = this.$refs.range_ref.getBoundingClientRect();
+      let pos = {
+        x:
+          range_rec.left -
+          this.$refs.range_ref.scrollLeft +
+          this.edge_size_w +
+          this.padding_add_left * this.scale,
+        y:
+          range_rec.top -
+          this.$refs.range_ref.scrollTop +
+          this.edge_size_h +
+          this.padding_add_up * this.scale,
+      };
+
+      return pos;
+    },
+    // get_moving_obj_pos() {
+    //   if (this.moving_obj == null) {
+    //     return null;
+    //   } else {
+    //     let p = this.get_content_origin_pos();
+    //     let bar_data = this.editor_bars[this.moving_obj.ebid];
+    //     //   console.log("canvas dx dy", dx, dy);
+    //     //   this.editor_bar_set_new_pos(
+    //     //     bar_data,
+    //     //     bar_data.pos_x - dx / this.scale,
+    //     //     bar_data.pos_y - dy / this.scale
+    //     //   );
+    //     p.x += bar_data.pos_x;
+    //     p.y += bar_data.pos_y;
+    //     return p;
+    //   }
+    // },
     editor_bar_set_new_pos(eb, x, y) {
       let old_ck = this.chunk_helper.calc_chunk_pos(eb.pos_x, eb.pos_y);
       eb.pos_x = x;
@@ -257,6 +369,8 @@ export default {
     },
     editor_bar_start_drag(event, eb) {
       //   console.log(eb);
+      //   let cp = this.get_canvas_client_pos();
+
       this.mouse_recorder.call_before_move(
         event.clientX,
         event.clientY
@@ -264,6 +378,7 @@ export default {
       );
       event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
       this.moving_obj = eb;
+      //   this.record_content_rect = this.$refs.content_ref.getBoundingClientRect();
     },
   },
   props: {},
@@ -282,6 +397,7 @@ export default {
   background-color: rgb(255, 200, 200);
   height: 400px;
   width: 300px;
+  transform-origin: 0 0 0;
 }
 .editor_bar_move {
   position: absolute;
