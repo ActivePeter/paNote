@@ -14,9 +14,9 @@
             edge_size_h +
             padding_add_up * scale +
             'px ' +
-            (edge_size_w + padding_add_right * scale) +
+            (edge_size_w + padding_add_right * scale + 300 * (scale - 1)) +
             'px ' +
-            (edge_size_h + padding_add_down * scale) +
+            (edge_size_h + padding_add_down * scale + 400 * (scale - 1)) +
             'px ' +
             (edge_size_w + padding_add_left * scale) +
             'px',
