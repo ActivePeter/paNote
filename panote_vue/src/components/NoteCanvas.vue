@@ -138,6 +138,19 @@ export default {
   methods: {
     add_editor_bar() {
       console.log("add_editor_bar");
+      let range_rec = this.$refs.range_ref.getBoundingClientRect();
+
+      //区域中心 client坐标
+      let mid_y = (range_rec.top + range_rec.bottom) / 2;
+      let mid_x = (range_rec.left + range_rec.right) / 2;
+
+      let origin_pos = this.get_content_origin_pos();
+      let px = mid_x - origin_pos.x;
+      let py = mid_y - origin_pos.y;
+      this.editor_bars.push({
+        pos_x: px / this.scale,
+        pos_y: py / this.scale,
+      });
     },
     update_moving_obj_pos() {
       let bar_data = this.editor_bars[this.moving_obj.ebid];
@@ -311,6 +324,8 @@ export default {
         this.$refs.range_ref.scrollTop += dh * this.scale;
       }
     },
+
+    //区域原点的client坐标
     get_content_origin_pos() {
       let range_rec = this.$refs.range_ref.getBoundingClientRect();
       let pos = {
