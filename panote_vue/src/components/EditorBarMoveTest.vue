@@ -20,9 +20,11 @@ export default {
   },
   methods: {
     handle_mouse_down(event) {
-      this.drag_on_x = event.offsetX;
-      this.drag_on_y = event.offsetY;
-      this.$emit("start_drag", event, this);
+      if (event.buttons == 1) {
+        this.drag_on_x = event.offsetX;
+        this.drag_on_y = event.offsetY;
+        this.$emit("start_drag", event, this);
+      }
     },
     handle_mouse_up() {},
   },

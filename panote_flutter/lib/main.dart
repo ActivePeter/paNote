@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vector_math/vector_math_64.dart' as v;
 
+import 'patest.dart' as patest;
+
 void main() {
   runApp(const MyApp());
 }
@@ -64,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool dragging = false;
   Matrix4 matrix = Matrix4.identity();
   FocusNode _focusNode = FocusNode();
-
+  patest.DragScaleArea dragScaleArea = patest.DragScaleArea();
   void _incrementCounter() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -78,7 +80,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Container main_container() {
     return Container(
-        color: Colors.red,
+        color: Colors.red.shade50,
         constraints: BoxConstraints(
             minWidth: double.infinity, minHeight: double.infinity),
         child: Stack(
@@ -88,7 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Container(
                   width: 500,
                   height: 500,
-                  color: Colors.blue,
+                  color: Colors.blue.shade50,
                   child: Stack(
                     children: [
                       Positioned(
@@ -118,7 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Container(
             width: 200,
             height: 200,
-            color: Colors.yellow,
+            color: Colors.yellow.shade50,
             child: TextField(
               decoration: new InputDecoration(
                   // labelText: "请输入密码",
@@ -142,7 +144,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
-
+    return dragScaleArea.build_test(context);
     // Initialize a stream for the KeyEvents:
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather

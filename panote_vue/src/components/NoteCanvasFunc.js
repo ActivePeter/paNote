@@ -1,3 +1,4 @@
+//移动组件时用于重新计算区块范围
 class ChunkHelper {
     chunk_max_x = 0;
     chunk_max_y = 0;
@@ -46,6 +47,40 @@ class ChunkHelper {
         console.log(this)
     }
 }
+//记录并处理canvas的鼠标拖拽
+class CanvasMouseDragHelper {
+    dragging = false;
+    start_drag_canvas() {
+        this.dragging = true;
+
+        // console.log("start_drag_canvas", this.dragging);
+    }
+    end_drag_canvas() {
+        this.dragging = false;
+        // event.preventDefault();
+        // console.log("end_drag_canvas", this.dragging);
+    }
+    on_drag(
+        canvas, event
+    ) {
+
+        // console.log("on_drag", this.dragging, event);
+        if (!this.dragging) {
+            return;
+        }
+        if (event.buttons != 2) {
+            this.dragging = false;
+            return;
+        }
+        let delta = canvas.mouse_recorder.get_delta();
+        canvas.$refs.range_ref.scrollLeft -= delta.dx;
+        canvas.$refs.range_ref.scrollTop -= delta.dy;
+        // console.log(canvas);
+        // canvas.mouse_recorder.get_delta()
+        // canvas = 1
+        // event = 1
+    }
+}
 export default {
     new_mouse_recorder: function () {
         return Object({
@@ -73,5 +108,6 @@ export default {
     },
     new_chunk_helper: function () {
         return new ChunkHelper();
-    }
+    },
+    CanvasMouseDragHelper
 }

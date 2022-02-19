@@ -1,9 +1,9 @@
 <template>
-  <div class="note_canvas">
+  <div class="note_canvas" @contextmenu.prevent>
     <div
       class="range"
       ref="range_ref"
-      @mousedown="handle_mouse_down"
+      @mousedown="handle_mouse_down_on_range"
       @mouseup="handle_mouse_up"
     >
       <div
@@ -53,7 +53,7 @@
     </div>
     <div class="info">
       scroll_enabled:{{ scroll_enabled }}, scale: {{ scale }}, dragging:
-      {{ dragging }}
+      {{ canvas_mouse_drag_helper ? canvas_mouse_drag_helper.dragging : false }}
     </div>
   </div>
 </template>
@@ -72,6 +72,8 @@ export default {
   mounted() {
     this.mouse_recorder = NoteCanvasFunc.new_mouse_recorder();
     this.chunk_helper = NoteCanvasFunc.new_chunk_helper();
+    this.canvas_mouse_drag_helper = new NoteCanvasFunc.CanvasMouseDragHelper();
+
     window.addEventListener("keyup", this.handle_key_up);
     window.addEventListener("keydown", this.handle_key_down);
 
@@ -109,7 +111,6 @@ export default {
       scroll_enabled: false,
       scale: 1,
       scale_step: 0.1,
-      dragging: false,
       edge_size_w: 100,
       edge_size_h: 100,
       moving_obj: null,
@@ -130,6 +131,7 @@ export default {
       non_empty_chunks: {
         "0,0": 1,
       },
+      canvas_mouse_drag_helper: null,
     };
   },
   methods: {
@@ -192,6 +194,7 @@ export default {
       }
     },
     handle_range_scroll(event) {
+      //缩放模式下，阻止原生滚动事件
       if (this.scroll_enabled) {
         event.preventDefault();
       }
@@ -214,7 +217,7 @@ export default {
         this.scale_canvas(val.deltaY);
       }
     },
-    handle_mouse_down(event) {
+    handle_mouse_down_on_range(event) {
       //   let cp = this.get_canvas_client_pos();
       this.mouse_recorder.call_before_move(
         event.clientX, // + cp.x,
@@ -222,7 +225,8 @@ export default {
         //   event.screenX, event.screenY
       );
       console.log("note canvase mouse down");
-      this.dragging = true;
+      //   this.dragging = true;
+      this.canvas_mouse_drag_helper.start_drag_canvas();
     },
     handle_mouse_move(val) {
       if (val.buttons != 0) {
@@ -236,11 +240,8 @@ export default {
         // let delta = this.mouse_recorder.get_delta();
 
         //拖拽画布
-        if (val.buttons == 1 && this.scroll_enabled) {
-          console.log(val);
-        } else {
-          this.dragging = false;
-        }
+        this.canvas_mouse_drag_helper.on_drag(this, val);
+
         //拖拽文本块
         if (this.moving_obj != null) {
           this.update_moving_obj_pos();
@@ -255,9 +256,10 @@ export default {
         }
       }
     },
-    handle_mouse_up() {
-      this.dragging = false;
+    handle_mouse_up(event) {
+      //   this.dragging = false;
       this.moving_obj = null;
+      this.canvas_mouse_drag_helper.end_drag_canvas(event);
     },
     get_canvas_client_pos() {
       let r = this.$refs.range_ref.getBoundingClientRect();
