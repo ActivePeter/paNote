@@ -84,16 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Stack(
           children: [
             Transform(
-              transform: matrix
-              //matrix,
-              // Matrix4.identity()
-              //   ..translate(map_dx, map_dy)
-              //   ..multiply(Matrix4.identity()
-              //     // ..r
-              //     // ..translate(scale_dx, scale_dy)
-              //     ..scale(scale))
-              ,
-              // ..translate(-scale_dx, -scale_dy)),
+              transform: matrix,
               child: Container(
                   width: 500,
                   height: 500,
@@ -104,42 +95,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         left: dx,
                         top: dy,
                         child: dragCard(),
-                        // Draggable(
-                        //   child: Container(
-                        //     width: 100,
-                        //     height: 100,
-                        //     color: Colors.yellow,
-                        //   ),
-                        //   feedback: Container(
-                        //     width: 100 * scale,
-                        //     height: 100 * scale,
-                        //     color: Colors.green,
-                        //   ),
-                        //   onDragEnd: (s) {
-                        //     if (!scaling) {
-                        //       var v1 =
-                        //           v.Vector4(s.offset.dx, s.offset.dy, 0, 0);
-                        //       print(v1);
-                        //       print(matrix);
-
-                        //       var m = Matrix4.inverted(matrix);
-                        //       print(m);
-                        //       var a = m.transform(
-                        //           v.Vector4(s.offset.dx, s.offset.dy, 0, 0));
-
-                        //       print(a);
-
-                        //       setState(() {
-                        //         dx = m.row0[0] * v1.x + m.row0[3];
-                        //         print(m.row1);
-                        //         dy = m.row1[1] * v1.y + m.row1[3];
-                        //         print(dx);
-                        //         print(dy);
-                        //         print(" ");
-                        //       });
-                        //     }
-                        //   },
-                        // )
                       )
                     ],
                   )),
@@ -220,22 +175,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   scale = scale2;
 
                   setState(() {
-                    matrix =
-                        // ..multiply(Matrix4.identity()
-                        // ..scale(dscale)
-                        // ..translate()
-                        // );
-                        (Matrix4.identity()..translate(scale_dx, scale_dy))
-                          ..multiply(Matrix4.identity()..scale(dscale))
-                          ..multiply(Matrix4.identity()
-                            ..translate(-scale_dx, -scale_dy))
-                          ..multiply(matrix);
-                    // matrix
-                    //   ..translate(s.localDelta.dx, s.localDelta.dy)
-                    //   ..scale(1.0)
-                    //   ..scale(scale2)
-                    //   ..translate(-s.localDelta.dx, -s.localDelta.dy);
-                    // scale = scale2;
+                    matrix = (Matrix4.identity()..translate(scale_dx, scale_dy))
+                      ..multiply(Matrix4.identity()..scale(dscale))
+                      ..multiply(
+                          Matrix4.identity()..translate(-scale_dx, -scale_dy))
+                      ..multiply(matrix);
                   });
                 }
               }
@@ -269,12 +213,6 @@ class _MyHomePageState extends State<MyHomePage> {
               focusNode: _focusNode,
               onKey: (e) {
                 setState(() {
-                  // if(e.logicalKey == LogicalKeyboardKey.alt ||
-                  // e.logicalKey == LogicalKeyboardKey.altLeft ||
-                  // e.logicalKey == LogicalKeyboardKey.altRight
-                  // ){
-                  // scaling=e.isKeyPressed();
-                  // }e
                   scaling = e.isKeyPressed(LogicalKeyboardKey.alt) ||
                       e.isKeyPressed(LogicalKeyboardKey.altLeft) ||
                       e.isKeyPressed(LogicalKeyboardKey.altRight);
@@ -282,99 +220,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 });
               },
             )),
-        // RawKeyboardListener(
-        //   focusNode: FocusNode(),
-        //   onKey: (event) {
-        //     setState(() {
-        //       scaling = event.isKeyPressed(LogicalKeyboardKey.alt) ||
-        //           event.isKeyPressed(LogicalKeyboardKey.altLeft) ||
-        //           event.isKeyPressed(LogicalKeyboardKey.altRight);
-        //       print(scaling);
-        //     });
-        //   },
-        //   child:,
-        // )),
       ),
-      //   Stack(
-      //   children: <Widget>[
-      //     Transform(
-      //       transform: Matrix4.identity()..translate(map_dx, map_dy),
-      //       child: Listener(
-      //           onPointerSignal: (ps) {
-      //             if (ps is PointerScrollEvent) {
-      //               // do something when scrolled
-
-      //               print('Scrolled');
-      //             }
-      //           },
-      //           child: RawKeyboardListener(
-      //             focusNode: FocusNode(),
-      //             onKey: (event) {
-      //               setState(() {
-      //                 scaling = event.isKeyPressed(LogicalKeyboardKey.alt) ||
-      //                     event.isKeyPressed(LogicalKeyboardKey.altLeft) ||
-      //                     event.isKeyPressed(LogicalKeyboardKey.altRight);
-      //               });
-      //             },
-      //             child: Stack(
-      //               children: [
-      //                 Positioned(
-      //                   left: dx,
-      //                   top: dy,
-      //                   child: Draggable(
-      //                     child: Text(scaling ? 'xx' : 'alt'),
-      //                     feedback: Text('data'),
-      //                     onDragEnd: (details) {
-      //                       setState(() {
-      //                         dx = details.offset.dx;
-      //                         dy = details.offset.dy;
-      //                       });
-      //                     },
-      //                   ),
-      //                 ),
-      //               ],
-      //             ),
-      //           )),
-      //     )
-
-      //     // Text(
-      //     //   'xx',
-      //     //   // style: T,
-      //     // ),
-      //   ],
-      //   alignment: Alignment.center,
-      // ),
-
-      // Center(
-      //   // Center is a layout widget. It takes a single child and positions it
-      //   // in the middle of the parent.
-      //   child: Column(
-      //     // Column is also a layout widget. It takes a list of children and
-      //     // arranges them vertically. By default, it sizes itself to fit its
-      //     // children horizontally, and tries to be as tall as its parent.
-      //     //
-      //     // Invoke "debug painting" (press "p" in the console, choose the
-      //     // "Toggle Debug Paint" action from the Flutter Inspector in Android
-      //     // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-      //     // to see the wireframe for each widget.
-      //     //
-      //     // Column has various properties to control how it sizes itself and
-      //     // how it positions its children. Here we use mainAxisAlignment to
-      //     // center the children vertically; the main axis here is the vertical
-      //     // axis because Columns are vertical (the cross axis would be
-      //     // horizontal).
-      //     mainAxisAlignment: MainAxisAlignment.center,
-      //     children: <Widget>[
-      //       const Text(
-      //         'You have pushed the button this many times:',
-      //       ),
-      //       Text(
-      //         '$_counter',
-      //         style: Theme.of(context).textTheme.headline4,
-      //       ),
-      //     ],
-      //   ),
-      // ),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
