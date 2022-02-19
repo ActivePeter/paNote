@@ -1,5 +1,6 @@
 <template>
   <div class="note_canvas" @contextmenu.prevent>
+    <!-- @contextmenu.prevent 去除右键菜单 -->
     <div
       class="range"
       ref="range_ref"
@@ -135,6 +136,9 @@ export default {
     };
   },
   methods: {
+    add_editor_bar() {
+      console.log("add_editor_bar");
+    },
     update_moving_obj_pos() {
       let bar_data = this.editor_bars[this.moving_obj.ebid];
       let origin_pos = this.get_content_origin_pos();

@@ -1,11 +1,11 @@
 <template>
   <div>
-    <el-row class="mb-4">
-      <el-button round>add note bar</el-button>
+    <el-row class="tool_line">
+      <el-button round @click="add_editor_bar">add note bar</el-button>
     </el-row>
   </div>
   <div class="note_canvas_border">
-    <NoteCanvas class="note_canvas" />
+    <NoteCanvas class="note_canvas" ref="note_canvas_ref" />
   </div>
   <!-- <img alt="Vue logo" src="./assets/logo.png" />
   <HelloWorld msg="Welcome to Your Vue.js App" /> -->
@@ -21,6 +21,11 @@ export default {
     // HelloWorld,
     NoteCanvas,
   },
+  methods: {
+    add_editor_bar() {
+      this.$refs.note_canvas_ref.add_editor_bar();
+    },
+  },
 };
 </script>
 
@@ -32,6 +37,9 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+.tool_line {
+  margin-bottom: 10px;
 }
 .note_canvas_border {
   border: 1px solid #000;
