@@ -1,25 +1,60 @@
 <template>
-  <div class="note_canvas">
+  <div class="note_canvas" @contextmenu.prevent>
+    <!-- @contextmenu.prevent 去除右键菜单 -->
     <div
       class="range"
       ref="range_ref"
-      @mousedown="handle_mouse_down"
+      @mousedown="handle_mouse_down_on_range"
       @mouseup="handle_mouse_up"
     >
       <div
-        class="content"
+        ref="content_padding_ref"
+        class="content_padding"
         :style="{
-          transform: 'scale(' + scale + ')',
-          margin: edge_size_h + 'px ' + edge_size_w + 'px',
+          padding:
+            edge_size_h +
+            padding_add_up * scale +
+            'px ' +
+            (edge_size_w + padding_add_right * scale + 300 * (scale - 1)) +
+            'px ' +
+            (edge_size_h + padding_add_down * scale + 400 * (scale - 1)) +
+            'px ' +
+            (edge_size_w + padding_add_left * scale) +
+            'px',
         }"
       >
-        content
-        <EditorBar />
+        <div
+          ref="content_ref"
+          class="content"
+          :style="{
+            transform: 'scale(' + scale + ')',
+          }"
+        >
+          content
+          <div
+            class="content_chunk_range"
+            :style="{
+              right: -padding_add_right + 'px',
+              left: -padding_add_left + 'px',
+              top: -padding_add_up + 'px',
+              bottom: -padding_add_down + 'px',
+            }"
+          ></div>
+          <EditorBar />
+          <EditorBarMove
+            v-for="(item, i) in editor_bars"
+            :key="i"
+            :ebid="i"
+            class="editor_bar_move"
+            :style="{ top: item.pos_y + 'px', left: item.pos_x + 'px' }"
+            @start_drag="editor_bar_start_drag"
+          />
+        </div>
       </div>
     </div>
     <div class="info">
       scroll_enabled:{{ scroll_enabled }}, scale: {{ scale }}, dragging:
-      {{ dragging }}
+      {{ canvas_mouse_drag_helper ? canvas_mouse_drag_helper.dragging : false }}
     </div>
   </div>
 </template>
@@ -27,24 +62,34 @@
 <script>
 import ElementResizeDetectorMaker from "element-resize-detector";
 import EditorBar from "./EditorBar.vue";
+import EditorBarMove from "./EditorBarMoveTest.vue";
+import NoteCanvasFunc from "./NoteCanvasFunc.js";
 export default {
   name: "NoteCanvas",
   components: {
     EditorBar,
+    EditorBarMove,
   },
   mounted() {
+    this.mouse_recorder = NoteCanvasFunc.new_mouse_recorder();
+    this.chunk_helper = NoteCanvasFunc.new_chunk_helper();
+    this.canvas_mouse_drag_helper = new NoteCanvasFunc.CanvasMouseDragHelper();
+
     window.addEventListener("keyup", this.handle_key_up);
     window.addEventListener("keydown", this.handle_key_down);
 
     window.addEventListener("mousewheel", this.handle_scroll);
     window.addEventListener("mouseup", this.handle_mouse_up);
     window.addEventListener("mousemove", this.handle_mouse_move);
+
+    this.$refs.range_ref.addEventListener("scroll", this.handle_scroll_bar);
     this.$refs.range_ref.addEventListener(
       "mousewheel",
       this.handle_range_scroll
     );
-    let erd = ElementResizeDetectorMaker();
     let _this = this;
+    let erd = ElementResizeDetectorMaker();
+
     erd.listenTo(this.$refs.range_ref, function (element) {
       var width = element.offsetWidth;
       var height = element.offsetHeight;
@@ -67,13 +112,116 @@ export default {
       scroll_enabled: false,
       scale: 1,
       scale_step: 0.1,
-      dragging: false,
       edge_size_w: 100,
       edge_size_h: 100,
+      moving_obj: null,
+      //   record_content_rect: null, //for moving
+
+      editor_bars: [
+        {
+          pos_x: 0,
+          pos_y: 0,
+        },
+      ],
+      mouse_recorder: null,
+      padding_add_up: 0,
+      padding_add_down: 0,
+      padding_add_left: 0,
+      padding_add_right: 0,
+      chunk_helper: null,
+      non_empty_chunks: {
+        "0,0": 1,
+      },
+      canvas_mouse_drag_helper: null,
     };
   },
   methods: {
+    add_editor_bar() {
+      console.log("add_editor_bar");
+      let range_rec = this.$refs.range_ref.getBoundingClientRect();
+
+      //区域中心 client坐标
+      let mid_y = (range_rec.top + range_rec.bottom) / 2;
+      let mid_x = (range_rec.left + range_rec.right) / 2;
+
+      let origin_pos = this.get_content_origin_pos();
+      let px = mid_x - origin_pos.x;
+      let py = mid_y - origin_pos.y;
+      let new_bar = {
+        pos_x: px / this.scale,
+        pos_y: py / this.scale,
+      };
+      this.editor_bars.push(new_bar);
+
+      let ck = this.chunk_helper.calc_chunk_pos(new_bar.pos_x, new_bar.pos_y);
+      this.chunk_helper.add_new_2chunks(this.non_empty_chunks, ck);
+      this.change_padding(
+        this.chunk_helper.chunk_min_y * -400,
+        this.chunk_helper.chunk_max_y * 400,
+        this.chunk_helper.chunk_max_x * 300,
+        this.chunk_helper.chunk_min_x * -300
+      );
+    },
+    update_moving_obj_pos() {
+      let bar_data = this.editor_bars[this.moving_obj.ebid];
+      let origin_pos = this.get_content_origin_pos();
+      //   var bar_pos = this.get_moving_obj_pos();
+      let dx =
+        this.mouse_recorder.mouse_cur_x -
+        origin_pos.x -
+        this.moving_obj.drag_on_x * this.scale;
+      let dy =
+        this.mouse_recorder.mouse_cur_y -
+        origin_pos.y -
+        this.moving_obj.drag_on_y * this.scale;
+      //   console.log("canvas dx dy", dx, dy, bar_pos);
+      this.editor_bar_set_new_pos(bar_data, dx / this.scale, dy / this.scale);
+    },
+    handle_scroll_bar(event) {
+      if (
+        this.moving_obj != null
+        //   && this.record_content_rect != null
+      ) {
+        console.log(event);
+        // let rct = this.get_content_origin_pos(); //this.$refs.content_ref.getBoundingClientRect();
+        // let dy = rct.y - this.record_content_rect.y;
+        // let dx = rct.x - this.record_content_rect.x;
+        // if (dx != 0 || dy != 0) {
+        //   //画布产生偏移，
+        //   let bar_data = this.editor_bars[this.moving_obj.ebid];
+        this.update_moving_obj_pos();
+        //   this.editor_bar_set_new_pos(
+        //     bar_data,
+        //     bar_data.pos_x - dx / this.scale,
+        //     bar_data.pos_y - dy / this.scale
+        //   );
+        // }
+        // let bar_data = this.editor_bars[this.moving_obj.ebid];
+        // let rct = this.$refs.content_padding_ref.getBoundingClientRect();
+        // let mov_rct = this.moving_obj.getBoundingClientRect();
+        // console.log(
+        //   "mouse moving obj",
+        //   this.mouse_recorder,
+        //   rct,
+        //   mov_rct,
+        //   bar_data,
+        //   this.moving_obj.drag_on_x,
+        //   this.moving_obj.drag_on_y
+        // );
+        // let bar_data = this.editor_bars[this.moving_obj.ebid];
+        // this.editor_bar_set_new_pos(
+        //   bar_data,
+        //   bar_data.pos_x + event.deltaX / this.scale,
+        //   bar_data.pos_y + event.deltaY / this.scale
+        // );
+        // this.record_content_rect = this.$refs.content_ref
+      }
+      {
+        // this.record_content_rect = this.get_content_origin_pos();
+      }
+    },
     handle_range_scroll(event) {
+      //缩放模式下，阻止原生滚动事件
       if (this.scroll_enabled) {
         event.preventDefault();
       }
@@ -91,23 +239,61 @@ export default {
       }
     },
     handle_scroll(val) {
+      //   console.log("handle_scroll", val);
       if (this.scroll_enabled) {
-        console.log("handle_scroll", val);
         this.scale_canvas(val.deltaY);
       }
     },
-    handle_mouse_down() {
-      this.dragging = true;
+    handle_mouse_down_on_range(event) {
+      //   let cp = this.get_canvas_client_pos();
+      this.mouse_recorder.call_before_move(
+        event.clientX, // + cp.x,
+        event.clientY //+ cp.y
+        //   event.screenX, event.screenY
+      );
+      console.log("note canvase mouse down");
+      //   this.dragging = true;
+      this.canvas_mouse_drag_helper.start_drag_canvas();
     },
     handle_mouse_move(val) {
-      if (val.buttons == 1 && this.scroll_enabled) {
-        console.log(val);
-      } else {
-        this.dragging = false;
+      if (val.buttons != 0) {
+        //有按键按下
+        // let cp = this.get_canvas_client_pos();
+        this.mouse_recorder.update_pos_on_move(
+          val.clientX, //+ cp.x,
+          val.clientY //+ cp.y
+          //   event.screenX, event.screenY
+        );
+        // let delta = this.mouse_recorder.get_delta();
+
+        //拖拽画布
+        this.canvas_mouse_drag_helper.on_drag(this, val);
+
+        //拖拽文本块
+        if (this.moving_obj != null) {
+          this.update_moving_obj_pos();
+          //   let bar_data = this.editor_bars[this.moving_obj.ebid];
+
+          //   this.editor_bar_set_new_pos(
+          //     bar_data,
+          //     bar_data.pos_x + delta.dx / this.scale,
+          //     bar_data.pos_y + delta.dy / this.scale
+          //   );
+          //   console.log("bar_data", bar_data);
+        }
       }
     },
-    handle_mouse_up() {
-      this.dragging = false;
+    handle_mouse_up(event) {
+      //   this.dragging = false;
+      this.moving_obj = null;
+      this.canvas_mouse_drag_helper.end_drag_canvas(event);
+    },
+    get_canvas_client_pos() {
+      let r = this.$refs.range_ref.getBoundingClientRect();
+      return {
+        y: r.top, //- this.$refs.range_ref.scrollTop,
+        x: r.left, // - this.$refs.range_ref.scrollLeft,
+      };
     },
     scale_canvas(dir) {
       let scale_bak = this.scale;
@@ -119,9 +305,111 @@ export default {
       if (scale_bak < 3 && scale_bak > 0.1) {
         this.final_set_scale(scale_bak);
       }
+      if (this.moving_obj) {
+        this.update_moving_obj_pos();
+      }
     },
     final_set_scale(scale) {
       this.scale = scale;
+    },
+    change_padding(u, d, r, l) {
+      console.log("change padding", u, d, r, l);
+      let dl = l - this.padding_add_left;
+      let dh = u - this.padding_add_up;
+
+      this.padding_add_up = u;
+      this.padding_add_down = d;
+      this.padding_add_right = r;
+      this.padding_add_left = l;
+
+      if (dl != 0) {
+        console.log("dr", this.$refs.range_ref.scrollLeft, dl);
+        this.$refs.range_ref.scrollLeft += dl * this.scale;
+      }
+
+      //   console.log(u, this.padding_add_up);
+      //   console.log(l, this.padding_add_left);
+      if (dh != 0) {
+        console.log("dh", this.$refs.range_ref.scrollTop, dh);
+        this.$refs.range_ref.scrollTop += dh * this.scale;
+      }
+    },
+
+    //区域原点的client坐标
+    get_content_origin_pos() {
+      let range_rec = this.$refs.range_ref.getBoundingClientRect();
+      let pos = {
+        x:
+          range_rec.left -
+          this.$refs.range_ref.scrollLeft +
+          this.edge_size_w +
+          this.padding_add_left * this.scale,
+        y:
+          range_rec.top -
+          this.$refs.range_ref.scrollTop +
+          this.edge_size_h +
+          this.padding_add_up * this.scale,
+      };
+
+      return pos;
+    },
+    // get_moving_obj_pos() {
+    //   if (this.moving_obj == null) {
+    //     return null;
+    //   } else {
+    //     let p = this.get_content_origin_pos();
+    //     let bar_data = this.editor_bars[this.moving_obj.ebid];
+    //     //   console.log("canvas dx dy", dx, dy);
+    //     //   this.editor_bar_set_new_pos(
+    //     //     bar_data,
+    //     //     bar_data.pos_x - dx / this.scale,
+    //     //     bar_data.pos_y - dy / this.scale
+    //     //   );
+    //     p.x += bar_data.pos_x;
+    //     p.y += bar_data.pos_y;
+    //     return p;
+    //   }
+    // },
+    editor_bar_set_new_pos(eb, x, y) {
+      let old_ck = this.chunk_helper.calc_chunk_pos(eb.pos_x, eb.pos_y);
+      eb.pos_x = x;
+      eb.pos_y = y;
+      let ck = this.chunk_helper.calc_chunk_pos(x, y);
+      if (old_ck != ck) {
+        console.log("ck", ck);
+
+        this.chunk_helper.move_chunk(this.non_empty_chunks, old_ck, ck);
+        console.log(this.non_empty_chunks);
+        this.change_padding(
+          this.chunk_helper.chunk_min_y * -400,
+          this.chunk_helper.chunk_max_y * 400,
+          this.chunk_helper.chunk_max_x * 300,
+          this.chunk_helper.chunk_min_x * -300
+        );
+        console.log(
+          this.padding_add_up,
+          this.padding_add_down,
+          this.padding_add_left,
+          this.padding_add_right
+        );
+      }
+
+      //   let ebw = 100;
+      //   let ebh = 100;
+      //超出原有范围需要重新设置背景面板的size
+    },
+    editor_bar_start_drag(event, eb) {
+      //   console.log(eb);
+      //   let cp = this.get_canvas_client_pos();
+
+      this.mouse_recorder.call_before_move(
+        event.clientX,
+        event.clientY
+        //   event.screenX, event.screenY
+      );
+      event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
+      this.moving_obj = eb;
+      //   this.record_content_rect = this.$refs.content_ref.getBoundingClientRect();
     },
   },
   props: {},
@@ -140,5 +428,13 @@ export default {
   background-color: rgb(255, 200, 200);
   height: 400px;
   width: 300px;
+  transform-origin: 0 0 0;
+}
+.editor_bar_move {
+  position: absolute;
+}
+.content_chunk_range {
+  position: absolute;
+  border: 1px solid #000;
 }
 </style>

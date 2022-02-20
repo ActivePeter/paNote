@@ -25,5 +25,7 @@ const editor = new EditorJS();// eslint-disable-line no-unused-vars
 <style scoped>
 .editor_bar {
   background: gray;
+  width: 100px;
+  height: 100px;
 }
 </style>
