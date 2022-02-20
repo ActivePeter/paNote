@@ -93,6 +93,129 @@ class CanvasMouseDragHelper {
         // event = 1
     }
 }
+class CanvasDrawer {
+    draw(
+        // canvas
+    ) {
+        // let canvas_ref = canvas.$refs.canvas_ref
+        // canvas_ref.width = 100 * canvas.scale
+        // canvas_ref.height = 100 * canvas.scale
+        // var ctx = canvas_ref.getContext("2d");
+        // ctx.moveTo(0, 0);
+
+        // ctx.lineWidth = 10;
+        // ctx.lineTo(50, 50);
+        // ctx.stroke();
+    }
+}
+class PathStruct {
+    ox = 0;//path块原点
+    oy = 0;
+    b_bar = -1;
+    e_bar = -1;
+    w = 10;//path块size
+    h = 10;
+    bx = 0;
+    by = 0;
+    ex = 0;
+    ey = 0;
+    set_begin(b_bar) {
+        this.b_bar = b_bar
+    }
+    set_end(e_bar) {
+        this.e_bar = e_bar
+    }
+    set_pos(bx, by, ex, ey) {
+        this.w = Math.abs(bx - ex)
+        this.h = Math.abs(by - ey)
+        this.ox = Math.min(ex, bx)
+        this.oy = Math.min(ey, by)
+
+        this.ex = ex - this.ox;
+        this.ey = ey - this.oy;
+        this.bx = bx - this.ox;
+        this.by = by - this.oy;
+        return this
+    }
+    change_end_pos(ex, ey) {
+        this.set_pos(this.ox + this.bx, this.oy + this.by, ex, ey)
+    }
+    change_begin_pos(bx, by) {
+        this.set_pos(bx, by, this.ox + this.ex, this.oy + this.ey)
+    }
+}
+class LineConnectHelper {
+    bar_move(canvas, ebid) {
+        let bar_data = canvas.editor_bars[ebid]
+        console
+        for (let i in bar_data.conns) {
+            // console.log(path)
+            let path_key = bar_data.conns[i]
+            let p = canvas.paths[path_key]
+            if (p.e_bar == ebid) {
+                p.change_end_pos(bar_data.pos_x, bar_data.pos_y)
+            } else if (p.b_bar == ebid) {
+                p.change_begin_pos(bar_data.pos_x, bar_data.pos_y)
+            }
+        }
+    }
+    end_connect(canvas, canvas_x, canvas_y, ebid) {
+        canvas.connecting_path.change_end_pos(canvas_x, canvas_y);
+        canvas.connecting_path.e_bar = ebid;
+        let bbar = canvas.connecting_path.b_bar
+        let key1 = bbar + ',' + ebid
+        if ((key1) in canvas.paths || (ebid + ',' + bbar) in canvas.paths || ebid == bbar) {
+            canvas.connecting_path = null;
+        } else {
+            canvas.paths[key1] = canvas.connecting_path;
+            console.log(
+                "valid one", key1
+            )
+
+            canvas.editor_bars[bbar].conns.push(key1)
+            canvas.editor_bars[ebid].conns.push(key1)
+        }
+        canvas.connecting_path = null;
+    }
+    move_connect(NoteCanvasFunc, canvas, bclient_x, bclient_y) {
+        let startp = NoteCanvasFunc.client_pos_2_canvas_item_pos(
+            canvas,
+            bclient_x,
+            bclient_y
+        );
+        canvas.connecting_path.change_end_pos(
+            startp.x,
+            startp.y,
+        );
+    }
+    // begin_connect_from_clientpos(NoteCanvasFunc, canvas, bclient_x, bclient_y) {
+    //     let startp = NoteCanvasFunc.client_pos_2_canvas_item_pos(
+    //         canvas,
+    //         bclient_x,
+    //         bclient_y
+    //     );
+    //     canvas.connecting_path = new NoteCanvasFunc.PathStruct().set_pos(
+    //         startp.x,
+    //         startp.y,
+    //         startp.x,
+    //         startp.y
+    //     );
+    //     canvas.paths.push(canvas.connecting_path);
+    // }
+    begin_connect_from_canvaspos(NoteCanvasFunc, canvas, cx, cy, ebid) {
+        // let startp = NoteCanvasFunc.client_pos_2_canvas_item_pos(
+        //     canvas,
+        //     bclient_x,
+        //     bclient_y
+        // );
+        canvas.connecting_path = new NoteCanvasFunc.PathStruct().set_pos(
+            cx,
+            cy, cx, cy
+        );
+        canvas.connecting_path.b_bar = ebid
+        // canvas.paths.push(canvas.connecting_path);
+    }
+}
 export default {
     new_mouse_recorder: function () {
         return Object({
@@ -121,5 +244,18 @@ export default {
     new_chunk_helper: function () {
         return new ChunkHelper();
     },
-    CanvasMouseDragHelper
+    CanvasMouseDragHelper,
+    CanvasDrawer,
+    PathStruct,
+    client_pos_2_canvas_item_pos(canvas, x, y) {
+        let origin = canvas.get_content_origin_pos()
+        return {
+            x: (x - origin.x)
+                / canvas.scale
+            ,
+            y: (y - origin.y)
+                / canvas.scale
+        }
+    },
+    line_connect_helper: new LineConnectHelper()
 }

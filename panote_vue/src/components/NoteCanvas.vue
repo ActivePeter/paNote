@@ -31,6 +31,51 @@
           }"
         >
           content
+          <svg
+            v-for="(item, i) in paths"
+            :key="i"
+            class="path"
+            version="1.1"
+            :height="item.h"
+            :width="item.w"
+            :style="{ top: item.oy + 'px', left: item.ox + 'px' }"
+          >
+            <path
+              :d="
+                'M ' + item.bx + ' ' + item.by + ' L ' + item.ex + ' ' + item.ey
+              "
+              stroke="black"
+              stroke-width="2"
+              fill="none"
+            ></path>
+          </svg>
+          <svg
+            v-if="connecting_path"
+            class="path"
+            version="1.1"
+            :height="connecting_path.h"
+            :width="connecting_path.w"
+            :style="{
+              top: connecting_path.oy + 'px',
+              left: connecting_path.ox + 'px',
+            }"
+          >
+            <path
+              :d="
+                'M ' +
+                connecting_path.bx +
+                ' ' +
+                connecting_path.by +
+                ' L ' +
+                connecting_path.ex +
+                ' ' +
+                connecting_path.ey
+              "
+              stroke="blue"
+              stroke-width="2"
+              fill="none"
+            ></path>
+          </svg>
           <div
             class="content_chunk_range"
             :style="{
@@ -48,6 +93,7 @@
             class="editor_bar_move"
             :style="{ top: item.pos_y + 'px', left: item.pos_x + 'px' }"
             @start_drag="editor_bar_start_drag"
+            @drag_release="editor_bar_drag_release"
           />
         </div>
       </div>
@@ -70,10 +116,20 @@ export default {
     EditorBar,
     EditorBarMove,
   },
+  watch: {
+    cursor_mode(val) {
+      console.log("mode select", val);
+    },
+  },
   mounted() {
     this.mouse_recorder = NoteCanvasFunc.new_mouse_recorder();
     this.chunk_helper = NoteCanvasFunc.new_chunk_helper();
     this.canvas_mouse_drag_helper = new NoteCanvasFunc.CanvasMouseDragHelper();
+    this.canvas_drawer = new NoteCanvasFunc.CanvasDrawer();
+    this.canvas_drawer.draw(this);
+
+    // this.paths.push(new NoteCanvasFunc.PathStruct().set_pos(100, 0, 0, 100));
+    // this.paths.push(new NoteCanvasFunc.PathStruct().set_pos(0, 0, 150, 100));
 
     window.addEventListener("keyup", this.handle_key_up);
     window.addEventListener("keydown", this.handle_key_down);
@@ -121,6 +177,7 @@ export default {
         {
           pos_x: 0,
           pos_y: 0,
+          conns: [],
         },
       ],
       mouse_recorder: null,
@@ -133,6 +190,9 @@ export default {
         "0,0": 1,
       },
       canvas_mouse_drag_helper: null,
+      canvas_drawer: null,
+      paths: {},
+      connecting_path: null,
     };
   },
   methods: {
@@ -150,6 +210,7 @@ export default {
       let new_bar = {
         pos_x: px / this.scale,
         pos_y: py / this.scale,
+        conns: [],
       };
       this.editor_bars.push(new_bar);
 
@@ -175,7 +236,12 @@ export default {
         origin_pos.y -
         this.moving_obj.drag_on_y * this.scale;
       //   console.log("canvas dx dy", dx, dy, bar_pos);
-      this.editor_bar_set_new_pos(bar_data, dx / this.scale, dy / this.scale);
+      this.editor_bar_set_new_pos(
+        this.moving_obj.ebid,
+        bar_data,
+        dx / this.scale,
+        dy / this.scale
+      );
     },
     handle_scroll_bar(event) {
       if (
@@ -281,12 +347,23 @@ export default {
           //   );
           //   console.log("bar_data", bar_data);
         }
+        if (this.connecting_path != null) {
+          NoteCanvasFunc.line_connect_helper.move_connect(
+            NoteCanvasFunc,
+            this,
+            val.clientX,
+            val.clientY
+          );
+        }
       }
     },
     handle_mouse_up(event) {
       //   this.dragging = false;
       this.moving_obj = null;
       this.canvas_mouse_drag_helper.end_drag_canvas(event);
+      if (this.connecting_path) {
+        this.connecting_path = null;
+      }
     },
     get_canvas_client_pos() {
       let r = this.$refs.range_ref.getBoundingClientRect();
@@ -311,6 +388,7 @@ export default {
     },
     final_set_scale(scale) {
       this.scale = scale;
+      this.canvas_drawer.draw(this);
     },
     change_padding(u, d, r, l) {
       console.log("change padding", u, d, r, l);
@@ -370,10 +448,22 @@ export default {
     //     return p;
     //   }
     // },
-    editor_bar_set_new_pos(eb, x, y) {
+    editor_bar_drag_release(event, bar) {
+      if (event && this.connecting_path) {
+        let bar_data = this.editor_bars[bar.ebid];
+        NoteCanvasFunc.line_connect_helper.end_connect(
+          this,
+          bar_data.pos_x,
+          bar_data.pos_y,
+          bar.ebid
+        );
+      }
+    },
+    editor_bar_set_new_pos(ebid, eb, x, y) {
       let old_ck = this.chunk_helper.calc_chunk_pos(eb.pos_x, eb.pos_y);
       eb.pos_x = x;
       eb.pos_y = y;
+      NoteCanvasFunc.line_connect_helper.bar_move(this, ebid);
       let ck = this.chunk_helper.calc_chunk_pos(x, y);
       if (old_ck != ck) {
         console.log("ck", ck);
@@ -408,11 +498,24 @@ export default {
         //   event.screenX, event.screenY
       );
       event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
-      this.moving_obj = eb;
+      if (this.cursor_mode == "拖拽") {
+        this.moving_obj = eb;
+      } else if (this.cursor_mode == "连线") {
+        let bar_data = this.editor_bars[eb.ebid];
+        NoteCanvasFunc.line_connect_helper.begin_connect_from_canvaspos(
+          NoteCanvasFunc,
+          this,
+          bar_data.pos_x,
+          bar_data.pos_y,
+          eb.ebid
+        );
+      }
       //   this.record_content_rect = this.$refs.content_ref.getBoundingClientRect();
     },
   },
-  props: {},
+  props: {
+    cursor_mode: String,
+  },
 };
 </script>
 
@@ -436,5 +539,19 @@ export default {
 .content_chunk_range {
   position: absolute;
   border: 1px solid #000;
+}
+#canvas {
+  /* height: 100%; */
+  /* width: 100%; */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100px;
+  height: 100px;
+}
+.path {
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 </style>

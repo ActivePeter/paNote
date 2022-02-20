@@ -1,11 +1,21 @@
 <template>
   <div>
     <el-row class="tool_line">
-      <el-button round @click="add_editor_bar">add note bar</el-button>
+      <el-button @click="add_editor_bar">add note bar</el-button>
+      <div style="width: 10px"></div>
+      <el-radio-group v-model="cursor_mode_select" size="medium">
+        <el-radio-button label="拖拽"></el-radio-button>
+        <el-radio-button label="连线"></el-radio-button>
+        <el-radio-button label="选择"></el-radio-button>
+      </el-radio-group>
     </el-row>
   </div>
   <div class="note_canvas_border">
-    <NoteCanvas class="note_canvas" ref="note_canvas_ref" />
+    <NoteCanvas
+      class="note_canvas"
+      ref="note_canvas_ref"
+      :cursor_mode="cursor_mode_select"
+    />
   </div>
   <!-- <img alt="Vue logo" src="./assets/logo.png" />
   <HelloWorld msg="Welcome to Your Vue.js App" /> -->
@@ -25,6 +35,11 @@ export default {
     add_editor_bar() {
       this.$refs.note_canvas_ref.add_editor_bar();
     },
+  },
+  data() {
+    return {
+      cursor_mode_select: "",
+    };
   },
 };
 </script>

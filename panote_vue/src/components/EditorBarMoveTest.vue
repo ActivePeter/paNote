@@ -26,7 +26,10 @@ export default {
         this.$emit("start_drag", event, this);
       }
     },
-    handle_mouse_up() {},
+    handle_mouse_up(event) {
+      // console.log(this.ebid, event);
+      this.$emit("drag_release", event, this);
+    },
   },
   props: {
     ebid: Number,
