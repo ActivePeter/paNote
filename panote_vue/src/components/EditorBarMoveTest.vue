@@ -4,18 +4,26 @@
     @mousedown="handle_mouse_down"
     @mouseup="handle_mouse_up"
   >
-    editor_bar
+    <QuillEditor class="editor" theme="snow" />
   </div>
 </template>
 
 <script>
+// import EditorJS from "@editorjs/editorjs";
+// import { quillEditor } from "vue-quill-editor";
 export default {
   name: "EditorBarMove",
-  mounted() {},
+  mounted() {
+    // new EditorJS("editor_bar" + this.ebid);
+  },
   data() {
     return {
       drag_on_x: 0,
       drag_on_y: 0,
+      content: "<h2>I am Example</h2>",
+      editorOption: {
+        // something config
+      },
     };
   },
   methods: {
@@ -39,9 +47,12 @@ export default {
 
 <style scoped>
 .editor_bar {
-  background: gray;
-  width: 100px;
-  height: 100px;
+  background: rgb(235, 234, 234);
+  width: 280px;
+  height: 380px;
   border: 1px solid #000;
+}
+.editor {
+  height: 100%;
 }
 </style>
