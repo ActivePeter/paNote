@@ -4,7 +4,11 @@
     @mousedown="handle_mouse_down"
     @mouseup="handle_mouse_up"
   >
-    <QuillEditor class="editor" theme="snow" />
+    <quill-editor
+      v-model:value="content"
+      :options="editorOption"
+      :disabled="disabled"
+    />
   </div>
 </template>
 
@@ -14,15 +18,22 @@
 export default {
   name: "EditorBarMove",
   mounted() {
+    // new Quill(".editor_bar");
     // new EditorJS("editor_bar" + this.ebid);
   },
   data() {
     return {
       drag_on_x: 0,
       drag_on_y: 0,
-      content: "<h2>I am Example</h2>",
+
+      curTheme: "snow",
+      showEditor: true,
+      content: "<p>2333</p>",
       editorOption: {
-        // something config
+        placeholder: "core",
+        modules: {
+          toolbar: false,
+        },
       },
     };
   },
