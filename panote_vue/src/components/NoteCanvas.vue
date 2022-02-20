@@ -147,10 +147,20 @@ export default {
       let origin_pos = this.get_content_origin_pos();
       let px = mid_x - origin_pos.x;
       let py = mid_y - origin_pos.y;
-      this.editor_bars.push({
+      let new_bar = {
         pos_x: px / this.scale,
         pos_y: py / this.scale,
-      });
+      };
+      this.editor_bars.push(new_bar);
+
+      let ck = this.chunk_helper.calc_chunk_pos(new_bar.pos_x, new_bar.pos_y);
+      this.chunk_helper.add_new_2chunks(this.non_empty_chunks, ck);
+      this.change_padding(
+        this.chunk_helper.chunk_min_y * -400,
+        this.chunk_helper.chunk_max_y * 400,
+        this.chunk_helper.chunk_max_x * 300,
+        this.chunk_helper.chunk_min_x * -300
+      );
     },
     update_moving_obj_pos() {
       let bar_data = this.editor_bars[this.moving_obj.ebid];

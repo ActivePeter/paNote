@@ -4,6 +4,15 @@ class ChunkHelper {
     chunk_max_y = 0;
     chunk_min_x = 0;
     chunk_min_y = 0;
+    add_new_2chunks(non_empty_chunks, ck) {
+        console.log("add_new_2chunks")
+        if (!(ck in non_empty_chunks)) {
+            non_empty_chunks[ck] = 1
+        } else {
+            non_empty_chunks[ck]++;
+        }
+        this.recalc_chunk_range(non_empty_chunks)
+    }
     calc_chunk_pos(x, y) {
         let cx = 0, cy = 0;
         cx = Math.floor(x / 300);
@@ -25,6 +34,10 @@ class ChunkHelper {
 
             non_empty_chunks[newck]++;
         }
+        this.recalc_chunk_range(non_empty_chunks)
+        console.log(this)
+    }
+    recalc_chunk_range(non_empty_chunks) {
         this.chunk_max_x = 0;
         this.chunk_max_y = 0;
         this.chunk_min_x = 0;
@@ -44,7 +57,6 @@ class ChunkHelper {
                 this.chunk_max_y = y;
             }
         }
-        console.log(this)
     }
 }
 //记录并处理canvas的鼠标拖拽

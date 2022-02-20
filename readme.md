@@ -54,6 +54,7 @@ In the process of  preparing for the Postgraduate entrance examination, the note
 - ~~1.画布拖拽~~
 - ~~2.内部元素拖拽~~
 - ~~2.1拖拽后面板区域也要实时更新~~
+- ~~2.2添加内部元素~~
 - 6.连线（先直线）
 - 3.anki插件（pa）
 - 4.内部元素的具体内容：editor.js（ad）
