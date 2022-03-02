@@ -326,7 +326,7 @@ export default {
               this.mouse_recorder)
         }
         if (this.connecting_path != null) {
-          NoteCanvasFunc.line_connect_helper.move_connect(
+          this.line_connect_helper.move_connect(
               NoteCanvasFunc,
               this,
               val.clientX,
@@ -420,7 +420,7 @@ export default {
     editor_bar_drag_release(event, bar) {
       if (event && this.connecting_path) {
         let bar_data = this.editor_bars[bar.ebid];
-        NoteCanvasFunc.line_connect_helper.end_connect(
+        this.line_connect_helper.end_connect(
             this,
             bar_data.pos_x,
             bar_data.pos_y,
