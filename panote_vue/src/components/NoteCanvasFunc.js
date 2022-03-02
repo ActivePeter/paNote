@@ -125,42 +125,47 @@ class PathStruct {
     set_end(e_bar) {
         this.e_bar = e_bar
     }
-    set_pos(bx, by, ex, ey) {
-        this.w = Math.abs(bx - ex)
-        this.h = Math.abs(by - ey)
-        this.ox = Math.min(ex, bx)
-        this.oy = Math.min(ey, by)
 
-        this.ex = ex - this.ox;
-        this.ey = ey - this.oy;
-        this.bx = bx - this.ox;
-        this.by = by - this.oy;
-        return this
-    }
-    change_end_pos(ex, ey) {
-        this.set_pos(this.ox + this.bx, this.oy + this.by, ex, ey)
-    }
-    change_begin_pos(bx, by) {
-        this.set_pos(bx, by, this.ox + this.ex, this.oy + this.ey)
-    }
 }
 class LineConnectHelper {
+    path_set_pos(path,bx, by, ex, ey) {
+        path.w = Math.abs(bx - ex)
+        path.h = Math.abs(by - ey)
+        path.ox = Math.min(ex, bx)
+        path.oy = Math.min(ey, by)
+
+        path.ex = ex - path.ox;
+        path.ey = ey - path.oy;
+        path.bx = bx - path.ox;
+        path.by = by - path.oy;
+        return path
+    }
+    path_change_end_pos(path,ex, ey) {
+        this.path_set_pos(path,path.ox + path.bx, path.oy + path.by, ex, ey)
+    }
+    path_change_begin_pos(path,bx, by) {
+        this.path_set_pos(path,bx, by, path.ox + path.ex, path.oy + path.ey)
+    }
+
     bar_move(canvas, ebid) {
         let bar_data = canvas.editor_bars[ebid]
-        console
+        // console
         for (let i in bar_data.conns) {
             // console.log(path)
             let path_key = bar_data.conns[i]
             let p = canvas.paths[path_key]
             if (p.e_bar == ebid) {
-                p.change_end_pos(bar_data.pos_x, bar_data.pos_y)
+                this.path_change_end_pos(p,bar_data.pos_x, bar_data.pos_y)
             } else if (p.b_bar == ebid) {
-                p.change_begin_pos(bar_data.pos_x, bar_data.pos_y)
+                this.path_change_begin_pos(p,bar_data.pos_x, bar_data.pos_y)
             }
         }
     }
     end_connect(canvas, canvas_x, canvas_y, ebid) {
-        canvas.connecting_path.change_end_pos(canvas_x, canvas_y);
+        this.path_change_end_pos(canvas.connecting_path,
+            canvas_x, canvas_y,
+            )
+
         canvas.connecting_path.e_bar = ebid;
         let bbar = canvas.connecting_path.b_bar
         let key1 = bbar + ',' + ebid
@@ -186,7 +191,8 @@ class LineConnectHelper {
             bclient_x,
             bclient_y
         );
-        canvas.connecting_path.change_end_pos(
+        this.path_change_end_pos(
+            canvas.connecting_path,
             startp.x,
             startp.y,
         );
@@ -211,10 +217,12 @@ class LineConnectHelper {
         //     bclient_x,
         //     bclient_y
         // );
-        canvas.connecting_path = new NoteCanvasFunc.PathStruct().set_pos(
-            cx,
-            cy, cx, cy
-        );
+        canvas.connecting_path =
+            this.path_set_pos(new NoteCanvasFunc.PathStruct(),
+                cx, cy, cx, cy
+            )
+
+
         canvas.connecting_path.b_bar = ebid
         // canvas.paths.push(canvas.connecting_path);
     }
@@ -253,6 +261,10 @@ class Storage{
         console.log(this.canvas.editor_bars);
     }
     save_all(){
+        this.save_bar()
+        this.save_paths()
+    }
+    save_bar(){
         console.log("save_all")
         localStorage.editor_bars=
             JSON.stringify(this.canvas.editor_bars);
@@ -293,6 +305,11 @@ class DragBarHelper{
         );
     }
     start_drag(NoteCanvasFunc,canvas,event,eb){
+        let ebpos=canvas.editor_bar_manager.get_editor_bar_client_pos(eb.ebid);
+        // console.log(ebpos)
+        eb.drag_on_x=event.clientX-ebpos.x
+        eb.drag_on_y=event.clientY-ebpos.y
+
         this.update_cnt=0;
         canvas.mouse_recorder.call_before_move(
             event.clientX,

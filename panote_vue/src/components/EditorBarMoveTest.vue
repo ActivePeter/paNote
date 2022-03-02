@@ -115,8 +115,8 @@ export default {
     handle_mouse_down(event) {
 
       if (event.buttons == 1) {
-        this.drag_on_x = event.offsetX;
-        this.drag_on_y = event.offsetY;
+        // this.drag_on_x = event.offsetX;
+        // this.drag_on_y = event.offsetY;
         this.$emit("start_drag", event, this);
       }
     },
@@ -172,7 +172,10 @@ export default {
 .tool_line{
   width: 100%;
   height: 25px;
-
+  box-sizing: border-box;
+border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-bottom:1px solid #ccc ;
   background: rgb(235, 234, 234);
 }
 .tool_line_bar{

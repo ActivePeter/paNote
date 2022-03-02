@@ -23,6 +23,14 @@ class EditorBarManager{
             );
         }
     }
+    get_editor_bar_client_pos(ebid){
+        let op=this.canvas.get_content_origin_pos();
+        let eb_data=this.canvas.editor_bars[ebid];
+        return {
+            x:op.x+eb_data.pos_x*this.canvas.scale,
+            y:op.y+eb_data.pos_y*this.canvas.scale,
+        }
+    }
     get_editor_bar_data_by_ebid(ebid){
         return this.canvas.editor_bars[ebid]
     }
@@ -101,7 +109,7 @@ class EditorBarManager{
     }
     content_change(ebid,content){
         this.canvas.editor_bars[ebid].content=content;
-        this.canvas.storage.save_all();
+        this.canvas.storage.save_bar();
     }
     on_mouse_move(event,mouse_rec){
         if(this.corner_drag_helper&&event){
