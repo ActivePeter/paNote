@@ -174,6 +174,9 @@ class LineConnectHelper {
 
             canvas.editor_bars[bbar].conns.push(key1)
             canvas.editor_bars[ebid].conns.push(key1)
+
+            canvas.storage.save_all();
+            canvas.storage.save_paths();
         }
         canvas.connecting_path = null;
     }
@@ -236,12 +239,27 @@ class Storage{
                 this.canvas.editor_bars=[]
             }
         }
+        if(typeof localStorage.paths=='string'){
+            try {
+                let p = JSON.parse(localStorage.paths);
+                if(typeof p=='object'){
+                    this.canvas.paths=p;
+                }
+            }catch (e){
+                console.log(e)
+                // this.canvas.editor_bars=[]
+            }
+        }
         console.log(this.canvas.editor_bars);
     }
     save_all(){
         console.log("save_all")
         localStorage.editor_bars=
             JSON.stringify(this.canvas.editor_bars);
+    }
+    save_paths(){
+        localStorage.paths=
+            JSON.stringify(this.canvas.paths);
     }
     export(){
         var FileSaver = require('file-saver');
