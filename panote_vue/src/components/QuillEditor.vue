@@ -165,6 +165,9 @@ export default {
           state.quill.inputAble=v;
         }
       },
+      quill_format(op_type,op_arg){
+        state.quill.format(op_type, op_arg, Quill.sources.USER);
+      },
       do_operation(op_type,op_arg){
         switch (op_type){
           case 'indent':
@@ -177,6 +180,7 @@ export default {
 
           }
             break;
+
         }
       }
     }

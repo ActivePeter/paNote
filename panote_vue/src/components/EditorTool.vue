@@ -34,7 +34,7 @@ export default {
       tools: [
         {
           name: "head",
-          select: [0, 1, 2, 3, 4, 5]
+          select: [false, 1, 2, 3, 4, 5]
         },
         {
           name: "indent",

@@ -8,6 +8,8 @@
         <el-radio-button label="连线"></el-radio-button>
         <el-radio-button label="选择"></el-radio-button>
       </el-radio-group>
+      <div style="width: 10px"></div>
+      <el-button @click="export_f">export</el-button>
     </el-row>
   </div>
   <div class="note_canvas_border">
@@ -35,6 +37,9 @@ export default {
     add_editor_bar() {
       this.$refs.note_canvas_ref.add_editor_bar();
     },
+    export_f(){
+      this.$refs.note_canvas_ref.storage.export()
+    }
   },
   data() {
     return {

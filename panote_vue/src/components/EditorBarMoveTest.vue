@@ -3,23 +3,35 @@
     class="editor_bar"
     @mousedown="handle_mouse_down"
     @mouseup="handle_mouse_up"
+    @mouseover="handle_mouse_over"
+    @mouseleave="handle_mouse_leave"
     @click="handle_click"
     :style="{height: height+'px',width:width+'px'}"
     :id="'editor_'+ebid"
   >
-    <div class="editor_drag rb"
-         @mousedown="corner_drag_helper.handle_mouse_drag_down"
-    >
-    </div>
+
     <quill-editor
-      v-model:value="content"
+      :value="content"
       :options="editorOption"
       :disabled="ebid!=editing_ebid"
+      @update:value="content_change"
       ref="quill_editor_ref"
     />
-    <el-button class="edit_btn" type="primary" round @click="switch_mode"
-      >{{ ebid==editing_ebid ? "done" : "edit" }}
-    </el-button>
+    <div class="tool_line">
+      <div class="editor_drag rb tool_line_bar"
+           v-show="mouse_over"
+           @mousedown="corner_drag_helper.handle_mouse_drag_down"
+      >
+      </div>
+
+      <div
+          @click="switch_mode"
+          v-show="ebid==editing_ebid||mouse_over"
+          class="tool_line_bar">
+
+        {{ ebid==editing_ebid ? "done" : "edit" }}
+      </div>
+    </div>
   </div>
 </template>
 
@@ -58,7 +70,7 @@ export default {
       drag_on_y: 0,
 
       curTheme: "snow",
-      content: "<p></p>",
+      // content: "<p></p>",
       editorOption: {
         placeholder: "write sth",
         modules: {
@@ -66,10 +78,14 @@ export default {
         },
       },
       editing: false,
+      mouse_over:false,
     };
   },
   methods: {
-
+    content_change(content){
+      // this.content=content;
+      this.$emit("content_change",this.ebid,content)
+    },
     choose_tool(args){
       if(args[0]=='indent'){
         if(args[1]=='foward'){
@@ -77,6 +93,8 @@ export default {
         }else{
           this.$refs.quill_editor_ref.do_operation(args[0],-1);
         }
+      }else if(args[0]=='head'){
+        this.$refs.quill_editor_ref.quill_format("header",args[1]);
       }
     },
     switch_mode() {
@@ -106,6 +124,13 @@ export default {
       // console.log(this.ebid, event);
       this.$emit("drag_release", event, this);
     },
+
+    handle_mouse_over(){
+      this.mouse_over=true;
+    },
+    handle_mouse_leave(){
+      this.mouse_over=false;
+    }
   },
   props: {
     ebid: Number,
@@ -113,6 +138,7 @@ export default {
     toolbar_on:Boolean,
     width:Number,
     height:Number,
+    content:String,
   },
 };
 </script>
@@ -122,7 +148,7 @@ export default {
   background: rgb(235, 234, 234);
   /*width: 280px;*/
   /*height: 380px;*/
-  border: 1px solid #000;
+  /*border: 1px solid #000;*/
 }
 .editor {
   height: 100%;
@@ -133,29 +159,30 @@ export default {
   bottom: -40px;
 }
 .editor_drag{
-  position: absolute;
+  /*position: absolute;*/
   width: 16px;
   height: 16px;
-  background: #1d1e30;
-}
-.editor_drag.lt{
-  top: -8px;
-  left: -8px;
-  z-index: 100;
-}
-.editor_drag.rt{
-  top: -8px;
-  right: -8px;
-  z-index: 100;
-}
-.editor_drag.lb{
-  bottom: -8px;
-  left: -8px;
-  z-index: 100;
+
 }
 .editor_drag.rb{
-  bottom: -8px;
-  right: -8px;
+  bottom: -16px;
+  right: 0px;
   z-index: 100;
+}
+.tool_line{
+  width: 100%;
+  height: 25px;
+
+  background: rgb(235, 234, 234);
+}
+.tool_line_bar{
+  float: right;
+  height: 100%;
+  line-height: 25px;
+  padding-left: 5px;
+  padding-right:5px ;
+  margin-left: 5px;
+  background: #a6a6a6;
+  cursor:pointer
 }
 </style>

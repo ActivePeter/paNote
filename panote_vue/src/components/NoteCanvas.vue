@@ -7,7 +7,7 @@
         @choose_tool="choose_tool"
     />
     <div
-        class="range"
+        class="range noselect"
         ref="range_ref"
         @mousedown="handle_mouse_down_on_range"
         @mouseup="handle_mouse_up"
@@ -35,7 +35,6 @@
             transform: 'scale(' + scale + ')',
           }"
         >
-          content
           <svg
               v-for="(item, i) in paths"
               :key="i"
@@ -90,17 +89,22 @@
               bottom: -padding_add_down + 'px',
             }"
           ></div>
-          <EditorBar/>
+<!--          <EditorBar/>-->
           <EditorBarMove
               v-for="(item, i) in editor_bars"
               :key="i"
               :ebid="i"
               :editing_ebid="editing_editor_bar_id"
               :toolbar_on="editor_tool_helper.tool_bar_on"
+
               :width="item.width"
               :height="item.height"
-              class="editor_bar_move"
+              :content="item.content"
               :style="{ top: item.pos_y + 'px', left: item.pos_x + 'px' }"
+
+              class="editor_bar_move"
+
+              @content_change="editor_bar_content_change"
               @start_drag="editor_bar_start_drag"
               @drag_release="editor_bar_drag_release"
               @switch_mode="editor_bar_switch_mode"
@@ -118,7 +122,7 @@
 
 <script>
 import ElementResizeDetectorMaker from "element-resize-detector";
-import EditorBar from "./EditorBar.vue";
+// import EditorBar from "./EditorBar.vue";
 import EditorBarMove from "./EditorBarMoveTest.vue";
 import NoteCanvasFunc from "./NoteCanvasFunc.js";
 import EditorTool from "@/components/EditorTool";
@@ -128,7 +132,7 @@ import EditorBarFunc from "@/components/EditorBarFunc";
 export default {
   name: "NoteCanvas",
   components: {
-    EditorBar,
+    // EditorBar,
     EditorBarMove,
     EditorTool,
   },
@@ -138,15 +142,14 @@ export default {
     },
   },
   mounted() {
+    this.storage=new NoteCanvasFunc.Storage(this)
     this.editor_bar_manager=new EditorBarFunc.EditorBarManager(this)
     this.mouse_recorder = NoteCanvasFunc.new_mouse_recorder();
     this.chunk_helper = NoteCanvasFunc.new_chunk_helper();
     this.canvas_mouse_drag_helper = new NoteCanvasFunc.CanvasMouseDragHelper();
-    this.canvas_drawer = new NoteCanvasFunc.CanvasDrawer();
-    this.canvas_drawer.draw(this);
-    this.editor_bar_manager.add_editor_bar(
-        this.editor_bar_manager.new_editor_bar(0, 0)
-    );
+
+    this.chunk_helper.first_calc_chunks(this)
+    this.editor_bar_manager.add_if_no()
 
     // this.paths.push(new NoteCanvasFunc.PathStruct().set_pos(100, 0, 0, 100));
     // this.paths.push(new NoteCanvasFunc.PathStruct().set_pos(0, 0, 150, 100));
@@ -203,10 +206,9 @@ export default {
 
       chunk_helper: null,
       non_empty_chunks: {
-        "0,0": 1,
+        "0,0": 0,
       },
       canvas_mouse_drag_helper: null,
-      canvas_drawer: null,
       paths: {},
       connecting_path: null,
 
@@ -214,7 +216,12 @@ export default {
       editing_editor_bar_id: -1,
       editor_bar_manager: null,
 
-      editor_tool_helper: new EditorToolFunc.EditorToolHelper
+      editor_tool_helper: new EditorToolFunc.EditorToolHelper,
+
+      storage:null,
+      drag_bar_helper:new NoteCanvasFunc.DragBarHelper,
+
+      line_connect_helper:new NoteCanvasFunc.LineConnectHelper,
     };
   },
   methods: {
@@ -234,50 +241,10 @@ export default {
       }
     },
     add_editor_bar() {
-      console.log("add_editor_bar");
-      let range_rec = this.$refs.range_ref.getBoundingClientRect();
-
-      //区域中心 client坐标
-      let mid_y = (range_rec.top + range_rec.bottom) / 2;
-      let mid_x = (range_rec.left + range_rec.right) / 2;
-
-      let origin_pos = this.get_content_origin_pos();
-      let px = mid_x - origin_pos.x;
-      let py = mid_y - origin_pos.y;
-      let new_bar =
-          this.editor_bar_manager.new_editor_bar(
-              px / this.scale,
-              py / this.scale)
-      this.editor_bars.push(new_bar);
-
-      let ck = this.chunk_helper.calc_chunk_pos(new_bar.pos_x, new_bar.pos_y);
-      this.chunk_helper.add_new_2chunks(this.non_empty_chunks, ck);
-      this.change_padding(
-          this.chunk_helper.chunk_min_y * -400,
-          this.chunk_helper.chunk_max_y * 400,
-          this.chunk_helper.chunk_max_x * 300,
-          this.chunk_helper.chunk_min_x * -300
-      );
+      this.editor_bar_manager.add_editor_bar_in_center(this);
     },
     update_moving_obj_pos() {
-      let bar_data = this.editor_bars[this.moving_obj.ebid];
-      let origin_pos = this.get_content_origin_pos();
-      //   var bar_pos = this.get_moving_obj_pos();
-      let dx =
-          this.mouse_recorder.mouse_cur_x -
-          origin_pos.x -
-          this.moving_obj.drag_on_x * this.scale;
-      let dy =
-          this.mouse_recorder.mouse_cur_y -
-          origin_pos.y -
-          this.moving_obj.drag_on_y * this.scale;
-      //   console.log("canvas dx dy", dx, dy, bar_pos);
-      this.editor_bar_set_new_pos(
-          this.moving_obj.ebid,
-          bar_data,
-          dx / this.scale,
-          dy / this.scale
-      );
+      this.drag_bar_helper.update_moving_obj_pos(this);
     },
     handle_scroll_bar(event) {
       if (
@@ -285,41 +252,7 @@ export default {
           //   && this.record_content_rect != null
       ) {
         console.log(event);
-        // let rct = this.get_content_origin_pos(); //this.$refs.content_ref.getBoundingClientRect();
-        // let dy = rct.y - this.record_content_rect.y;
-        // let dx = rct.x - this.record_content_rect.x;
-        // if (dx != 0 || dy != 0) {
-        //   //画布产生偏移，
-        //   let bar_data = this.editor_bars[this.moving_obj.ebid];
         this.update_moving_obj_pos();
-        //   this.editor_bar_set_new_pos(
-        //     bar_data,
-        //     bar_data.pos_x - dx / this.scale,
-        //     bar_data.pos_y - dy / this.scale
-        //   );
-        // }
-        // let bar_data = this.editor_bars[this.moving_obj.ebid];
-        // let rct = this.$refs.content_padding_ref.getBoundingClientRect();
-        // let mov_rct = this.moving_obj.getBoundingClientRect();
-        // console.log(
-        //   "mouse moving obj",
-        //   this.mouse_recorder,
-        //   rct,
-        //   mov_rct,
-        //   bar_data,
-        //   this.moving_obj.drag_on_x,
-        //   this.moving_obj.drag_on_y
-        // );
-        // let bar_data = this.editor_bars[this.moving_obj.ebid];
-        // this.editor_bar_set_new_pos(
-        //   bar_data,
-        //   bar_data.pos_x + event.deltaX / this.scale,
-        //   bar_data.pos_y + event.deltaY / this.scale
-        // );
-        // this.record_content_rect = this.$refs.content_ref
-      }
-      {
-        // this.record_content_rect = this.get_content_origin_pos();
       }
     },
     handle_range_scroll(event) {
@@ -404,7 +337,8 @@ export default {
     },
     handle_mouse_up(event) {
       //   this.dragging = false;
-      this.moving_obj = null;
+
+      this.drag_bar_helper.end_drag(this);
       this.canvas_mouse_drag_helper.end_drag_canvas(event);
       if (this.connecting_path) {
         this.connecting_path = null;
@@ -477,23 +411,6 @@ export default {
 
       return pos;
     },
-    // get_moving_obj_pos() {
-    //   if (this.moving_obj == null) {
-    //     return null;
-    //   } else {
-    //     let p = this.get_content_origin_pos();
-    //     let bar_data = this.editor_bars[this.moving_obj.ebid];
-    //     //   console.log("canvas dx dy", dx, dy);
-    //     //   this.editor_bar_set_new_pos(
-    //     //     bar_data,
-    //     //     bar_data.pos_x - dx / this.scale,
-    //     //     bar_data.pos_y - dy / this.scale
-    //     //   );
-    //     p.x += bar_data.pos_x;
-    //     p.y += bar_data.pos_y;
-    //     return p;
-    //   }
-    // },
     editor_bar_corner_drag_start(a){
       this.editor_bar_manager.corner_drag_start(a)
     },
@@ -512,58 +429,21 @@ export default {
       }
     },
     editor_bar_set_new_pos(ebid, eb, x, y) {
-      let old_ck = this.chunk_helper.calc_chunk_pos(eb.pos_x, eb.pos_y);
-      eb.pos_x = x;
-      eb.pos_y = y;
-      NoteCanvasFunc.line_connect_helper.bar_move(this, ebid);
-      let ck = this.chunk_helper.calc_chunk_pos(x, y);
-      if (old_ck != ck) {
-        console.log("ck", ck);
-
-        this.chunk_helper.move_chunk(this.non_empty_chunks, old_ck, ck);
-        console.log(this.non_empty_chunks);
-        this.change_padding(
-            this.chunk_helper.chunk_min_y * -400,
-            this.chunk_helper.chunk_max_y * 400,
-            this.chunk_helper.chunk_max_x * 300,
-            this.chunk_helper.chunk_min_x * -300
-        );
-        console.log(
-            this.padding_add_up,
-            this.padding_add_down,
-            this.padding_add_left,
-            this.padding_add_right
-        );
-      }
-
+      this.editor_bar_manager.set_new_pos(ebid,eb,x,y);
       //   let ebw = 100;
       //   let ebh = 100;
       //超出原有范围需要重新设置背景面板的size
     },
+    editor_bar_content_change(ebid,content){
+      this.editor_bar_manager.content_change(ebid,content);
+    },
     editor_bar_start_drag(event, eb) {
       //   console.log(eb);
       //   let cp = this.get_canvas_client_pos();
+      this.drag_bar_helper.start_drag(NoteCanvasFunc,this,
+        event,eb
+      )
 
-      this.mouse_recorder.call_before_move(
-          event.clientX,
-          event.clientY
-          //   event.screenX, event.screenY
-      );
-      event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
-      if (this.cursor_mode == "拖拽") {
-        if(this.editor_bar_manager.corner_drag_helper==null){
-          this.moving_obj = eb;
-        }
-      } else if (this.cursor_mode == "连线") {
-        let bar_data = this.editor_bars[eb.ebid];
-        NoteCanvasFunc.line_connect_helper.begin_connect_from_canvaspos(
-            NoteCanvasFunc,
-            this,
-            bar_data.pos_x,
-            bar_data.pos_y,
-            eb.ebid
-        );
-      }
       //   this.record_content_rect = this.$refs.content_ref.getBoundingClientRect();
     },
   },
@@ -584,7 +464,7 @@ export default {
 }
 
 .content {
-  background-color: rgb(255, 200, 200);
+  /*background-color: rgb(255, 200, 200);*/
   height: 400px;
   width: 300px;
   transform-origin: 0 0 0;
@@ -613,5 +493,23 @@ export default {
   position: absolute;
   top: 0;
   left: 0;
+}
+
+.noselect {
+
+  -webkit-touch-callout: none; /* iOS Safari */
+
+  -webkit-user-select: none; /* Chrome/Safari/Opera */
+
+  -khtml-user-select: none; /* Konqueror */
+
+  -moz-user-select: none; /* Firefox */
+
+  -ms-user-select: none; /* Internet Explorer/Edge */
+
+  user-select: none; /* Non-prefixed version, currently
+
+not supported by any browser */
+
 }
 </style>
