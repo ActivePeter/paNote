@@ -1,13 +1,15 @@
-
+import RightMenuFunc from "@/components/RightMenuFunc";
 class CornerDragHelper{
     editor_bar=null
     constructor(editor_bar) {
         this.editor_bar=editor_bar;
     }
 
-    handle_mouse_drag_down(){
-        // console.log("handle_mouse_drag_down",tag)
-        this.editor_bar.$emit("corner_drag_start", this);
+    handle_mouse_drag_down(event){
+        if(event.buttons===1){
+            // console.log("handle_mouse_drag_down",tag)
+            this.editor_bar.$emit("corner_drag_start", this);
+        }
     }
 }
 class EditorBarManager{
@@ -15,6 +17,13 @@ class EditorBarManager{
     corner_drag_helper=null
     constructor(canvas) {
         this.canvas=canvas;
+    }
+    delete_one(editor_bar){
+        this.canvas.line_connect_helper.remove_bar_paths(
+            this.canvas,editor_bar.ebid
+        )
+        delete this.canvas.editor_bars[editor_bar.ebid]
+     // console.log("delete one",editor_bar)
     }
     add_if_no(){
         if(this.canvas.editor_bars.length===0){
@@ -45,7 +54,10 @@ class EditorBarManager{
         }
     }
     add_editor_bar(bar){
-        this.canvas.editor_bars.push(bar);
+        this.canvas.editor_bars[
+            this.canvas.next_editor_bar_id
+            ]=(bar);
+        this.canvas.next_editor_bar_id++;
         let canvas=this.canvas
         let ck = canvas.chunk_helper.calc_chunk_pos(bar.pos_x, bar.pos_y);
         canvas.chunk_helper.add_new_2chunks(canvas.non_empty_chunks, ck);
@@ -55,6 +67,7 @@ class EditorBarManager{
             canvas.chunk_helper.chunk_max_x * 300,
             canvas.chunk_helper.chunk_min_x * -300
         );
+        this.canvas.storage.save_bar();
     }
     add_editor_bar_in_center(canvas){
         console.log("add_editor_bar");
@@ -124,6 +137,17 @@ class EditorBarManager{
         this.corner_drag_helper=null
     }
 }
+class EditorBarRightMenuHelper {
+    // eslint-disable-next-line no-unused-vars
+    get_right_menu_content(editor_bar){
+        let content=new RightMenuFunc.RightMenuContent()
+        content.add_one_selection("删除",()=>{
+            console.log("删除 callback")
+            editor_bar.emit_delete()
+        })
+        return content;
+    }
+}
 export default {
     editor_bar_switch_mode(canvas,eb){
         console.log(eb.ebid,canvas.editing_editor_bar_id)
@@ -136,5 +160,6 @@ export default {
         }
     },
     CornerDragHelper,
-    EditorBarManager
+    EditorBarManager,
+    EditorBarRightMenuHelper
 }

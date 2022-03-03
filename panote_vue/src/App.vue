@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <el-row class="tool_line">
       <el-button @click="add_editor_bar">add note bar</el-button>
@@ -12,13 +13,17 @@
       <el-button @click="export_f">export</el-button>
     </el-row>
   </div>
-  <div class="note_canvas_border">
+  <div class="note_canvas_border"
+
+  >
     <NoteCanvas
       class="note_canvas"
       ref="note_canvas_ref"
       :cursor_mode="cursor_mode_select"
+      @right_menu="right_menu"
     />
   </div>
+  <RightMenu ref="right_menu_ref"/>
   <!-- <img alt="Vue logo" src="./assets/logo.png" />
   <HelloWorld msg="Welcome to Your Vue.js App" /> -->
 </template>
@@ -26,10 +31,11 @@
 <script>
 // import HelloWorld from "./components/HelloWorld.vue";
 import NoteCanvas from "./components/NoteCanvas.vue";
-
+import RightMenu from "@/components/RightMenu";
 export default {
   name: "App",
   components: {
+    RightMenu,
     // HelloWorld,
     NoteCanvas,
   },
@@ -39,6 +45,9 @@ export default {
     },
     export_f(){
       this.$refs.note_canvas_ref.storage.export()
+    },
+    right_menu(event,tag,obj){
+      this.$refs.right_menu_ref.right_menu(event,tag,obj);
     }
   },
   data() {

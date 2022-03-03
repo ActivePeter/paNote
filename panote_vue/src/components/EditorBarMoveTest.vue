@@ -5,7 +5,6 @@
     @mouseup="handle_mouse_up"
     @mouseover="handle_mouse_over"
     @mouseleave="handle_mouse_leave"
-    @click="handle_click"
     :style="{height: height+'px',width:width+'px'}"
     :id="'editor_'+ebid"
   >
@@ -38,6 +37,8 @@
 <script>
 import QuillEditor from "@/components/QuillEditor";
 import EditorBarFunc from "@/components/EditorBarFunc";
+import RightMenuFunc from "@/components/RightMenuFunc";
+
 // import $ from "jquery"
 // import EditorJS from "@editorjs/editorjs";
 // import { quillEditor } from "vue-quill-editor";
@@ -79,9 +80,14 @@ export default {
       },
       editing: false,
       mouse_over:false,
+
+      right_menu_helper:new EditorBarFunc.EditorBarRightMenuHelper()
     };
   },
   methods: {
+    emit_delete(){
+      this.$emit("delete",this)
+    },
     content_change(content){
       // this.content=content;
       this.$emit("content_change",this.ebid,content)
@@ -119,6 +125,8 @@ export default {
         // this.drag_on_y = event.offsetY;
         this.$emit("start_drag", event, this);
       }
+      RightMenuFunc.if_right_click_then_emit(event,"editor_bar",this);
+      event.preventDefault();
     },
     handle_mouse_up(event) {
       // console.log(this.ebid, event);
@@ -133,7 +141,7 @@ export default {
     }
   },
   props: {
-    ebid: Number,
+    ebid: String,
     editing_ebid:Number,
     toolbar_on:Boolean,
     width:Number,

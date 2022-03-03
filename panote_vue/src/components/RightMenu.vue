@@ -1,0 +1,81 @@
+<template>
+  <div ref="anchor">
+    <div
+        @contextmenu.prevent
+        class="right_menu"
+         ref="right_menu_ref"
+         v-show="show"
+         :style="{
+           top:pos_y+'px',
+           left:pos_x+'px',
+         }"
+    >
+      <div v-for="(item, i) in content"
+           :key="i"
+        @click="click_selection(item)"
+      >
+        {{item.text}}
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "RightMenu",
+  mounted() {
+    window.addEventListener("mousedown", this.handle_mouse_down);
+  },
+  data() {
+    return {
+      show:false,
+      pos_x:0,
+      pos_y:0,
+      content:[]
+    };
+  },
+  methods: {
+    click_selection(item){
+      item.callback()
+      this.show=false
+    },
+    // eslint-disable-next-line no-unused-vars
+    right_menu(event,tag,obj){
+      // let rect=this.$refs.anchor.getBoundingClientRect()
+      this.show=true;
+      this.pos_x=event.clientX;//-rect.left;
+      this.pos_y=event.clientY;//-rect.top;
+      if(tag==="editor_bar"){
+        let content=obj.right_menu_helper.get_right_menu_content(obj);
+        this.content=content.arr;
+      }
+      // this.$forceUpdate();
+      // console.log(this.pos_x,this.pos_y)
+      event.stopPropagation();
+    },
+    handle_mouse_down(event){
+      console.log("right menu mouse down")
+      if(this.$refs.right_menu_ref){
+        let rect=this.$refs.right_menu_ref.getBoundingClientRect();
+        // console.log(event.clientX,event.clientY,rect)
+        if(!(event.clientX>=rect.left&&event.clientX<=rect.right
+            &&event.clientY<=rect.bottom&&event.clientY>=rect.top)
+        ){
+          this.show=false;
+        }
+      }
+    }
+  },
+  props: {},
+};
+</script>
+
+<style scoped>
+.right_menu {
+  position: absolute;
+  background: gray;
+  width: 100px;
+  height: 100px;
+  z-index: 302;
+}
+</style>

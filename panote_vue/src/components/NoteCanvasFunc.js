@@ -1,4 +1,6 @@
 //移动组件时用于重新计算区块范围
+import Util from "@/components/Util";
+
 class ChunkHelper {
     chunk_max_x = 0;
     chunk_max_y = 0;
@@ -146,7 +148,25 @@ class LineConnectHelper {
     path_change_begin_pos(path,bx, by) {
         this.path_set_pos(path,bx, by, path.ox + path.ex, path.oy + path.ey)
     }
+    remove_bar_paths(canvas,ebid){
+        let bar_data = canvas.editor_bars[ebid]
 
+        // 遍历所有连线
+        for (let i in bar_data.conns) {
+            let path_key = bar_data.conns[i]
+            let p = canvas.paths[path_key]
+            let other_bar_id=p.b_bar;
+            if(p.b_bar===ebid){
+                other_bar_id=p.e_bar;
+            }
+            //移除对方方块对连线的存储
+            Util.remove_one_in_arr(
+                canvas.editor_bars[other_bar_id].conns,path_key);
+            //移除连线
+            delete canvas.paths[path_key];
+        }
+        bar_data.conns=[]
+    }
     bar_move(canvas, ebid) {
         let bar_data = canvas.editor_bars[ebid]
         // console
@@ -234,14 +254,17 @@ class Storage{
         this.load_all();
     }
     load_all(){
-        console.log("load_all")
+        this.canvas.next_editor_bar_id
+        =localStorage.next_editor_bar_id;
+
+        console.log("load_all",this.canvas.next_editor_bar_id)
         if(typeof localStorage.editor_bars=='string'){
             console.log(localStorage.editor_bars)
             try {
                 this.canvas.editor_bars = JSON.parse(localStorage.editor_bars);
-                if(!Array.isArray(this.canvas.editor_bars)){
-                    this.canvas.editor_bars=[]
-                }
+                // if(!Array.isArray(this.canvas.editor_bars)){
+                //     this.canvas.editor_bars=[]
+                // }
             }catch (e){
                 console.log(e)
                 this.canvas.editor_bars=[]
@@ -268,6 +291,7 @@ class Storage{
         console.log("save_all")
         localStorage.editor_bars=
             JSON.stringify(this.canvas.editor_bars);
+        localStorage.next_editor_bar_id=this.canvas.next_editor_bar_id;
     }
     save_paths(){
         localStorage.paths=
@@ -316,7 +340,7 @@ class DragBarHelper{
             event.clientY
             //   event.screenX, event.screenY
         );
-        event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
+        // event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
         if (canvas.cursor_mode == "拖拽") {
             console.log("开始拖拽")
             if(canvas.editor_bar_manager.corner_drag_helper==null){

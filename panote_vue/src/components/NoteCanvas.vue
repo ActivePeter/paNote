@@ -109,6 +109,8 @@
               @drag_release="editor_bar_drag_release"
               @switch_mode="editor_bar_switch_mode"
               @corner_drag_start="editor_bar_corner_drag_start"
+              @right_menu="right_menu"
+              @delete="editor_bar_delete"
           />
         </div>
       </div>
@@ -128,7 +130,7 @@ import NoteCanvasFunc from "./NoteCanvasFunc.js";
 import EditorTool from "@/components/EditorTool";
 import EditorToolFunc from "@/components/EditorToolFunc";
 import EditorBarFunc from "@/components/EditorBarFunc";
-
+import RightMenuFunc from "@/components/RightMenuFunc";
 export default {
   name: "NoteCanvas",
   components: {
@@ -201,7 +203,8 @@ export default {
 
       moving_obj: null,
       //   record_content_rect: null, //for moving
-      editor_bars: [],
+      editor_bars: {},
+      next_editor_bar_id:1000,
       mouse_recorder: null,
 
       chunk_helper: null,
@@ -225,6 +228,9 @@ export default {
     };
   },
   methods: {
+    right_menu(event,tag,obj){
+      RightMenuFunc.continue_emit(event,tag,obj,this);
+    },
     editor_tool_change_is_show(is_show) {
       this.editor_tool_helper.switch_tool_bar(this, is_show)
     },
@@ -410,6 +416,9 @@ export default {
       };
 
       return pos;
+    },
+    editor_bar_delete(editor_bar){
+      this.editor_bar_manager.delete_one(editor_bar)
     },
     editor_bar_corner_drag_start(a){
       this.editor_bar_manager.corner_drag_start(a)
