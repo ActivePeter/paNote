@@ -135,6 +135,7 @@ export default {
   name: "NoteCanvas",
   components: {
     // EditorBar,
+    // eslint-disable-next-line vue/no-unused-components
     EditorBarMove,
     EditorTool,
   },
@@ -144,13 +145,14 @@ export default {
     },
   },
   mounted() {
+
+    this.chunk_helper = NoteCanvasFunc.new_chunk_helper();
     this.storage=new NoteCanvasFunc.Storage(this)
     this.editor_bar_manager=new EditorBarFunc.EditorBarManager(this)
     this.mouse_recorder = NoteCanvasFunc.new_mouse_recorder();
-    this.chunk_helper = NoteCanvasFunc.new_chunk_helper();
     this.canvas_mouse_drag_helper = new NoteCanvasFunc.CanvasMouseDragHelper();
 
-    this.chunk_helper.first_calc_chunks(this)
+    this.storage.load_all();
     this.editor_bar_manager.add_if_no()
 
     // this.paths.push(new NoteCanvasFunc.PathStruct().set_pos(100, 0, 0, 100));
@@ -176,6 +178,7 @@ export default {
       var height = element.offsetHeight;
       console.log("Size: " + width + "x" + height);
       //根据画布区域大小计算白边尺寸
+
       if (width > 100) {
         _this.edge_size_w = width - 80;
       } else {
@@ -274,7 +277,7 @@ export default {
       }
     },
     handle_key_down(val) {
-      if (val.key == "b") {
+      if (val.key == "b"&&val.ctrlKey) {
         console.log("handle_key_down", val);
         this.scroll_enabled = true;
       }

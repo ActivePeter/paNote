@@ -61,10 +61,13 @@ class ChunkHelper {
         }
     }
     first_calc_chunks(canvas){
-        for(let i=0;i<canvas.editor_bars.length;i++){
-            let bar=canvas.editor_bars[i]
+        console.log("first_calc_chunks")
+        // eslint-disable-next-line no-unused-vars
+        for(var value of Object.values(canvas.editor_bars)){
+            let bar=value;
             let ck = canvas.chunk_helper.calc_chunk_pos(bar.pos_x, bar.pos_y);
             canvas.chunk_helper.add_new_2chunks(canvas.non_empty_chunks, ck);
+
             canvas.change_padding(
                 canvas.chunk_helper.chunk_min_y * -400,
                 canvas.chunk_helper.chunk_max_y * 400,
@@ -72,7 +75,6 @@ class ChunkHelper {
                 canvas.chunk_helper.chunk_min_x * -300
             );
         }
-
     }
 }
 
@@ -251,23 +253,44 @@ class Storage{
     canvas
     constructor(canvas) {
         this.canvas=canvas;
-        this.load_all();
     }
     load_all(){
-        this.canvas.next_editor_bar_id
-        =localStorage.next_editor_bar_id;
+
+        if(localStorage.next_editor_bar_id){
+            if(typeof localStorage.next_editor_bar_id==="string"){
+
+                this.canvas.next_editor_bar_id
+                    =    parseInt(localStorage.next_editor_bar_id)
+            }else{
+
+                this.canvas.next_editor_bar_id
+                    =    localStorage.next_editor_bar_id
+            }
+        }
+
 
         console.log("load_all",this.canvas.next_editor_bar_id)
         if(typeof localStorage.editor_bars=='string'){
             console.log(localStorage.editor_bars)
             try {
-                this.canvas.editor_bars = JSON.parse(localStorage.editor_bars);
+                let ebs = JSON.parse(localStorage.editor_bars);
+                if(Array.isArray(ebs)){
+                    for(let i in ebs){
+                        if(ebs[i]){
+                            this.canvas.editor_bar_manager.add_editor_bar(ebs[i]);
+                        }
+                    }
+                    this.canvas.chunk_helper.first_calc_chunks(this.canvas)
+                }
+                else if(typeof ebs=='object'){
+                    this.canvas.editor_bars= ebs;
+                    this.canvas.chunk_helper.first_calc_chunks(this.canvas)
+                }
                 // if(!Array.isArray(this.canvas.editor_bars)){
                 //     this.canvas.editor_bars=[]
                 // }
             }catch (e){
                 console.log(e)
-                this.canvas.editor_bars=[]
             }
         }
         if(typeof localStorage.paths=='string'){
@@ -300,9 +323,26 @@ class Storage{
     export(){
         var FileSaver = require('file-saver');
         var blob = new Blob(
-            [JSON.stringify(this.canvas.editor_bars)],
+            [JSON.stringify({
+                editor_bars:this.canvas.editor_bars,
+                next_editor_bar_id:this.canvas.next_editor_bar_id,
+                paths:this.canvas.paths
+            })],
             {type: "text/plain;charset=utf-8"});
         FileSaver.saveAs(blob, "hello world.txt");
+    }
+    import_f(obj){
+        if('paths' in obj && 'editor_bars' in obj && 'next_editor_bar_id' in obj){
+            localStorage.editor_bars=JSON.stringify(obj.editor_bars);
+            localStorage.paths=JSON.stringify(obj.paths);
+            localStorage.next_editor_bar_id=obj.next_editor_bar_id;
+            this.load_all();
+        }
+        // const reader = new FileReader();
+
+        // reader.onload = e => console.log(e.target.result);
+
+        // reader.readAsText(file);
     }
 }
 class DragBarHelper{

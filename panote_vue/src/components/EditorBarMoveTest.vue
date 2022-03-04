@@ -126,7 +126,7 @@ export default {
         this.$emit("start_drag", event, this);
       }
       RightMenuFunc.if_right_click_then_emit(event,"editor_bar",this);
-      event.preventDefault();
+      // event.preventDefault();
     },
     handle_mouse_up(event) {
       // console.log(this.ebid, event);
