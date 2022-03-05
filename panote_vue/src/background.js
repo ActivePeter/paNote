@@ -3,6 +3,7 @@
 import { app, protocol, BrowserWindow } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
+import electron_net from "@/electron_net";
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -32,7 +33,10 @@ async function createWindow() {
     createProtocol('app')
     // Load the index.html when not in development
     win.loadURL('app://./index.html')
+
   }
+
+  electron_net.load_net_manager();
 }
 
 // Quit when all windows are closed.

@@ -35,6 +35,7 @@
 // import HelloWorld from "./components/HelloWorld.vue";
 import NoteCanvas from "./components/NoteCanvas.vue";
 import RightMenu from "@/components/RightMenu";
+// import electron_net from "@/electron_net";
 export default {
   name: "App",
   components: {
@@ -42,8 +43,12 @@ export default {
     // HelloWorld,
     NoteCanvas,
   },
+  mounted() {
+    // this.net_manager=electron_net.load_net_manager();
+  },
   methods: {
     add_editor_bar() {
+
       this.$refs.note_canvas_ref.add_editor_bar();
     },
     export_f(){
@@ -86,6 +91,7 @@ export default {
     return {
       cursor_mode_select: "",
       file:true,
+      // net_manager:null
     };
   },
 };
