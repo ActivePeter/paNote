@@ -11,6 +11,9 @@
       </el-option>
 
     </el-select>
+<!--    <div>-->
+<!--      {{review_part_man.card_set_man.cardsets}}-->
+<!--    </div>-->
     <div style="height: 10px"></div>
     <div v-if="mode==='review_cards'">
       <el-button class="add_btn" @click="switch2add_card">添加卡片组</el-button>
@@ -36,7 +39,7 @@
 </template>
 
 <script>
-import ReviewPartFunc from "@/components/ReviewPartFunc.js";
+import ReviewPartFunc from "@/components/ReviewPartFunc.ts";
 export default {
   name: "ReviewPart",
   mounted() {

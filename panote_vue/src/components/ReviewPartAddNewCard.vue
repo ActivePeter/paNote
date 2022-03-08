@@ -1,12 +1,12 @@
 <template>
-  <div class="SelectDialogue">
+  <div class="ReviewPartAddNewCard">
 
   </div>
 </template>
 
 <script>
 export default {
-  name: "SelectDialogue",
+  name: "ReviewPartAddNewCard",
   mounted() {},
   data() {
     return {};

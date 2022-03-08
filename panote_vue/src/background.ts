@@ -3,7 +3,8 @@
 import { app, protocol, BrowserWindow } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
-import electron_net from "@/electron_net";
+// @ts-ignore
+import electron_net from "@/electron_net"
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -13,6 +14,7 @@ protocol.registerSchemesAsPrivileged([
 
 async function createWindow() {
   // Create the browser window.
+  // @ts-ignore
   const win = new BrowserWindow({
     width: 800,
     height: 600,
