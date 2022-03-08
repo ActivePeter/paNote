@@ -60,15 +60,15 @@ In the process of  preparing for the Postgraduate entrance examination, the note
 - ~~6.连线（先直线）~~
 - 7右键菜单
   - ~~删除~~
-
 - 3.anki插件（pa）
+  - 卡片组
+
+- 多个笔记
 - 4.内部元素的具体内容：~~editor.js（ad）~~
   - ~~quill~~
   - ~~类似命令行的舒服的格式化方式~~
-
 - 5.存储（先本地（electron））
   - ~~暂用localstorage（假装存储）~~
-
 - 7.每天编辑历史
 - 8.前后端（云端存储）
 

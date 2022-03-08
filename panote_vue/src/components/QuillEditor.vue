@@ -4,8 +4,9 @@
 
 <script>
 import 'quill/dist/quill.core.css'
-import 'quill/dist/quill.snow.css'
-import 'quill/dist/quill.bubble.css'
+import '../assets/quill.snow.css'
+// import 'quill/dist/quill.snow.css'
+// import 'quill/dist/quill.bubble.css'
 import Quill from '../3rd/quill-1.3.7/quill.js'
 import { onMounted, ref, watch, onUnmounted, onBeforeUnmount } from 'vue'
 const defaultOptions = {

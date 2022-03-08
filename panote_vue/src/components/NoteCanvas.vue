@@ -131,6 +131,9 @@ import EditorTool from "@/components/EditorTool";
 import EditorToolFunc from "@/components/EditorToolFunc";
 import EditorBarFunc from "@/components/EditorBarFunc";
 import RightMenuFunc from "@/components/RightMenuFunc";
+
+
+
 export default {
   name: "NoteCanvas",
   components: {
@@ -145,6 +148,7 @@ export default {
     },
   },
   mounted() {
+    this.$emit("get_context",this);
 
     this.chunk_helper = NoteCanvasFunc.new_chunk_helper();
     this.storage=new NoteCanvasFunc.Storage(this)
@@ -152,8 +156,8 @@ export default {
     this.mouse_recorder = NoteCanvasFunc.new_mouse_recorder();
     this.canvas_mouse_drag_helper = new NoteCanvasFunc.CanvasMouseDragHelper();
 
-    this.storage.load_all();
-    this.editor_bar_manager.add_if_no()
+    // this.storage.load_all();
+    // this.editor_bar_manager.add_if_no()
 
     // this.paths.push(new NoteCanvasFunc.PathStruct().set_pos(100, 0, 0, 100));
     // this.paths.push(new NoteCanvasFunc.PathStruct().set_pos(0, 0, 150, 100));
@@ -193,6 +197,8 @@ export default {
   },
   data() {
     return {
+      context:null,
+
       scroll_enabled: false,
       scale: 1,
       scale_step: 0.1,
@@ -228,9 +234,16 @@ export default {
       drag_bar_helper:new NoteCanvasFunc.DragBarHelper,
 
       line_connect_helper:new NoteCanvasFunc.LineConnectHelper,
+      content_manager:new NoteCanvasFunc.ContentManager,
     };
   },
   methods: {
+    set_context(ctx){
+      // console.log(this,this.note)
+      this.context=ctx;
+      // this..pub_note_list_mounted(ctx,this);
+    },
+
     right_menu(event,tag,obj){
       RightMenuFunc.continue_emit(event,tag,obj,this);
     },
@@ -257,10 +270,10 @@ export default {
     },
     handle_scroll_bar(event) {
       if (
-          this.moving_obj != null
+          this.moving_obj
           //   && this.record_content_rect != null
       ) {
-        console.log(event);
+        console.log("handle_scroll_bar",this.moving_obj,event);
         this.update_moving_obj_pos();
       }
     },
@@ -346,8 +359,9 @@ export default {
     },
     handle_mouse_up(event) {
       //   this.dragging = false;
+      console.log("handle_mouse_up")
 
-      this.drag_bar_helper.end_drag(this);
+      this.drag_bar_helper.end_drag(this.context,this);
       this.canvas_mouse_drag_helper.end_drag_canvas(event);
       if (this.connecting_path) {
         this.connecting_path = null;
@@ -404,6 +418,7 @@ export default {
 
     //区域原点的client坐标
     get_content_origin_pos() {
+      console.log("get_content_origin_pos",this,this.$refs.range_ref)
       let range_rec = this.$refs.range_ref.getBoundingClientRect();
       let pos = {
         x:

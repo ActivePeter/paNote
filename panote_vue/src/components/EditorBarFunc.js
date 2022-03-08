@@ -12,6 +12,37 @@ class CornerDragHelper{
         }
     }
 }
+class EditorBar{
+    pos_x= 0
+    pos_y= 0
+    width=150
+    height=150
+    content=""
+    conns= []
+    constructor(x,y) {
+        this.pos_x=x;
+        this.pos_y=y;
+    }
+}
+const EditorBarChangeType={
+    Move:0,
+    Resize:1,
+    ContentChange:2,
+    Delete:3,
+    LineConnect:4,
+}
+class EditorBarChange{
+    /**
+     *@param type {Number}
+     *@param before_change {EditorBar}
+     */
+    type=-1
+    before_change=null
+    constructor(type,before_change) {
+        this.type=type
+        this.before_change=before_change
+    }
+}
 class EditorBarManager{
     canvas=null
     corner_drag_helper=null
@@ -23,6 +54,8 @@ class EditorBarManager{
             this.canvas,editor_bar.ebid
         )
         delete this.canvas.editor_bars[editor_bar.ebid]
+        this.canvas.context.storage_manager
+            .save_note_editor_bars(this.canvas.content_manager.cur_note_id,this.canvas.editor_bars)
      // console.log("delete one",editor_bar)
     }
     add_if_no(){
@@ -44,21 +77,24 @@ class EditorBarManager{
         return this.canvas.editor_bars[ebid]
     }
     new_editor_bar(px,py){
-        return {
-            pos_x: px,
-            pos_y: py,
-            width:150,
-            height:150,
-            content:"",
-            conns: [],
-        }
+        return new EditorBar(px,py)
+        // {
+        //     pos_x: px,
+        //     pos_y: py,
+        //     width:150,
+        //     height:150,
+        //     content:"",
+        //     conns: [],
+        // }
     }
+    /**@param bar {EditorBar}
+     **/
     add_editor_bar(bar){
-        this.canvas.editor_bars[
-            this.canvas.next_editor_bar_id
-            ]=(bar);
-        this.canvas.next_editor_bar_id++;
         let canvas=this.canvas
+        canvas.content_manager.backend_add_editor_bar_and_save(canvas.context,
+            canvas,bar);
+
+
         let ck = canvas.chunk_helper.calc_chunk_pos(bar.pos_x, bar.pos_y);
         canvas.chunk_helper.add_new_2chunks(canvas.non_empty_chunks, ck);
         canvas.change_padding(
@@ -67,7 +103,7 @@ class EditorBarManager{
             canvas.chunk_helper.chunk_max_x * 300,
             canvas.chunk_helper.chunk_min_x * -300
         );
-        this.canvas.storage.save_bar();
+        // this.canvas.storage.save_bar();
     }
     add_editor_bar_in_center(canvas){
         console.log("add_editor_bar");
@@ -122,7 +158,14 @@ class EditorBarManager{
     }
     content_change(ebid,content){
         this.canvas.editor_bars[ebid].content=content;
-        this.canvas.storage.save_bar();
+        this.canvas.content_manager.backend_editor_bar_change_and_save(
+            this.canvas.context,this.canvas,
+            new EditorBarChange(
+                EditorBarChangeType.ContentChange,
+                null,
+            )
+        )
+        // this.canvas.storage.save_bar();
     }
     on_mouse_move(event,mouse_rec){
         if(this.corner_drag_helper&&event){
@@ -161,5 +204,8 @@ export default {
     },
     CornerDragHelper,
     EditorBarManager,
-    EditorBarRightMenuHelper
+    EditorBarRightMenuHelper,
+    EditorBar,
+    EditorBarChange,
+    EditorBarChangeType
 }

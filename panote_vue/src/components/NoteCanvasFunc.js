@@ -1,5 +1,7 @@
 //移动组件时用于重新计算区块范围
 import Util from "@/components/Util";
+import EditorBarFunc from "@/components/EditorBarFunc";
+import PathFunc from "@/components/PathFunc";
 
 class ChunkHelper {
     chunk_max_x = 0;
@@ -63,6 +65,16 @@ class ChunkHelper {
     first_calc_chunks(canvas){
         console.log("first_calc_chunks")
         // eslint-disable-next-line no-unused-vars
+        if(Object.values(canvas.editor_bars).length===0){
+            canvas.chunk_helper.recalc_chunk_range(canvas.non_empty_chunks)
+            canvas.change_padding(
+                canvas.chunk_helper.chunk_min_y * -400,
+                canvas.chunk_helper.chunk_max_y * 400,
+                canvas.chunk_helper.chunk_max_x * 300,
+                canvas.chunk_helper.chunk_min_x * -300
+            );
+            return;
+        }
         for(var value of Object.values(canvas.editor_bars)){
             let bar=value;
             let ck = canvas.chunk_helper.calc_chunk_pos(bar.pos_x, bar.pos_y);
@@ -202,8 +214,23 @@ class LineConnectHelper {
             canvas.editor_bars[bbar].conns.push(key1)
             canvas.editor_bars[ebid].conns.push(key1)
 
-            canvas.storage.save_all();
-            canvas.storage.save_paths();
+            canvas.content_manager.backend_path_change_and_save(
+                canvas.context,canvas,
+                new PathFunc.PathChange(
+                    PathFunc.PathChangeType.Add,
+                    null,
+                    null
+                )
+            )
+            canvas.content_manager.backend_editor_bar_change_and_save(
+                canvas.context,canvas,
+                new EditorBarFunc.EditorBarChange(
+                    EditorBarFunc.EditorBarChangeType.LineConnect,
+                    null,
+                ),
+            )
+            // canvas.storage.save_all();
+            // canvas.storage.save_paths();
         }
         canvas.connecting_path = null;
     }
@@ -247,6 +274,75 @@ class LineConnectHelper {
 
         canvas.connecting_path.b_bar = ebid
         // canvas.paths.push(canvas.connecting_path);
+    }
+}
+class NoteContentData{
+    next_editor_bar_id=1000
+    editor_bars={}
+    paths={}
+    constructor(next_editor_bar_id,editor_bars,paths) {
+        this.next_editor_bar_id=next_editor_bar_id
+        this.editor_bars=editor_bars
+        this.paths=paths
+    }
+}
+class ContentManager{
+    cur_note_id="-1"
+    /**@param data {NoteContentData}
+     *@param noteid {string}
+     * */
+    reset(canvas){
+        canvas.non_empty_chunks= {
+            "0,0": 0,
+        }
+        canvas.moving_obj= null
+
+        canvas.editing_editor_bar= null
+        canvas.editing_editor_bar_id= -1
+
+        canvas.connecting_path=null
+    }
+    first_load_set(noteid,canvas,data){
+        console.log("first_load_set",data);
+        canvas.next_editor_bar_id=data.next_editor_bar_id
+        canvas.paths=data.paths
+        canvas.editor_bars=data.editor_bars
+        this.reset(canvas)
+        canvas.chunk_helper.first_calc_chunks(canvas)
+        this.cur_note_id=noteid
+    }
+
+    /**@param bar {EditorBarFunc.EditorBar}
+     **/
+    backend_add_editor_bar_and_save(ctx,canvas,bar){
+        console.log("backend_add_editor_bar_and_save",canvas,bar)
+        canvas.editor_bars[
+            canvas.next_editor_bar_id
+            ]=(bar);
+        canvas.next_editor_bar_id++;
+        ctx.storage_manager.save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
+        ctx.storage_manager.save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
+        console.log("backend_add_editor_bar_and_save");
+    }
+
+    /**@param change {EditorBarFunc.EditorBarChange}
+     *
+     **/
+    // eslint-disable-next-line no-unused-vars
+    backend_editor_bar_change_and_save(ctx,canvas,change){
+        console.log("backend_editor_bar_change_and_save");
+        // if(change.type==EditorBarFunc.EditorBarChangeType.)
+
+        ctx.storage_manager.save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
+    }
+
+    /**@param change {PathFunc.PathChange}
+     **/
+    // eslint-disable-next-line no-unused-vars
+    backend_path_change_and_save(ctx,canvas,change){
+        console.log("backend_path_change_and_save");
+
+        ctx.storage_manager.save_note_paths(this.cur_note_id,canvas.paths);
     }
 }
 class Storage{
@@ -299,7 +395,8 @@ class Storage{
                 if(typeof p=='object'){
                     this.canvas.paths=p;
                 }
-            }catch (e){
+            }catch (e){/**@param bar {EditorBarFunc.EditorBar}
+             **/
                 console.log(e)
                 // this.canvas.editor_bars=[]
             }
@@ -381,12 +478,12 @@ class DragBarHelper{
             //   event.screenX, event.screenY
         );
         // event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
-        if (canvas.cursor_mode == "拖拽") {
+        if (canvas.cursor_mode === "拖拽") {
             console.log("开始拖拽")
             if(canvas.editor_bar_manager.corner_drag_helper==null){
                 canvas.moving_obj = eb;
             }
-        } else if (canvas.cursor_mode == "连线") {
+        } else if (canvas.cursor_mode === "连线") {
             let bar_data = canvas.editor_bars[eb.ebid];
             canvas.line_connect_helper.begin_connect_from_canvaspos(
                 NoteCanvasFunc,
@@ -397,11 +494,29 @@ class DragBarHelper{
             );
         }
     }
-    end_drag(canvas){
+    end_drag(ctx,canvas){
+        // console.log("end_drag",canvas.moving_obj)
         if(canvas.moving_obj!=null){
             canvas.moving_obj = null;
+            // console.log(" end_drag", canvas.moving_obj )
             if(this.update_cnt>0){
-                canvas.storage.save_all()
+                canvas.content_manager.
+                    backend_editor_bar_change_and_save(
+                        canvas.context,canvas,
+                        new EditorBarFunc.EditorBarChange(
+                            EditorBarFunc.EditorBarChangeType.Move,
+                            null,
+                        )
+                    )
+                canvas.content_manager
+                    .backend_path_change_and_save(
+                        canvas.context,canvas,
+                        new PathFunc.PathChange(
+                            PathFunc.PathChangeType.MoveSome,
+                            null,null
+                        )
+                    )
+                // canvas.storage.save_all()
             }
         }
     }
@@ -450,4 +565,6 @@ export default {
     LineConnectHelper,
     Storage,
     DragBarHelper,
+    ContentManager,
+    NoteContentData
 }

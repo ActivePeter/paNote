@@ -49,6 +49,10 @@ export default {
         let content=obj.right_menu_helper.get_right_menu_content(obj);
         this.content=content.arr;
       }
+      else if(tag==="notelist_bar"){
+        let content=obj.note_list_bar_helper.get_right_menu_content(obj);
+        this.content=content.arr;
+      }
       // this.$forceUpdate();
       // console.log(this.pos_x,this.pos_y)
       event.stopPropagation();
