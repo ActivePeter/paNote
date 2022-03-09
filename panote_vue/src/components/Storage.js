@@ -1,5 +1,5 @@
 import NoteCanvasFunc from "@/components/NoteCanvasFunc";
-import Util from "./Util";
+import Util from "./reuseable/Util";
 import { ElMessage } from 'element-plus'
 // import AppFunc from "@/AppFunc";
 

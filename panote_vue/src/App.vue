@@ -34,7 +34,8 @@
       >
         <template v-slot:sidebar>
 
-          <ReviewPart></ReviewPart>
+          <ReviewPart
+          ></ReviewPart>
         </template>
         <template v-slot:content>
           <div class="note_canvas_border content">
@@ -66,6 +67,7 @@ import ReviewPart from "@/components/ReviewPart";
 import SideBarContainer from "@/components/reuseable/SideBarContainer";
 import NoteList from "@/components/NoteList";
 import AppFunc from "@/AppFunc";
+
 // import electron_net from "@/electron_net";
 export default {
   name: "App",
@@ -80,6 +82,8 @@ export default {
   mounted() {
     this.context.app=this;
     this.$refs.note_list_ref.init(this.context);
+
+    AppFunc.set_ctx(this.context)
     // this.net_manager=electron_net.load_net_manager();
   },
   methods: {

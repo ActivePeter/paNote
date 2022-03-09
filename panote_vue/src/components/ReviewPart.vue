@@ -15,6 +15,9 @@
 <!--      {{review_part_man.card_set_man.cardsets}}-->
 <!--    </div>-->
     <div style="height: 10px"></div>
+    <ReviewPartAddNewCard v-if="show_add_new_card_view"
+      @cancel_add_new_card="cancel_add_new_card"
+    />
     <div v-if="mode==='review_cards'">
       <el-button class="add_btn" @click="switch2add_card">添加卡片组</el-button>
       <div style="height: 10px"></div>
@@ -40,9 +43,19 @@
 
 <script>
 import ReviewPartFunc from "@/components/ReviewPartFunc.ts";
+import ReviewPartAddNewCard from "./ReviewPartAddNewCard"
+import {ReviewPartFuncNew} from "@/components/ReviewPartFunc";
 export default {
   name: "ReviewPart",
+  components:{
+    ReviewPartAddNewCard
+  },
   mounted() {
+  },
+  computed:{
+    show_add_new_card_view(){
+      return this.mode===ReviewPartFunc.ReviewPartGuiMode.AddNewCard
+    }
   },
   data() {
     return {
@@ -85,10 +98,14 @@ export default {
     },
     switch2review_card(){
 
-      this.mode=ReviewPartFunc.ReviewPartGuiMode.ReviewCards
+      this.mode=ReviewPartFuncNew.Enum.ReviewPartGuiMode.ReviewCards
+      // this.mode=ReviewPartFunc.ReviewPartGuiMode.ReviewCards
     },
     add_card_set(){
       this.review_part_man.card_set_man.add_card_set(this.input_card_set_name)
+      this.switch2review_card()
+    },
+    cancel_add_new_card(){
       this.switch2review_card()
     }
   },

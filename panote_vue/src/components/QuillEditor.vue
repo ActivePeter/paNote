@@ -149,7 +149,7 @@ export default {
     }
     onBeforeUnmount(() => {
       const editorToolbar = editor.value.previousSibling
-      if (editorToolbar && editorToolbar.className.indexOf('ql-toolbar') > -1) {
+      if (editorToolbar && editorToolbar.className &&editorToolbar.className.indexOf('ql-toolbar') > -1) {
         editorToolbar.parentNode.removeChild(editorToolbar)
       }
     })

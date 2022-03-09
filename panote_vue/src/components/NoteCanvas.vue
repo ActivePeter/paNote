@@ -105,7 +105,7 @@
               class="editor_bar_move"
 
               @content_change="editor_bar_content_change"
-              @start_drag="editor_bar_start_drag"
+              @left_click="editor_bar_left_click"
               @drag_release="editor_bar_drag_release"
               @switch_mode="editor_bar_switch_mode"
               @corner_drag_start="editor_bar_corner_drag_start"
@@ -146,6 +146,8 @@ export default {
     cursor_mode(val) {
       console.log("mode select", val);
     },
+  },
+  computed:{
   },
   mounted() {
     this.$emit("get_context",this);
@@ -284,17 +286,17 @@ export default {
       }
     },
     handle_key_up(val) {
-      if (val.key == "b") {
+      if (val.key === "b") {
         console.log("handle_key_up", val);
         this.scroll_enabled = false;
       }
     },
     handle_key_down(val) {
-      if (val.key == "b"&&val.ctrlKey) {
+      if (val.key === "b"&&val.ctrlKey) {
         console.log("handle_key_down", val);
         this.scroll_enabled = true;
       }
-      if (val.key == "/") {
+      if (val.key === "/") {
         this.try_switch_tool_bar_state();
       }
     },
@@ -436,12 +438,21 @@ export default {
       return pos;
     },
     editor_bar_delete(editor_bar){
+      if(this.content_manager.linkBarToListView.is_linking){
+        return;
+      }
       this.editor_bar_manager.delete_one(editor_bar)
     },
     editor_bar_corner_drag_start(a){
+      if(this.content_manager.linkBarToListView.is_linking){
+        return;
+      }
       this.editor_bar_manager.corner_drag_start(a)
     },
     editor_bar_switch_mode(eb) {
+      if(this.content_manager.linkBarToListView.is_linking){
+        return;
+      }
       EditorBarFunc.editor_bar_switch_mode(this, eb);
     },
     editor_bar_drag_release(event, bar) {
@@ -456,15 +467,25 @@ export default {
       }
     },
     editor_bar_set_new_pos(ebid, eb, x, y) {
+      if(this.content_manager.linkBarToListView.is_linking){
+        return;
+      }
       this.editor_bar_manager.set_new_pos(ebid,eb,x,y);
       //   let ebw = 100;
       //   let ebh = 100;
       //超出原有范围需要重新设置背景面板的size
     },
     editor_bar_content_change(ebid,content){
+      if(this.content_manager.linkBarToListView.is_linking){
+        return;
+      }
       this.editor_bar_manager.content_change(ebid,content);
     },
-    editor_bar_start_drag(event, eb) {
+    editor_bar_left_click(event, eb) {
+      if(this.content_manager.linkBarToListView.is_linking){
+        this.content_manager.linkBarToListView.link_canvas_bar(this,eb)
+        return;
+      }
       //   console.log(eb);
       //   let cp = this.get_canvas_client_pos();
       this.drag_bar_helper.start_drag(NoteCanvasFunc,this,

@@ -123,7 +123,7 @@ export default {
       if (event.buttons == 1) {
         // this.drag_on_x = event.offsetX;
         // this.drag_on_y = event.offsetY;
-        this.$emit("start_drag", event, this);
+        this.$emit("left_click", event, this);
       }
       RightMenuFunc.if_right_click_then_emit(event,"editor_bar",this);
       // event.preventDefault();

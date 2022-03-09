@@ -41,6 +41,8 @@ export default {
     },
     // eslint-disable-next-line no-unused-vars
     right_menu(event,tag,obj){
+
+      console.log("right menu call",tag)
       // let rect=this.$refs.anchor.getBoundingClientRect()
       this.show=true;
       this.pos_x=event.clientX;//-rect.left;
@@ -52,7 +54,11 @@ export default {
       else if(tag==="notelist_bar"){
         let content=obj.note_list_bar_helper.get_right_menu_content(obj);
         this.content=content.arr;
+        // eslint-disable-next-line no-empty
+      }else if("arr" in obj){
+        this.content=obj.arr
       }
+
       // this.$forceUpdate();
       // console.log(this.pos_x,this.pos_y)
       event.stopPropagation();

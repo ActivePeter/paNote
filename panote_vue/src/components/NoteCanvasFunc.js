@@ -1,7 +1,8 @@
 //移动组件时用于重新计算区块范围
-import Util from "@/components/Util";
+import Util from "@/components/reuseable/Util";
 import EditorBarFunc from "@/components/EditorBarFunc";
 import PathFunc from "@/components/PathFunc";
+import {LinkCanvasBarToListView} from "@/components/LinkCanvasBarToListView";
 
 class ChunkHelper {
     chunk_max_x = 0;
@@ -288,6 +289,7 @@ class NoteContentData{
 }
 class ContentManager{
     cur_note_id="-1"
+    linkBarToListView=new LinkCanvasBarToListView.LinkBarToListView()
     /**@param data {NoteContentData}
      *@param noteid {string}
      * */
