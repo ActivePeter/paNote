@@ -1,5 +1,7 @@
 ## panote
 
+![image-20220309214521213](https://hanbaoaaa.xyz/tuchuang/images/2022/03/09/image-20220309214521213.png)
+
 考研途中发现笔记软件总是没法完全满足我的需要
 
 - marginnote这类的笔记软件可以较好的整理思路框架
