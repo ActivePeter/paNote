@@ -131,6 +131,7 @@ import EditorTool from "@/components/EditorTool";
 import EditorToolFunc from "@/components/EditorToolFunc";
 import EditorBarFunc from "@/components/EditorBarFunc";
 import RightMenuFunc from "@/components/RightMenuFunc";
+import {NoteCanvasTs} from "@/components/NoteCanvasTs";
 
 
 
@@ -237,6 +238,7 @@ export default {
 
       line_connect_helper:new NoteCanvasFunc.LineConnectHelper,
       content_manager:new NoteCanvasFunc.ContentManager,
+      state_ts:new NoteCanvasTs.NoteCanvasStateTs()
     };
   },
   methods: {

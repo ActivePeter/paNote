@@ -28,12 +28,31 @@ class AddNewCardHelper{
         }
     }
 }
+class Card{
+    id
+    front
+    back
+    constructor(id:string,front:object[],back:object[]) {
+        this.id=id;
+        this.back=back;
+        this.front=front;
+    }
+}
 class CardSet{
     value:string=""
-    next_card_id:Number=0
-    cards:any={}
+    next_card_id:number=0
+    cards:object={}
     constructor(name:string) {
         this.value=name
+    }
+    add_card(front:object[],back:object[]){
+        if(front.length>0&&back.length>0){
+            // @ts-ignore
+            this.cards[this.next_card_id+""]=new Card(this.next_card_id+"",front,back);
+            this.next_card_id+=1;
+            return (this.next_card_id-1)+"";
+        }
+        return null;
     }
 }
 
@@ -46,13 +65,16 @@ class CardSetManager{
         this.cardsets[name]=new CardSet(name);
     }
 
-    // eslint-disable-next-line no-unused-vars
-    new_card_in_card_set(cardfront:Object,cardback:Object){
-
+    add_card_to_set(set:string,front:object[],back:object[]){
+        if(set in this.cardsets){
+            return this.cardsets[set].add_card(front,back);
+        }
+        return null;
     }
 }
-class ReviewPartManager{
+export class ReviewPartManager{
     card_set_man
+    selected_card_set=""
     constructor() {
         this.card_set_man=new CardSetManager()
     }
@@ -64,13 +86,43 @@ const ReviewPartGuiMode={
 }
 export namespace ReviewPartFuncNew{
     export const Enum: any = {ReviewPartGuiMode}
+    export const final_add_new_card_2_selected_set=(reviewPartManager:ReviewPartManager,front:object[],back:object[])=>{
+        return reviewPartManager.card_set_man.add_card_to_set(reviewPartManager.selected_card_set,front,back);
+    }
+
     export namespace AddNewCard{
         export const Class={
             AddNewCardHelper
         }
         export namespace Funcs{
+            export namespace Rpan{
+                export const helper=(rpan:any):AddNewCardHelper=>{
+                    return rpan.helper
+                }
+                export const frontlist_helper=(rpan:any):EditorBarViewListFunc.EditorBarViewListHelper=>{
+                    // if(rpan){
+                        return  rpan.$refs.front_list.helper
+                }
+                export const backlist_helper=(rpan:any):EditorBarViewListFunc.EditorBarViewListHelper=>{
+                    // if(rpan){
+                        return  rpan.$refs.back_list.helper
+                    // }else{
+                    //     return null
+                    // }
+                }
+            }
             export const emit_cancel_add_new_card=(rpan:any)=>{
                 rpan.$emit("cancel_add_new_card")
+            }
+            export const emit_final_add_new_card=(rpan:any)=>{
+                // frontlist_helper(rpan).bars;
+                // frontlist_helper(rpan).rank;
+                if(rpan){
+                    const front=EditorBarViewListFunc.HelperFuncs.Getteer.get_ranked_bars(Rpan.frontlist_helper(rpan))
+                    const back=EditorBarViewListFunc.HelperFuncs.Getteer.get_ranked_bars(Rpan.backlist_helper(rpan))
+
+                    rpan.$emit("final_add_new_card",front,back);
+                }
             }
         }
     }

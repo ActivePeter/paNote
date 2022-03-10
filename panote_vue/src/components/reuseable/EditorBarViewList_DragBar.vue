@@ -1,4 +1,5 @@
 <template>
+<!--  drg{{draggable}}-->
   <div class="EditorBarViewList_DragBar"
        :style="style"
   @mouseover="handle_mouse_over"
@@ -19,6 +20,9 @@ export default {
   },
   computed:{
     show_drag(){
+      if(!this.draggable){
+        return false;
+      }
       if(this.list_helper.draggingbar){
         return this.list_helper.draggingbar===this
       }else{
@@ -68,7 +72,8 @@ export default {
   },
   props: {
     index:Number,
-    list_helper:Object
+    list_helper:Object,
+    draggable:Boolean
   },
 };
 </script>
@@ -81,6 +86,6 @@ export default {
   cursor: pointer;
 }
 .EditorBarViewList_DragBar{
-  transform: translate();
+  /*transform: translate();*/
 }
 </style>

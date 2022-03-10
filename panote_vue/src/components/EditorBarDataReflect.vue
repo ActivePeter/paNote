@@ -5,16 +5,22 @@
         :options="option"
         :value="content"
     ></quill-editor>
+
+    <el-button class="menu_btn" :icon="icon" size="small" circle
+      @click="locate_bar"
+    ></el-button>
   </div>
 </template>
 
 <script>
 import QuillEditor from "@/components/QuillEditor";
-import AppFunc from "@/AppFunc";
+import AppFunc, {AppFuncTs} from "@/AppFunc";
+import { Search } from '@element-plus/icons-vue'
+
 export default {
   name: "EditorBarDataReflect",
   components:{
-    QuillEditor
+    QuillEditor,
   },
   computed:{
     content(){
@@ -27,9 +33,16 @@ export default {
   },
   mounted() {},
   data() {
-    return {};
+    return {
+      icon:Search,
+    };
   },
-  methods: {},
+  methods: {
+    locate_bar(){
+      // console.log("locate_bar")
+      AppFuncTs.NoteCanvasRelate.locate_editor_bar(this.link_info)
+    }
+  },
   props: {
     option:Object,
     link_info:Object
@@ -41,5 +54,13 @@ export default {
 .container{
   max-height: 200px;
   overflow-y:scroll;
+  position: relative;
+  /*box-sizing: border-box;*/
+}
+.menu_btn{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+
 }
 </style>

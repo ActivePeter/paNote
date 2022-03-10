@@ -10,6 +10,7 @@
       <el-col :span="12">
         <el-button type="primary"
                    class="top_btn"
+                   @click="final_add_new_card"
         >创建</el-button>
       </el-col>
     </el-row>
@@ -73,11 +74,12 @@ export default {
     },
     cancel_add_card(){
       ReviewPartFuncNew.AddNewCard.Funcs.emit_cancel_add_new_card(this)
+    },
+    final_add_new_card(){
+      ReviewPartFuncNew.AddNewCard.Funcs.emit_final_add_new_card(this)
     }
   },
   props: {
-    on_left:Boolean,
-    width:Number
   },
 };
 </script>

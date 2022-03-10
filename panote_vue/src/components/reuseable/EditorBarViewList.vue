@@ -1,34 +1,41 @@
 <template>
   <div :class="'EditorBarViewList'+class_sub">
-    <div>{{}}</div>
+<!--    <div>{{helper.rank}}</div>-->
+
+<!--    edit{{editing}}-->
     <EditorBarViewList_DragBar
-        v-for="(v,i) in helper.bars"
+        v-for="(to,i) in helper.rank"
         :key="i"
         :index="i"
-        :id="'bar'+i"
-        :ref="'bar'+i"
+        :id="'bar'+to"
+        :ref="'bar'+to"
         :list_helper="helper"
+        :draggable="editing"
         @start_drag="start_drag"
     >
       <template v-slot:content>
-        <div class="bar" v-if="helper.linkingbar===v">
+<!--        {{i}}{{helper.rank[i]}}-->
+        <div class="bar" v-if="helper.linkingbar_id===helper.rank[i]">
           <el-button type="text" @click="cancel_link">取消连接</el-button>
-          <el-button type="text">完成连接</el-button>
+          <el-button type="text"  @click="finish_link">完成连接</el-button>
         </div>
         <div
             class="bar"
-            v-if="v.bartype===1&&!helper.linkingbar&&!v.linking_info">当前连接块未连接脑图
-          <el-button type="text" @click="start_link(v)">开始连接</el-button></div>
+            v-if="helper.bars[to].bartype===1&&
+            !helper.bars[to].linking_info&&helper.linkingbar_id!==helper.rank[i]">当前连接块未连接脑图
+          <el-button type="text" @click="start_link(helper.rank[i])">开始连接</el-button></div>
         <EditorBarDataReflect
-            v-if="v.bartype===1&&v.linking_info"
+            v-if="helper.bars[to].bartype===1&&helper.bars[to].linking_info"
             :option="editorOption"
-            :link_info="v.linking_info"
+            :link_info="helper.bars[to].linking_info"
         />
         <quill-editor
-            v-if="v.bartype===0"
-            :disabled="false"
+            v-if="helper.bars[to].bartype===0"
+            :disabled="!editing"
             :options="editorOption"
-            :value="v.text"
+            :value="helper.bars[to].text"
+            :numid="to"
+            @update:value_numid="content_change"
         ></quill-editor>
       </template>
     </EditorBarViewList_DragBar>
@@ -40,6 +47,7 @@ import QuillEditor from "@/components/QuillEditor";
 import EditorBarViewList_DragBar from "./EditorBarViewList_DragBar"
 import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
 import EditorBarDataReflect from "@/components/EditorBarDataReflect";
+import {ElMessage} from "element-plus";
 export default {
   name: "EditorBarViewList",
   components:{
@@ -60,7 +68,7 @@ export default {
   mounted() {
     window.addEventListener("mousemove",this.mouse_move);
     window.addEventListener("mouseup",this.mouse_up);
-    EditorBarViewListFunc.HelperFuncs.Linking.stop_linking_list_bar(this.helper);
+    EditorBarViewListFunc.HelperFuncs.Linking.cancel_linking_list_bar(this.helper);
   },
   data() {
     return {
@@ -74,6 +82,9 @@ export default {
     };
   },
   methods: {
+    content_change(id,con){
+      this.helper.bars[id].text=con;
+    },
     mouse_move(event){
 
       this.helper.mouse_move(this,event)
@@ -86,15 +97,28 @@ export default {
     },
     cancel_link(){
       EditorBarViewListFunc.HelperFuncs.Linking.
-        stop_linking_list_bar(this.helper)
+        cancel_linking_list_bar(this.helper)
     },
-    start_link(v){
+    finish_link(){
+      const ok=EditorBarViewListFunc.HelperFuncs.Linking.
+        try_stop_linking_list_bar(this.helper)
+      if(!ok){
+        ElMessage({
+          message: '还没有连接到脑图块',
+          type: 'warning',
+        })
+      }
+    },
+    start_link(index){
       EditorBarViewListFunc.HelperFuncs.Linking
-          .set_linking_list_bar(v,this.helper)
+          .set_linking_list_bar(index,this.helper)
     }
   },
   props: {
-
+    editing: {
+      type: Boolean,
+      default: true
+    },
   },
 };
 </script>
@@ -116,6 +140,8 @@ export default {
 not supported by any browser */
 }
 .bar{
+  /*text-align: left;*/
+  padding: 10px;
   border: 1px solid #ccc;
 }
 </style>

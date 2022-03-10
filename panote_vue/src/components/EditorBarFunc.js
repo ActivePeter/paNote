@@ -12,7 +12,7 @@ class CornerDragHelper{
         }
     }
 }
-class EditorBar{
+export class EditorBar{
     pos_x= 0
     pos_y= 0
     width=150

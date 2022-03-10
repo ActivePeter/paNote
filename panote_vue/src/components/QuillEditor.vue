@@ -47,8 +47,10 @@ export default {
       required: false,
       default: () => ({})
     },
+    numid:Number,
+    strid:String,
   },
-  emits: ['ready', 'change', 'input', 'blur', 'focus', 'update:value'],
+  emits: ['ready', 'change', 'input', 'blur', 'focus', 'update:value','update:value_numid'],
   setup(props, context) {
     const state = {
       editorOption: {},
@@ -140,6 +142,8 @@ export default {
           const text = state.quill.getText()
           if (html === '<p><br></p>') html = ''
           _content = html
+
+          context.emit('update:value_numid',props.numid,_content);
           context.emit('update:value', _content)
           context.emit('change', { html, text, quill })
         })

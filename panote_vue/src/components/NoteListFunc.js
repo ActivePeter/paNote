@@ -11,7 +11,7 @@ class NoteListBarHelper{
         return content;
     }
 }
-class NoteListManager{
+export class NoteListManager{
     data_to_storage={
         pub_notes:{},
         next_id:0

@@ -34,7 +34,7 @@
       >
         <template v-slot:sidebar>
 
-          <ReviewPart
+          <ReviewPart class="review_part"
           ></ReviewPart>
         </template>
         <template v-slot:content>
@@ -67,6 +67,7 @@ import ReviewPart from "@/components/ReviewPart";
 import SideBarContainer from "@/components/reuseable/SideBarContainer";
 import NoteList from "@/components/NoteList";
 import AppFunc from "@/AppFunc";
+import Storage from "@/components/Storage";
 
 // import electron_net from "@/electron_net";
 export default {
@@ -96,7 +97,8 @@ export default {
       this.$refs.note_canvas_ref.add_editor_bar();
     },
     export_f(){
-      this.context.storage_manager.PortModule_export_cur_file(this.context);
+      Storage.Port.export_all_as_file(this.context)
+      // this.context.storage_manager.PortModule_export_cur_file(this.context);
       // this.$refs.note_canvas_ref.storage.export()
     },
     import_f(){
@@ -121,7 +123,8 @@ export default {
         try {
           let obj=JSON.parse(this.result)
           console.log(obj)
-          _this.context.storage_manager.PortModule_import_2_cur_file(_this.context,obj);
+          Storage.Port.import_all(_this.context,obj);
+          // _this.context.storage_manager.PortModule_import_2_cur_file(_this.context,obj);
         }catch (e){
           console.log(e)
         }
@@ -158,9 +161,13 @@ export default {
 }
 .note_canvas_border {
   border: 1px solid #000;
-  height: calc(90vh);
+  height: calc(100vh - 80px);
 }
 .note_canvas {
   height: 100%;
+}
+.review_part{
+  height: calc(100vh - 80px);
+  overflow-y: hidden;
 }
 </style>
