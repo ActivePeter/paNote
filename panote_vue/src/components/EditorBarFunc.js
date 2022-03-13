@@ -167,13 +167,13 @@ class EditorBarManager{
         )
         // this.canvas.storage.save_bar();
     }
-    on_mouse_move(event,mouse_rec){
+    on_mouse_move(event,mouse_rec,scale){
         if(this.corner_drag_helper&&event){
             let data=this.get_editor_bar_data_by_ebid(
                 this.corner_drag_helper.editor_bar.ebid);
             let delta=mouse_rec.get_delta()
-            data.width+=delta.dx;
-            data.height+=delta.dy;
+            data.width+=delta.dx/scale;
+            data.height+=delta.dy/scale;
         }
     }
     on_mouse_up(){

@@ -349,7 +349,7 @@ export default {
         }else{
           //编辑器拖拽相关
           this.editor_bar_manager.on_mouse_move(event,
-              this.mouse_recorder)
+              this.mouse_recorder,this.scale)
         }
         if (this.connecting_path != null) {
           this.line_connect_helper.move_connect(
