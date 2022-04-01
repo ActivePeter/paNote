@@ -7,7 +7,7 @@ from .websocket_server import WebsocketServer
 import threading
 import socket
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
-
+import tcp_pack_construct
 
 # 信号对象
 class QTypeSignal(QObject):
@@ -22,12 +22,10 @@ class QTypeSignal(QObject):
         self.sendmsg.emit('emit_connect')
 
 
-
-
-
 global_send = QTypeSignal()
-global_on=True
-tcp_server_socket=None
+global_on = True
+tcp_server_socket = None
+
 
 def new_dic(name: str):
     panote_dic = mw.col.decks.id(name)
@@ -73,13 +71,27 @@ def recv_msg(new_client_socket, ip_port, send):
         recv_data = new_client_socket.recv(1024)
         # 判断是否有消息返回
         if recv_data:
-            recv_text = recv_data.decode("gbk")
-            print("来自【%s】的消息：%s" % (str(ip_port), recv_text))
+            recv_text = recv_data.decode('UTF-8')
+
+            # print("来自【%s】的消息：%s" % (str(ip_port), recv_text))
         else:
             # 如果断开连接会执行这行代码，此时关闭socket的连接
             new_client_socket.close()
-            print("已经断开【%s】的连接" % (str(ip_port)))
+            # print("已经断开【%s】的连接" % (str(ip_port)))
             break
+
+
+
+class NetCtx:
+    send: QTypeSignal
+
+
+netctx = NetCtx()
+
+
+def new_client1(client, server):
+    server.send_message_to_all("Hey all, a new client has joined us")
+    netctx.send.emit_connect()
 
 
 def net_thread(send: QTypeSignal):
@@ -89,7 +101,7 @@ def net_thread(send: QTypeSignal):
     # server.run_forever()
     # 创建套接字
 
-    global_send.emit_connect()
+    # global_send.emit_connect()
     global tcp_server_socket
     tcp_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # 设置地址可复用
@@ -113,8 +125,6 @@ def net_thread(send: QTypeSignal):
             print('err')
 
 
-
-
 def init():
     print('将信号绑定槽：')
     # 将信号绑定到槽函数上
@@ -127,13 +137,14 @@ def init():
 def slot_handle(msg):
     utils.showInfo(msg + "panote 客户端已经连接上anki插件")
 
+
 def about_2_quit():
-    global tcp_server_socket,global_on
-    global_on=False
+    global tcp_server_socket, global_on
+    global_on = False
     tcp_server_socket.close()
     # utils.showInfo("about_2_quit")
+
 
 gui_hooks.main_window_did_init.append(init)
 gui_hooks.profile_will_close.append(about_2_quit)
 # mw.app.aboutToQuit.connect(about_2_quit)
-

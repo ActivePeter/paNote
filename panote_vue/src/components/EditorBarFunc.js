@@ -56,6 +56,8 @@ class EditorBarManager{
         delete this.canvas.editor_bars[editor_bar.ebid]
         this.canvas.context.storage_manager
             .save_note_editor_bars(this.canvas.content_manager.cur_note_id,this.canvas.editor_bars)
+        this.canvas.context.storage_manager
+            .save_note_paths(this.canvas.content_manager.cur_note_id,this.canvas.paths);
      // console.log("delete one",editor_bar)
     }
     add_if_no(){

@@ -40,7 +40,40 @@ export module NoteCanvasTs{
                 // canvas.$refs.range_ref.scrollTop+=dy;
             }
         }
+        export const final_set_scale=(canvas:any,scale:number,mouse_event:MouseEvent)=>{
+            if(canvas.$refs.range_ref){
+                const range_rec = canvas.$refs.range_ref.getBoundingClientRect();
+                //缩放之后要修改滚动偏移
+                const scale_beginx=range_rec.left
+                    -canvas.$refs.range_ref.scrollLeft
+                    +canvas.edge_size_w;
+                const scale_beginy=range_rec.top
+                    -canvas.$refs.range_ref.scrollTop
+                    +canvas.edge_size_h;
+                const msbx=mouse_event.clientX-scale_beginx
+                const msby=mouse_event.clientY-scale_beginy
 
+                canvas.$refs.range_ref.scrollLeft-=((msbx)/scale- (msbx)/canvas.scale)*scale;
+                canvas.$refs.range_ref.scrollTop-=((msby)/scale- (msby)/canvas.scale)*scale;
+                // console.log(mouse_event.clientX,scale_beginx)
+
+                // canvas.$refs.range_ref.scrollLeft+=(mouse_event.clientX-scale_beginx)*(canvas.scale-scale)
+                // canvas.$refs.range_ref.scrollTop-=(mouse_event.clientY-scale_beginy)*(canvas.scale-scale)
+                //
+                canvas.scale = scale;
+            }
+
+            // x:
+            //     range_rec.left //滚动显示范围边界
+            //     - canvas.$refs.range_ref.scrollLeft//滚动偏移量
+            //     +canvas.edge_size_w +
+            //     canvas.padding_add_left * canvas.scale,
+            //         y:
+            // range_rec.top -
+            // this.$refs.range_ref.scrollTop +
+            // this.edge_size_h +
+            // this.padding_add_up * this.scale,
+        }
         export const locate_editor_bar=(canvas:any, editor_bar_id:string)=>{
             console.log("locate_editor_bar",editor_bar_id)
             const bar_data=EditorBar.get_editor_bar_data(canvas,editor_bar_id)

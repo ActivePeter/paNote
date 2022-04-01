@@ -2,6 +2,7 @@
   <div class="note_canvas" @contextmenu.prevent>
     <!-- @contextmenu.prevent 去除右键菜单 -->
     <EditorTool
+        class="editor_tool"
         ref="editor_tool_ref"
         @change_is_show="editor_tool_change_is_show"
         @choose_tool="choose_tool"
@@ -289,7 +290,7 @@ export default {
     },
     handle_key_up(val) {
       if (val.key === "b") {
-        console.log("handle_key_up", val);
+        // console.log("handle_key_up", val);
         this.scroll_enabled = false;
       }
     },
@@ -305,7 +306,7 @@ export default {
     handle_scroll(val) {
       //   console.log("handle_scroll", val);
       if (this.scroll_enabled) {
-        this.scale_canvas(val.deltaY);
+        this.scale_canvas(val.deltaY,val);
       }
     },
     handle_mouse_down_on_range(event) {
@@ -379,7 +380,7 @@ export default {
         x: r.left, // - this.$refs.range_ref.scrollLeft,
       };
     },
-    scale_canvas(dir) {
+    scale_canvas(dir,event) {
       let scale_bak = this.scale;
       if (dir > 0) {
         scale_bak += this.scale_step;
@@ -387,16 +388,18 @@ export default {
         scale_bak -= this.scale_step;
       }
       if (scale_bak < 3 && scale_bak > 0.1) {
-        this.final_set_scale(scale_bak);
+        NoteCanvasTs.UiOperation.final_set_scale(this,scale_bak,event)
+        // this.final_set_scale(scale_bak);
       }
       if (this.moving_obj) {
         this.update_moving_obj_pos();
       }
     },
-    final_set_scale(scale) {
-      this.scale = scale;
-      this.canvas_drawer.draw(this);
-    },
+    // final_set_scale(scale) {
+    //
+    //   this.scale = scale;
+    //   // this.canvas_drawer.draw(this);
+    // },
     change_padding(u, d, r, l) {
       console.log("change padding", u, d, r, l);
       let dl = l - this.padding_add_left;
@@ -504,6 +507,9 @@ export default {
 </script>
 
 <style scoped>
+.editor_tool{
+  z-index: 400;
+}
 .info {
   float: left;
 }
