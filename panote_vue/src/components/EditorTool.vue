@@ -49,6 +49,10 @@ export default {
         {
           name: "list",
           select: ["order", "disorder"]
+        },
+        {
+          name:"code",
+          select:null
         }
       ]
     };
@@ -155,6 +159,7 @@ export default {
     do_select(){
       let g=this.get_select()
       if(g){
+        //传递到editorbar里的choosetool函数
         this.$emit("choose_tool", g);
         return true;
       }else{

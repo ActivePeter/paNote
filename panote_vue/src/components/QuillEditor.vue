@@ -185,6 +185,14 @@ export default {
 
           }
             break;
+          case 'code':
+          {
+            let range = state.quill.getSelection();
+            let formats = state.quill.getFormat(range);
+            // console.log("r,f",range,formats)
+            state.quill.formatLine(range, { 'code-block': !formats['code-block'] });
+          }
+            break;
 
         }
       }

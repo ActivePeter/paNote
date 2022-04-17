@@ -69,6 +69,12 @@ In the process of  preparing for the Postgraduate entrance examination, the note
 - 4.内部元素的具体内容：~~editor.js（ad）~~
   - ~~quill~~
   - ~~类似命令行的舒服的格式化方式~~
+    - [x] 列表
+    - [x] 缩进
+    - [x] 加粗
+    - [x] 标题
+    - [x] 下划线
+    - [x] 代码块切换
 - 5.存储（先本地（electron））
   - ~~暂用localstorage（假装存储）~~
 - 7.每天编辑历史

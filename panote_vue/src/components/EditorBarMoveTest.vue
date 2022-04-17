@@ -101,6 +101,9 @@ export default {
         }
       }else if(args[0]=='head'){
         this.$refs.quill_editor_ref.quill_format("header",args[1]);
+        // eslint-disable-next-line no-empty
+      }else if(args[0]=='code'){
+        this.$refs.quill_editor_ref.do_operation('code',true);
       }
     },
     switch_mode() {
@@ -142,7 +145,7 @@ export default {
   },
   props: {
     ebid: String,
-    editing_ebid:Number,
+    editing_ebid:String,
     toolbar_on:Boolean,
     width:Number,
     height:Number,
