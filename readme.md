@@ -76,7 +76,8 @@ In the process of  preparing for the Postgraduate entrance examination, the note
     - [x] 下划线
     - [x] 代码块切换
 - 5.存储（先本地（electron））
-  - ~~暂用localstorage（假装存储）~~
+  - [x] ~~暂用localstorage（假装存储）~~
+  - [ ] 与本地文件绑定，自动存储
 - 7.每天编辑历史
 - 8.前后端（云端存储）
 
