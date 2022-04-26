@@ -2,12 +2,12 @@ from aqt import mw
 from aqt import gui_hooks
 from aqt import utils
 
-import logging
-from .websocket_server import WebsocketServer
 import threading
 import socket
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
-import tcp_pack_construct
+from . import tcp_pack_construct
+import json
+
 
 # 信号对象
 class QTypeSignal(QObject):
@@ -52,34 +52,28 @@ def test():
     ))
 
 
-def new_client(client, server):
-    utils.showInfo("panote 客户端已经连接上anki插件")
+def thread_recv_msg(new_client_socket: socket, ip_port, send):
+    pack_constructor=tcp_pack_construct.TcpPackConstructor()
 
+    def pack_handle(pack_data: list):
+        pack_data = bytearray(pack_data)
+        jsonobj=json.loads(pack_data.decode(encoding='UTF-8', errors='strict'))
+        if 'id' in 
+        # print("recv:", pack_data.decode(encoding='UTF-8', errors='strict'))
 
-def lost_client():
-    utils.showInfo("panote anki插件 失去客户端连接")
-
-
-def recv_msg(new_client_socket, ip_port, send):
-    """
-    接收消息 的函数
-    :param new_client_socket: socket
-    :param ip_port: ip地址元祖
-    :return:
-    """
+    pack_constructor.set_detahandle_callback(pack_handle)
     while global_on:
         recv_data = new_client_socket.recv(1024)
         # 判断是否有消息返回
         if recv_data:
-            recv_text = recv_data.decode('UTF-8')
-
+            pack_constructor.handle_slice(list(recv_data))
+            # recv_text = recv_data.decode('UTF-8')
             # print("来自【%s】的消息：%s" % (str(ip_port), recv_text))
         else:
             # 如果断开连接会执行这行代码，此时关闭socket的连接
             new_client_socket.close()
             # print("已经断开【%s】的连接" % (str(ip_port)))
             break
-
 
 
 class NetCtx:
@@ -89,17 +83,10 @@ class NetCtx:
 netctx = NetCtx()
 
 
-def new_client1(client, server):
-    server.send_message_to_all("Hey all, a new client has joined us")
-    netctx.send.emit_connect()
 
 
-def net_thread(send: QTypeSignal):
-    # server = WebsocketServer(host='127.0.0.1', port=13254, loglevel=logging.INFO)
-    # server.set_fn_new_client(new_client)
-    # server.set_fn_client_left(lost_client)
-    # server.run_forever()
-    # 创建套接字
+
+def thread_server(send: QTypeSignal):
 
     # global_send.emit_connect()
     global tcp_server_socket
@@ -107,7 +94,7 @@ def net_thread(send: QTypeSignal):
     # 设置地址可复用
     # tcp_server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
     # 绑定TCP端口
-    tcp_server_socket.bind(("", 12359))
+    tcp_server_socket.bind(("", 12357))
     # 设置监听 最多128个连接
     tcp_server_socket.listen(128)
 
@@ -116,7 +103,7 @@ def net_thread(send: QTypeSignal):
             new_client_socket, ip_port = tcp_server_socket.accept()
             # utils.showInfo("panote 客户端已经连接上anki插件")
             send.emit_connect();
-            new_thread = threading.Thread(target=recv_msg, args=(new_client_socket, ip_port, send))
+            new_thread = threading.Thread(target=thread_recv_msg, args=(new_client_socket, ip_port, send))
             # 设置守护线程：在主线程关闭的时候 子线程也会关闭
             new_thread.setDaemon(True)
 
@@ -125,19 +112,22 @@ def net_thread(send: QTypeSignal):
             print('err')
 
 
-def init():
-    print('将信号绑定槽：')
-    # 将信号绑定到槽函数上
-    global_send.sendmsg.connect(slot_handle)
 
-    thread = threading.Thread(target=net_thread, args=(global_send,))
-    thread.start()
 
 
 def slot_handle(msg):
     utils.showInfo(msg + "panote 客户端已经连接上anki插件")
 
 
+
+# 插件生命周期
+def init():
+    print('将信号绑定槽：')
+    # 将信号绑定到槽函数上
+    global_send.sendmsg.connect(slot_handle)
+
+    thread = threading.Thread(target=thread_server, args=(global_send,))
+    thread.start()
 def about_2_quit():
     global tcp_server_socket, global_on
     global_on = False
