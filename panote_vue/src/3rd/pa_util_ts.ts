@@ -2,6 +2,21 @@ import {Buffer} from "buffer";
 import * as buffer from "buffer";
 
 export namespace _PaUtilTs {
+    export const try_parse_json=(str:string)=>{
+        try {
+            return JSON.parse(str)
+        }catch (e){
+            return null
+        }
+    }
+    export namespace _JudgeType{
+        export const is_number=(v:any)=>{
+            return typeof v == "number"
+        }
+        export const is_string=(v:any)=>{
+            return typeof v == "number"
+        }
+    }
     export namespace _NodeJs {
         export namespace _Buffer {
             //old data wouldnt be hold

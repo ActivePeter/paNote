@@ -1,9 +1,100 @@
 import {ElMessage} from "element-plus";
 // @ts-ignore
-import {EditorBar} from "@/components/EditorBarFunc";
+import EditorBarFunc, {EditorBar, EditorBarChange} from "@/components/EditorBarFunc";
 import {Gradient} from "@/components/reuseable/Gradient";
+import {LinkCanvasBarToListView} from "@/components/LinkCanvasBarToListView";
+import {AppFuncTs} from "@/AppFunc";
+import PathFunc, {PathChange} from "@/components/PathFunc";
+import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 
 export module NoteCanvasTs{
+    export class ContentManager{
+        cur_note_id="-1"
+        linkBarToListView=new LinkCanvasBarToListView.LinkBarToListView()
+        /**@param data {NoteContentData}
+         *@param noteid {string}
+         * */
+        reset(canvas:any){
+            canvas.non_empty_chunks= {
+                "0,0": 0,
+            }
+            canvas.moving_obj= null
+
+            canvas.editing_editor_bar= null
+            canvas.editing_editor_bar_id= -1
+
+            canvas.connecting_path=null
+        }
+        first_load_set(noteid:string,canvas:any,data:any){
+            console.log("first_load_set",data);
+            canvas.next_editor_bar_id=data.next_editor_bar_id
+            canvas.paths=data.paths
+            canvas.editor_bars=data.editor_bars
+            this.reset(canvas)
+            canvas.chunk_helper.first_calc_chunks(canvas)
+            this.cur_note_id=noteid
+        }
+        _backend_save_if_binded(ctx:AppFuncTs.Context){
+            const nlman= ctx.get_notelist_manager()
+            if(nlman){
+                nlman.pub_set_note_newedited_flag(this.cur_note_id)
+            }
+        }
+        _backend_save_mode_choose(ctx:AppFuncTs.Context,ifbind:()=>void,ifnotbind:()=>void){
+            const nconf=NoteListFuncTs.get_note_config_info(
+                NoteListFuncTs.get_note_list_from_ctx(ctx).notelist_manager,this.cur_note_id)
+            if(nconf) {
+                // eslint-disable-next-line no-empty
+                if (nconf.bind_file) {
+                    ifbind()
+                } else {
+                    ifnotbind()
+                }
+            }
+        }
+        /**@param bar {EditorBarFunc.EditorBar}
+         **/
+        backend_add_editor_bar_and_save(ctx:AppFuncTs.Context,canvas:any,bar:EditorBar){
+            console.log("backend_add_editor_bar_and_save",canvas,bar)
+            canvas.editor_bars[
+                canvas.next_editor_bar_id
+                ]=(bar);
+            canvas.next_editor_bar_id++;
+            this._backend_save_mode_choose(ctx,()=>{
+                this._backend_save_if_binded(ctx);
+            },()=>{
+                ctx.storage_manager.save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
+                ctx.storage_manager.save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
+            })
+            console.log("backend_add_editor_bar_and_save");
+        }
+
+        /**@param change {EditorBarFunc.EditorBarChange}
+         *
+         **/
+        // eslint-disable-next-line no-unused-vars
+        backend_editor_bar_change_and_save(ctx:AppFuncTs.Context,canvas:any,change:EditorBarChange){
+            console.log("backend_editor_bar_change_and_save");
+            // if(change.type==EditorBarFunc.EditorBarChangeType.)
+            this._backend_save_mode_choose(ctx,()=>{
+                this._backend_save_if_binded(ctx);
+            },()=>{
+                ctx.storage_manager.save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
+            })
+        }
+
+        /**@param change {PathFunc.PathChange}
+         **/
+        // eslint-disable-next-line no-unused-vars
+        backend_path_change_and_save(ctx:AppFuncTs.Context,canvas:any,change:PathChange){
+            console.log("backend_path_change_and_save");
+            this._backend_save_mode_choose(ctx,()=>{
+                this._backend_save_if_binded(ctx);
+            },()=>{
+                ctx.storage_manager.save_note_paths(this.cur_note_id,canvas.paths);
+            })
+        }
+    }
     export class NoteCanvasStateTs{
         gradient_scroll=new Gradient.Common()
     }

@@ -133,6 +133,7 @@ import EditorToolFunc from "@/components/EditorToolFunc";
 import EditorBarFunc from "@/components/EditorBarFunc";
 import RightMenuFunc from "@/components/RightMenuFunc";
 import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+import {_PaUtilTs} from "@/3rd/pa_util_ts";
 
 
 
@@ -148,6 +149,11 @@ export default {
     cursor_mode(val) {
       console.log("mode select", val);
     },
+    editing_editor_bar_id(val){
+      if(_PaUtilTs._JudgeType.is_number(val)){
+        this.editing_editor_bar_id=val.toString()
+      }
+    }
   },
   computed:{
   },
@@ -229,21 +235,22 @@ export default {
       connecting_path: null,
 
       editing_editor_bar: null,
-      editing_editor_bar_id: -1,
+      editing_editor_bar_id: "-1",
       editor_bar_manager: null,
 
-      editor_tool_helper: new EditorToolFunc.EditorToolHelper,
+      editor_tool_helper: new EditorToolFunc.EditorToolHelper(),
 
       storage:null,
-      drag_bar_helper:new NoteCanvasFunc.DragBarHelper,
+      drag_bar_helper:new NoteCanvasFunc.DragBarHelper(),
 
-      line_connect_helper:new NoteCanvasFunc.LineConnectHelper,
-      content_manager:new NoteCanvasFunc.ContentManager,
+      line_connect_helper:new NoteCanvasFunc.LineConnectHelper(),
+      content_manager:new NoteCanvasTs.ContentManager(),
       state_ts:new NoteCanvasTs.NoteCanvasStateTs()
     };
   },
   methods: {
     set_context(ctx){
+
       // console.log(this,this.note)
       this.context=ctx;
       // this..pub_note_list_mounted(ctx,this);

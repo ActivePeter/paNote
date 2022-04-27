@@ -31,7 +31,7 @@ const EditorBarChangeType={
     Delete:3,
     LineConnect:4,
 }
-class EditorBarChange{
+export class EditorBarChange{
     /**
      *@param type {Number}
      *@param before_change {EditorBar}
@@ -197,7 +197,7 @@ export default {
     editor_bar_switch_mode(canvas,eb){
         console.log(eb.ebid,canvas.editing_editor_bar_id)
         if(eb.ebid===canvas.editing_editor_bar_id){
-            canvas.editing_editor_bar_id=-1
+            canvas.editing_editor_bar_id='-1'
             canvas.editing_editor_bar=null
         }else{
             canvas.editing_editor_bar_id=eb.ebid

@@ -55,6 +55,7 @@
   </SideBarContainer>
 
   <RightMenu ref="right_menu_ref"/>
+  <NoteConfigDialog ref="note_config_dialog_ref"></NoteConfigDialog>
   <!-- <img alt="Vue logo" src="./assets/logo.png" />
   <HelloWorld msg="Welcome to Your Vue.js App" /> -->
 </template>
@@ -67,8 +68,9 @@ import ReviewPart from "@/components/ReviewPart";
 import SideBarContainer from "@/components/reuseable/SideBarContainer";
 import NoteList from "@/components/NoteList";
 import AppFunc from "@/AppFunc";
-import Storage from "@/components/Storage";
-
+import {AppFuncTs} from "@/AppFunc";
+import Storage from "@/storage/Storage";
+import NoteConfigDialog from "@/components/NoteConfigDialog";
 // import electron_net from "@/electron_net";
 export default {
   name: "App",
@@ -79,16 +81,19 @@ export default {
     ReviewPart,
     SideBarContainer,
     NoteList,
+    // eslint-disable-next-line vue/no-unused-components
+    NoteConfigDialog
   },
   mounted() {
-    this.context.app=this;
+    this.context.app = this;
     this.$refs.note_list_ref.init(this.context);
 
     AppFunc.set_ctx(this.context)
+    AppFuncTs.set_up_all(this.context)
     // this.net_manager=electron_net.load_net_manager();
   },
   methods: {
-    get_context(obj){
+    get_context(obj) {
       obj.set_context(this.context)
       // obj.context=this.context;
     },
@@ -96,52 +101,52 @@ export default {
 
       this.$refs.note_canvas_ref.add_editor_bar();
     },
-    export_f(){
+    export_f() {
       Storage.Port.export_all_as_file(this.context)
       // this.context.storage_manager.PortModule_export_cur_file(this.context);
       // this.$refs.note_canvas_ref.storage.export()
     },
-    import_f(){
+    import_f() {
       console.log("import_f")
       this.$refs.file_ref.click();
     },
-    read_f(){
+    read_f() {
       var selectedFile = this.$refs.file_ref.files[0];
-      this.file=false;
+      this.file = false;
       var name = selectedFile.name; //读取选中文件的文件名
       var size = selectedFile.size; //读取选中文件的大小
 
       console.log("文件名:" + name + "大小:" + size);
       var reader = new FileReader(); //这是核心,读取操作就是由它完成.
       reader.readAsText(selectedFile); //读取文件的内容,也可以读取文件的URL
-      let _this=this;
+      let _this = this;
       this.$nextTick(() => {
-        this.file=true;
+        this.file = true;
       })
-      reader.onload = function() {
+      reader.onload = function () {
         //当读取完成后回调这个函数,然后此时文件的内容存储到了result中,直接操作即可
         console.log(this.result);
         try {
-          let obj=JSON.parse(this.result)
+          let obj = JSON.parse(this.result)
           console.log(obj)
-          Storage.Port.import_all(_this.context,obj);
+          Storage.Port.import_all(_this.context, obj);
           // _this.context.storage_manager.PortModule_import_2_cur_file(_this.context,obj);
-        }catch (e){
+        } catch (e) {
           console.log(e)
         }
       }
 
     },
-    right_menu(event,tag,obj){
-      this.$refs.right_menu_ref.right_menu(event,tag,obj);
+    right_menu(event, tag, obj) {
+      this.$refs.right_menu_ref.right_menu(event, tag, obj);
     }
   },
   data() {
     return {
       cursor_mode_select: "",
-      file:true,
-      context:new AppFunc.Context(this),
-      app_ref_getter:new AppFunc.AppRefsGetter()
+      file: true,
+      context: new AppFunc.Context(this),
+      app_ref_getter: new AppFunc.AppRefsGetter()
       // net_manager:null
     };
   },
@@ -157,17 +162,21 @@ export default {
   color: #2c3e50;
 
 }
+
 .tool_line {
   margin-bottom: 10px;
 }
+
 .note_canvas_border {
   border: 1px solid #000;
   height: calc(100vh - 80px);
 }
+
 .note_canvas {
   height: 100%;
 }
-.review_part{
+
+.review_part {
   height: calc(100vh - 80px);
   overflow-y: hidden;
 }

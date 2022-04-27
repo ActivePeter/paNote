@@ -1,9 +1,11 @@
 import NoteCanvasFunc from "@/components/NoteCanvasFunc";
-import Util from "./reuseable/Util";
+import Util from "../components/reuseable/Util";
 import { ElMessage } from 'element-plus'
 import {AppFuncTs} from "@/AppFunc";
-import {NoteListManager} from "@/components/NoteListFunc";
 import {ReviewPartFuncNew, ReviewPartManager} from "@/components/ReviewPartFunc";
+import {bus, bus_event_names} from "@/bus";
+import {NoteListFuncTs} from "@/components/NoteListFuncTs";
+import {NoteListScanFileBind} from "@/storage/NoteListScanFileBind";
 // import AppFunc from "@/AppFunc";
 
 
@@ -40,6 +42,7 @@ const storage_get=(obj_id:string,type:number)=>{
     }
 }
 namespace Storage{
+    import NoteListManager = NoteListFuncTs.NoteListManager;
     export namespace Tags{
         export const get_note_next_editor_bar_id_tag=(noteid:string)=>{
             return "note"+noteid+"_next_editor_bar_id"
@@ -120,6 +123,9 @@ namespace Storage{
         }
     }
     export class StorageManager{
+        constructor(ctx: AppFuncTs.Context) {
+            NoteListScanFileBind.start(ctx)
+        }
         load_notelist(notelist:any){
             if(localStorage.notelist_store){
                 if(typeof localStorage.notelist_store==="string"){

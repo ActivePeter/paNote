@@ -7,7 +7,7 @@
       <ToolSelect
           v-for="(item, i) in children"
           :key="i"
-          :name="item" :children="null"
+          :name="item.toString()" :children="null"
           :index="i" :depth="depth+1"
           :select_depth="select_depth"
           :select_level="select_level"

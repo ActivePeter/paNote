@@ -86,7 +86,7 @@ import ReviewPartAddNewCard from "./ReviewPartAddNewCard"
 import {ReviewPartFuncNew} from "@/components/ReviewPartFunc";
 import {ElMessage} from "element-plus";
 import ReviewPartCard from "@/components/ReviewPartCard"
-import Storage from "@/components/Storage";
+import Storage from "@/storage/Storage";
 
 export default {
   name: "ReviewPart",

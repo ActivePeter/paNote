@@ -5,6 +5,8 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 // @ts-ignore
 import electron_net from "@/electron_net"
+import {_ipc} from "@/ipc";
+// import ipcMain = Electron.Main.ipcMain;
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -38,7 +40,8 @@ async function createWindow() {
 
   }
 
-  electron_net.load_net_manager();
+  electron_net.get_net_manager();
+  _ipc.regist();
 }
 
 // Quit when all windows are closed.

@@ -1,9 +1,10 @@
 
-import Storage from "@/components/Storage";
+import Storage from "@/storage/Storage";
 import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
-import {NoteListManager} from "@/components/NoteListFunc";
+// import {NoteListManager} from "@/components/NoteListFunc";
 import {NoteCanvasTs} from "@/components/NoteCanvasTs";
-
+import {bus,bus_event_names} from "@/bus";
+import NoteConfigDialog from "@/components/NoteConfigDialog.vue";
 
 class AppRefsGetter{
     get_note_canvas(app:any){
@@ -15,6 +16,9 @@ class AppRefsGetter{
     get_note_list(app:any){
         return app.$refs.note_list_ref
     }
+    get_note_config_dialog(app:any):NoteConfigDialog{
+        return app.$refs.note_config_dialog_ref
+    }
 }
 
 
@@ -22,16 +26,34 @@ export module AppFuncTs{
     export class Context{
         app:any
         cur_open_note_id="-1"
-        storage_manager=new Storage.StorageManager()
+        storage_manager=new Storage.StorageManager(this)
         constructor(app:any) {
             this.app=app
+        }
+        get_notelist_manager():NoteListFuncTs.NoteListManager|null{
+            if(this.app){
+                return this.app.app_ref_getter.get_note_list(this.app).notelist_manager
+            }
+            return null
         }
     }
     export let appctx: Context = new Context(null);
     export const set_ctx=(ctx:Context)=>{
         appctx=ctx;
     }
-
+    namespace set_up_detail{
+        export const notelist_rela=(ctx:Context)=>{
+            bus.off(bus_event_names.start_bind_note_2_file)
+            bus.on(bus_event_names.start_bind_note_2_file,(noteid)=>{
+                console.log("start bind file for note",noteid)
+                const dia=ctx.app.app_ref_getter.get_note_config_dialog(ctx.app)
+                dia.show(ctx,noteid)
+            })
+        }
+    }
+    export const set_up_all=(ctx:Context)=>{
+        set_up_detail.notelist_rela(ctx);
+    }
     export module NoteCanvasRelate{
         export const locate_editor_bar=(barinfo:EditorBarViewListFunc.LinkingInfo)=>{
             console.log("locate_editor_bar",barinfo)
@@ -43,7 +65,7 @@ export module AppFuncTs{
             }else{
                 const notelist=
                     appctx.app.app_ref_getter.get_note_list(appctx.app);
-                const notelistman:NoteListManager=notelist.notelist_manager;
+                const notelistman:NoteListFuncTs.NoteListManager=notelist.notelist_manager;
                 notelistman.open_note(appctx,barinfo.noteid)
                 canvas.$nextTick(()=>{
                     NoteCanvasTs.UiOperation.locate_editor_bar(canvas,barinfo.barid);
@@ -54,6 +76,7 @@ export module AppFuncTs{
 }
 
 import Context = AppFuncTs.Context;
+import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 export default {
     AppRefsGetter,
     Context,

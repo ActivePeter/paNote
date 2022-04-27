@@ -2,7 +2,7 @@
 import Util from "@/components/reuseable/Util";
 import EditorBarFunc from "@/components/EditorBarFunc";
 import PathFunc from "@/components/PathFunc";
-import {LinkCanvasBarToListView} from "@/components/LinkCanvasBarToListView";
+// import {LinkCanvasBarToListView} from "@/components/LinkCanvasBarToListView";
 
 class ChunkHelper {
     chunk_max_x = 0;
@@ -287,66 +287,7 @@ class NoteContentData{
         this.paths=paths
     }
 }
-class ContentManager{
-    cur_note_id="-1"
-    linkBarToListView=new LinkCanvasBarToListView.LinkBarToListView()
-    /**@param data {NoteContentData}
-     *@param noteid {string}
-     * */
-    reset(canvas){
-        canvas.non_empty_chunks= {
-            "0,0": 0,
-        }
-        canvas.moving_obj= null
 
-        canvas.editing_editor_bar= null
-        canvas.editing_editor_bar_id= -1
-
-        canvas.connecting_path=null
-    }
-    first_load_set(noteid,canvas,data){
-        console.log("first_load_set",data);
-        canvas.next_editor_bar_id=data.next_editor_bar_id
-        canvas.paths=data.paths
-        canvas.editor_bars=data.editor_bars
-        this.reset(canvas)
-        canvas.chunk_helper.first_calc_chunks(canvas)
-        this.cur_note_id=noteid
-    }
-
-    /**@param bar {EditorBarFunc.EditorBar}
-     **/
-    backend_add_editor_bar_and_save(ctx,canvas,bar){
-        console.log("backend_add_editor_bar_and_save",canvas,bar)
-        canvas.editor_bars[
-            canvas.next_editor_bar_id
-            ]=(bar);
-        canvas.next_editor_bar_id++;
-        ctx.storage_manager.save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
-        ctx.storage_manager.save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
-        console.log("backend_add_editor_bar_and_save");
-    }
-
-    /**@param change {EditorBarFunc.EditorBarChange}
-     *
-     **/
-    // eslint-disable-next-line no-unused-vars
-    backend_editor_bar_change_and_save(ctx,canvas,change){
-        console.log("backend_editor_bar_change_and_save");
-        // if(change.type==EditorBarFunc.EditorBarChangeType.)
-
-        ctx.storage_manager.save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
-    }
-
-    /**@param change {PathFunc.PathChange}
-     **/
-    // eslint-disable-next-line no-unused-vars
-    backend_path_change_and_save(ctx,canvas,change){
-        console.log("backend_path_change_and_save");
-
-        ctx.storage_manager.save_note_paths(this.cur_note_id,canvas.paths);
-    }
-}
 class Storage{
     canvas
     constructor(canvas) {
@@ -567,6 +508,6 @@ export default {
     LineConnectHelper,
     Storage,
     DragBarHelper,
-    ContentManager,
+    // ContentManager,
     NoteContentData
 }

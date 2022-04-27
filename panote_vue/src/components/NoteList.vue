@@ -22,24 +22,22 @@
 </template>
 
 <script>
-import NoteListFunc from "@/components/NoteListFunc";
+// import NoteListFunc from "@/components/NoteListFunc";
 import NoteListBar from "@/components/NoteListBar";
 import RightMenuFunc from "@/components/RightMenuFunc";
+import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 export default {
   name: "NodeList",
   components:{
     NoteListBar
   },
   mounted() {
-    if(!this.notelist_manager){
-      this.notelist_manager=new NoteListFunc.NoteListManager()
-    }
     this.$emit("get_context",this);
   },
   data() {
     return {
       context:null,
-      notelist_manager:new NoteListFunc.NoteListManager()
+      notelist_manager:new NoteListFuncTs.NoteListManager()
     };
   },
   methods: {

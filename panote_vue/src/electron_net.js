@@ -1,22 +1,36 @@
 import {TcpPackConstructor} from "@/electron_net_ts";
 import {Buffer} from "buffer";
+import {SendState} from "@/electron_net_ts";
 
 const net = require("net")
 
+
+
 //client
 class NetManager {
-    try_send_str(str){
+    try_send_str(str) {
         // let make=[]
-        let make=Buffer.alloc(4+str.length);
+        let make = Buffer.alloc(4 + str.length);
         make.writeUInt32BE(str.length);
         make.subarray(4).write(str);
-
-        this.client.write(make)
+        return new Promise(
+            (resolve ,_)=>{
+                const _this=this;
+                this.client.write(make,()=>{
+                    if(_this.client.bytesWritten===make.length){
+                        resolve(SendState.Succ)
+                    }else{
+                        resolve(SendState.Fail)
+                    }
+                })
+            }
+        )
     }
+
     constructor() {
         this.tcp_pack_constructor = new TcpPackConstructor()
-        this.tcp_pack_constructor.set_one_pack_callback((buf)=>{
-            console.log("pack data:",buf.toString())
+        this.tcp_pack_constructor.set_one_pack_callback((buf) => {
+            console.log("pack data:", buf.toString())
         })
         let PORT = 12357
         let HOST = "192.168.137.92"//"127.0.0.1"
@@ -34,14 +48,14 @@ class NetManager {
                 setTimeout(conn, 10000);//重连
             });
             this.client.on('data', (data) => {
-                this.tcp_pack_constructor.handle_one_slice(data,data.length)
+                this.tcp_pack_constructor.handle_one_slice(data, data.length)
                 // console.log('data from server:', data)
             })
 
             return this.client;
         }
         let conn = () => {
-            const _this=this;
+            const _this = this;
             new_client()
                 .connect(PORT, HOST, () => {
                     console.log("连接成功: " + HOST + ":" + PORT);
@@ -61,10 +75,14 @@ class NetManager {
     }
 }
 
+let net_man_single = null;
 export default {
-    load_net_manager() {
+    get_net_manager() {
         if (net) {
-            return new NetManager();
+            if (!net_man_single) {
+                net_man_single = new NetManager()
+            }
+            return net_man_single;
         } else {
             return null
         }

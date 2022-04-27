@@ -3,7 +3,7 @@ const PathChangeType={
     Delete:1,
     MoveSome:2,
 }
-class PathChange{
+export class PathChange{
     type=-1
     before=null
     after=null

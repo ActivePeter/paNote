@@ -1,6 +1,9 @@
 import {Buffer} from "buffer";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
-
+export enum SendState{
+    Succ,
+    Fail
+}
 export class TcpPackConstructor {
     HEAD_BUF_LEN=4
 
