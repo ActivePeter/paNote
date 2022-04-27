@@ -69,9 +69,10 @@ export module AppFuncTs{
                     const notelist=
                         appctx.app.app_ref_getter.get_note_list(appctx.app);
                     const notelistman:NoteListFuncTs.NoteListManager=notelist.notelist_manager;
-                    notelistman.open_note(appctx,barinfo.noteid)
-                    canvas.$nextTick(()=>{
-                        NoteCanvasTs.UiOperation.locate_editor_bar(canvas,barinfo.barid);
+                    notelistman.open_note(appctx,barinfo.noteid).then(()=>{
+                        canvas.$nextTick(()=>{
+                            NoteCanvasTs.UiOperation.locate_editor_bar(canvas,barinfo.barid);
+                        })
                     })
                 }
             }

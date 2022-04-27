@@ -9,6 +9,7 @@ import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {NoteListScanFileBind} from "@/storage/NoteListScanFileBind";
 import {ipcRenderer} from "electron";
 import {_ipc} from "@/ipc";
+import {_PaUtilTs} from "@/3rd/pa_util_ts";
 // import AppFunc from "@/AppFunc";
 
 
@@ -259,7 +260,7 @@ namespace Storage{
                 return false;
             }
         }
-        load_note_all(noteid:string){
+        load_note_all_from_buffered(noteid:string){
             const next_editor_bar_id=this.load_note_next_editor_bar_id(noteid)
             const editor_bars=this.load_note_editor_bars(noteid)
             const paths=this.load_note_paths(noteid)
@@ -273,8 +274,40 @@ namespace Storage{
                 editor_bars,
                 paths)
         }
+        //根据笔记模式来加载，
+        //  如果是绑定文件，则从文件中加载，
+        //  如果没绑定，从缓存中加载
+        async load_note_all(noteid:string,config:NoteListFuncTs.NoteConfigInfo):Promise<NoteContentData | null>{
+            if(config.bind_file){
+                try {
+                    const loadres=await this._load_note_from_file(config.bind_file)
+                    if(loadres){
+                        console.log("note load from file")
+                        return loadres.note_content_data
+                    }
+                    ElMessage.error('从绑定的文件中解析数据失败，将从缓存读取')
+                }catch (e){
+                    console.log(e)
+                    ElMessage.error('从绑定的文件中读取数据失败，将从缓存读取，请确保文件权限可读写')
+                }
+                return this.load_note_all_from_buffered(noteid)
+            }else{
+                return this.load_note_all_from_buffered(noteid)
+            }
+        }
+        async _load_note_from_file(filepath:string):Promise<NoteStoreToFileStruct | null>{
+            const res=await ipcRenderer.invoke(_ipc._channels.read_file_content,filepath)
+            if(!res.err){
+
+                const obj=_PaUtilTs.try_parse_json(_PaUtilTs._Conv.UInt8Array2string(res.data))
+                if(obj){
+                    return obj
+                }
+            }
+            return null
+        }
         save_note_2_file(noteid:string,filepath:string){
-            const save=new NoteStoreToFileStruct(noteid,this.load_note_all(noteid))
+            const save=new NoteStoreToFileStruct(noteid,this.load_note_all_from_buffered(noteid))
             ipcRenderer.invoke(_ipc._channels.overwrite_file_str,filepath,JSON.stringify(save)).then(
                 ()=>{
                     console.log(noteid,"saved_note_2_file")

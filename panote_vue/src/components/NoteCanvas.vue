@@ -412,7 +412,7 @@ export default {
     //   // this.canvas_drawer.draw(this);
     // },
     change_padding(u, d, r, l) {
-      console.log("change padding", u, d, r, l);
+      // console.log("change padding", u, d, r, l);
       let dl = l - this.padding_add_left;
       let dh = u - this.padding_add_up;
 

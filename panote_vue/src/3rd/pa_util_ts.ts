@@ -3,8 +3,9 @@ import * as buffer from "buffer";
 
 export namespace _PaUtilTs {
     export namespace _Conv{
-        export const string2arraybuffer=(str:string)=>{
-
+        export const UInt8Array2string=(data1:Uint8Array)=>{
+            const data = Buffer.from(data1)
+            return data.toString()
         }
     }
     export const try_parse_json=(str:string)=>{

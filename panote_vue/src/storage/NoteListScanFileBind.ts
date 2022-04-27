@@ -2,7 +2,7 @@ import {AppFuncTs} from "@/AppFunc";
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import Storage from "@/storage/Storage";
 
-let started = false
+// let started = false
 export namespace NoteListScanFileBind {
 
     export const start = (ctx: AppFuncTs.Context) => {
@@ -26,7 +26,7 @@ export namespace NoteListScanFileBind {
                         if (conf && conf.bind_file && "new_edit" in item && item["new_edit"]) {
                             item["new_edit"] = false
                             console.log("note new edit and save",)
-                            ctx.storage_manager.save_note_2_file(key, conf.bind_file)
+                            ctx.storage_manager.save_note_2_file(key,conf.bind_file)
                         }
                     }
                 }
@@ -35,10 +35,10 @@ export namespace NoteListScanFileBind {
                 tick
                 , 10000)
         }
-        if (!started) {
-            started = true;
+        // if (!started) {
+            // started = true;
             tick()
-        }
+        // }
     }
 
 

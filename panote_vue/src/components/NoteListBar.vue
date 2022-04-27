@@ -44,9 +44,10 @@
 
 <script>
 import NoteListFunc from "@/components/NoteListFunc";
-import RightMenuFunc from "@/components/RightMenuFunc";
+// import RightMenuFunc from "@/components/RightMenuFunc";
 import ClickDetector from "@/components/ClickDetector";
 import {Loading, Finished} from "@element-plus/icons-vue";
+import {NoteListBarTs} from "@/components/NoteListBarTs";
 
 export default {
   name: "NoteListBar",
@@ -95,20 +96,8 @@ export default {
         this.$refs.input_ref.focus();
       })
     },
-    open_note() {
-      this.$emit("open_note", this.id);
-    },
-    handle_mouse_down() {
-      let _this = this;
-      this.click_detector.click((cnt) => {
-        console.log("click", cnt);
-        if (cnt >= 2) {
-          _this.start_edit();
-        } else if (cnt == 1) {
-          _this.open_note();
-        }
-      })
-      RightMenuFunc.if_right_click_then_emit(event, "notelist_bar", this);
+    handle_mouse_down(event) {
+      NoteListBarTs.handle_mouse_down(this,event)
     }
   },
   props: {

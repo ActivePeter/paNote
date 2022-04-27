@@ -10,7 +10,7 @@ class ChunkHelper {
     chunk_min_x = 0;
     chunk_min_y = 0;
     add_new_2chunks(non_empty_chunks, ck) {
-        console.log("add_new_2chunks")
+        // console.log("add_new_2chunks")
         if (!(ck in non_empty_chunks)) {
             non_empty_chunks[ck] = 1
         } else {
