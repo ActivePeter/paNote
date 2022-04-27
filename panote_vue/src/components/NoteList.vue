@@ -9,6 +9,7 @@
         :id="i"
         :name="item.name"
         :open_id="open_id"
+        :data="item"
 
         @right_menu="note_list_bar_right_menu"
         @delete="note_list_bar_delete"

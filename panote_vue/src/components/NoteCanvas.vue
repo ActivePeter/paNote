@@ -222,8 +222,13 @@ export default {
 
       moving_obj: null,
       //   record_content_rect: null, //for moving
+
+      //data to save->
       editor_bars: {},
       next_editor_bar_id:1000,
+      paths: {},
+      //<-data to save
+
       mouse_recorder: null,
 
       chunk_helper: null,
@@ -231,7 +236,6 @@ export default {
         "0,0": 0,
       },
       canvas_mouse_drag_helper: null,
-      paths: {},
       connecting_path: null,
 
       editing_editor_bar: null,

@@ -1,4 +1,5 @@
-import NoteCanvasFunc from "@/components/NoteCanvasFunc";
+// @ts-ignore
+import NoteCanvasFunc, {NoteContentData} from "@/components/NoteCanvasFunc";
 import Util from "../components/reuseable/Util";
 import { ElMessage } from 'element-plus'
 import {AppFuncTs} from "@/AppFunc";
@@ -6,6 +7,8 @@ import {ReviewPartFuncNew, ReviewPartManager} from "@/components/ReviewPartFunc"
 import {bus, bus_event_names} from "@/bus";
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {NoteListScanFileBind} from "@/storage/NoteListScanFileBind";
+import {ipcRenderer} from "electron";
+import {_ipc} from "@/ipc";
 // import AppFunc from "@/AppFunc";
 
 
@@ -22,7 +25,7 @@ const storage_get_raw_str=(obj_id:string)=>{
     return null;
 }
 const storage_get=(obj_id:string,type:number)=>{
-    console.log("storage_get",obj_id,localStorage[obj_id])
+    // console.log("storage_get",obj_id,localStorage[obj_id])
     if(!localStorage[obj_id]){
         return null
     }
@@ -69,6 +72,15 @@ namespace Storage{
         }
     }
     export namespace Port{
+        // export class OneNotePortData{
+        //     notecontent_data:NoteContentData
+        //     static construct_by_notecanvas(notecanvas:any){
+        //         const ret=new OneNotePortData()
+        //         ret.notecontent_data.next_editor_bar_id=notecanvas.next_editor_bar_id
+        //         ret.notecontent_data.paths=notecanvas.paths
+        //         ret.notecontent_data.editor_bars=notecanvas.editor_bars
+        //     }
+        // }
         export class PortDataStruct{
             notelist_struct
             noteid_2_jsonstr:any={}
@@ -122,9 +134,17 @@ namespace Storage{
             // }
         }
     }
+    export class NoteStoreToFileStruct{
+        note_content_data:NoteContentData
+        note_id:string
+        constructor(note_id:string,note_content_data:NoteContentData) {
+            this.note_content_data=note_content_data
+            this.note_id=note_id
+        }
+    }
     export class StorageManager{
         constructor(ctx: AppFuncTs.Context) {
-            NoteListScanFileBind.start(ctx)
+
         }
         load_notelist(notelist:any){
             if(localStorage.notelist_store){
@@ -178,7 +198,7 @@ namespace Storage{
             let load={}
             const obj=storage_get(Tags.get_note_editor_bars_tag(noteid),Util.DataType.Obj)
             if(obj){
-                console.log("load_note_editor_bars",obj);
+                // console.log("load_note_editor_bars",obj);
                 load=obj;
             }else{
                 // if(typeof localStorage.editor_bars=='string'){
@@ -252,6 +272,14 @@ namespace Storage{
                 next_editor_bar_id,
                 editor_bars,
                 paths)
+        }
+        save_note_2_file(noteid:string,filepath:string){
+            const save=new NoteStoreToFileStruct(noteid,this.load_note_all(noteid))
+            ipcRenderer.invoke(_ipc._channels.overwrite_file_str,filepath,JSON.stringify(save)).then(
+                ()=>{
+                    console.log(noteid,"saved_note_2_file")
+                }
+            );
         }
         save_note_editor_bars(noteid:string,editor_bars:object){
             localStorage[Tags.get_note_editor_bars_tag(noteid)]=JSON.stringify(editor_bars)

@@ -18,8 +18,8 @@ class AddNewCardHelper{
     }
     add_btn_click(list:any,event:MouseEvent){
         console.log("add btn",AppFunc.get_ctx())
-        if(AppFunc.get_ctx().app){
-            const app=AppFunc.get_ctx().app
+        if(AppFunc.get_ctx()?.app){
+            const app=AppFunc.get_ctx()?.app
 
 
             const con=this.construct_right_menu(list);

@@ -1,7 +1,7 @@
 <template>
   <div class="notelist_bar"
        :style="style"
-    @mousedown="handle_mouse_down"
+       @mousedown="handle_mouse_down"
   >
     <div v-show="editing">
       <input ref="input_ref" class="input" type=text v-model="editing_name"
@@ -9,7 +9,34 @@
       >
     </div>
     <div v-show="!editing">
-      {{name}}
+      {{ name }}
+      <span v-if="'bind_file' in data">
+        <el-tooltip
+            v-if=" 'new_edit' in data && data['new_edit']"
+
+            class="box-item"
+            effect="light"
+            content="数据变更即将同步至文件"
+            placement="right-start"
+        >
+          <el-icon color="#409EFC" class="is-loading">
+            <Loading/>
+          </el-icon>
+        </el-tooltip>
+        <el-tooltip
+            v-else
+
+            class="box-item"
+            effect="light"
+            content="数据已同步至文件"
+            placement="right-start"
+        >
+
+          <el-icon color="#409EFC">
+            <Finished/>
+          </el-icon>
+        </el-tooltip>
+      </span>
     </div>
   </div>
 
@@ -19,91 +46,99 @@
 import NoteListFunc from "@/components/NoteListFunc";
 import RightMenuFunc from "@/components/RightMenuFunc";
 import ClickDetector from "@/components/ClickDetector";
+import {Loading, Finished} from "@element-plus/icons-vue";
 
 export default {
   name: "NoteListBar",
+  components: {
+    Loading,
+    Finished
+  },
   mounted() {
     window.addEventListener("keydown", this.handle_key_down);
   },
   data() {
     return {
-      editing:false,
-      editing_name:"",
-      note_list_bar_helper:new NoteListFunc.NoteListBarHelper(),
-      click_detector:new ClickDetector.ClickDetector(),
+      editing: false,
+      editing_name: "",
+      note_list_bar_helper: new NoteListFunc.NoteListBarHelper(),
+      click_detector: new ClickDetector.ClickDetector(),
     };
   },
-  computed:{
-    style(){
-      if(this.id===this.open_id){
+  computed: {
+    style() {
+      if (this.id === this.open_id) {
         return {
           background: "#ebf4fd"
         }
-      }else{
-        return{}
+      } else {
+        return {}
       }
     }
   },
   methods: {
-    handle_key_down(event){
-      if(event.key==='Enter'){
+    handle_key_down(event) {
+      if (event.key === 'Enter') {
         this.finish_edit();
       }
     },
-    finish_edit(){
-      if(this.editing){
-        this.editing=false;
-        this.$emit("change_name",this);
+    finish_edit() {
+      if (this.editing) {
+        this.editing = false;
+        this.$emit("change_name", this);
       }
     },
-    start_edit(){
-      this.editing_name=this.name;
-      this.editing=true;
+    start_edit() {
+      this.editing_name = this.name;
+      this.editing = true;
       this.$nextTick(() => {
         this.$refs.input_ref.focus();
       })
     },
-    open_note(){
-      this.$emit("open_note",this.id);
+    open_note() {
+      this.$emit("open_note", this.id);
     },
-    handle_mouse_down(){
-      let _this=this;
-      this.click_detector.click((cnt)=>{
-        console.log("click",cnt);
-        if(cnt>=2){
+    handle_mouse_down() {
+      let _this = this;
+      this.click_detector.click((cnt) => {
+        console.log("click", cnt);
+        if (cnt >= 2) {
           _this.start_edit();
-        }else if(cnt==1){
+        } else if (cnt == 1) {
           _this.open_note();
         }
       })
-      RightMenuFunc.if_right_click_then_emit(event,"notelist_bar",this);
+      RightMenuFunc.if_right_click_then_emit(event, "notelist_bar", this);
     }
   },
   props: {
-    name:String,
-    id:String,
-    open_id:String,
+    name: String,
+    id: String,
+    open_id: String,
+    data: Object
   },
 };
 </script>
 
 <style scoped>
-  .notelist_bar{
-    padding: 10px;
-    text-align: left;
-    border-radius: 4px;
-  }
-  .notelist_bar:hover{
-    background: #ebf4fd;
-  }
-  .input{
-    border-style:none;
-    border-width: 0;
-    outline:0;
-    background: rgba(0,0,0,0);
-    font-size:100%;
-    font-family: Avenir, Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+.notelist_bar {
+  padding: 10px;
+  text-align: left;
+  border-radius: 4px;
+}
+
+.notelist_bar:hover {
+  background: #ebf4fd;
+}
+
+.input {
+  border-style: none;
+  border-width: 0;
+  outline: 0;
+  background: rgba(0, 0, 0, 0);
+  font-size: 100%;
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 </style>

@@ -85,6 +85,7 @@ export default {
     NoteConfigDialog
   },
   mounted() {
+    console.log("App Mounted")
     this.context.app = this;
     this.$refs.note_list_ref.init(this.context);
 
@@ -92,6 +93,7 @@ export default {
     AppFuncTs.set_up_all(this.context)
     // this.net_manager=electron_net.load_net_manager();
   },
+
   methods: {
     get_context(obj) {
       obj.set_context(this.context)
@@ -150,6 +152,11 @@ export default {
       // net_manager:null
     };
   },
+  beforeUnmount() {
+
+    console.log("App Will Unmount")
+  }
+
 };
 </script>
 

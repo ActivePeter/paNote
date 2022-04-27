@@ -277,7 +277,7 @@ class LineConnectHelper {
         // canvas.paths.push(canvas.connecting_path);
     }
 }
-class NoteContentData{
+export class NoteContentData{
     next_editor_bar_id=1000
     editor_bars={}
     paths={}

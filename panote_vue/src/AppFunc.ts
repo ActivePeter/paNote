@@ -37,10 +37,8 @@ export module AppFuncTs{
             return null
         }
     }
-    export let appctx: Context = new Context(null);
-    export const set_ctx=(ctx:Context)=>{
-        appctx=ctx;
-    }
+    export let appctx: Context|null;
+    appctx=null
     namespace set_up_detail{
         export const notelist_rela=(ctx:Context)=>{
             bus.off(bus_event_names.start_bind_note_2_file)
@@ -50,26 +48,32 @@ export module AppFuncTs{
                 dia.show(ctx,noteid)
             })
         }
+        export const storage_rela=(ctx:Context)=>{
+            NoteListScanFileBind.start(ctx)
+        }
     }
     export const set_up_all=(ctx:Context)=>{
         set_up_detail.notelist_rela(ctx);
+        set_up_detail.storage_rela(ctx);
     }
     export module NoteCanvasRelate{
         export const locate_editor_bar=(barinfo:EditorBarViewListFunc.LinkingInfo)=>{
-            console.log("locate_editor_bar",barinfo)
-            const canvas=
-                appctx.app.app_ref_getter.get_note_canvas(appctx.app);
+            if(appctx){
+                console.log("locate_editor_bar",barinfo)
+                const canvas=
+                    appctx.app.app_ref_getter.get_note_canvas(appctx.app);
 
-            if(appctx.cur_open_note_id===barinfo.noteid){
-                NoteCanvasTs.UiOperation.locate_editor_bar(canvas,barinfo.barid);
-            }else{
-                const notelist=
-                    appctx.app.app_ref_getter.get_note_list(appctx.app);
-                const notelistman:NoteListFuncTs.NoteListManager=notelist.notelist_manager;
-                notelistman.open_note(appctx,barinfo.noteid)
-                canvas.$nextTick(()=>{
+                if(appctx.cur_open_note_id===barinfo.noteid){
                     NoteCanvasTs.UiOperation.locate_editor_bar(canvas,barinfo.barid);
-                })
+                }else{
+                    const notelist=
+                        appctx.app.app_ref_getter.get_note_list(appctx.app);
+                    const notelistman:NoteListFuncTs.NoteListManager=notelist.notelist_manager;
+                    notelistman.open_note(appctx,barinfo.noteid)
+                    canvas.$nextTick(()=>{
+                        NoteCanvasTs.UiOperation.locate_editor_bar(canvas,barinfo.barid);
+                    })
+                }
             }
         }
     }
@@ -77,6 +81,7 @@ export module AppFuncTs{
 
 import Context = AppFuncTs.Context;
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
+import {NoteListScanFileBind} from "@/storage/NoteListScanFileBind";
 export default {
     AppRefsGetter,
     Context,

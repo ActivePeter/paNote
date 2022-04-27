@@ -2,6 +2,11 @@ import {Buffer} from "buffer";
 import * as buffer from "buffer";
 
 export namespace _PaUtilTs {
+    export namespace _Conv{
+        export const string2arraybuffer=(str:string)=>{
+
+        }
+    }
     export const try_parse_json=(str:string)=>{
         try {
             return JSON.parse(str)

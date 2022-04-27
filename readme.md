@@ -54,18 +54,29 @@ In the process of  preparing for the Postgraduate entrance examination, the note
 #### Todo
 
 - ~~1.画布拖拽~~
+
 - ~~2.内部元素拖拽~~
+
 - ~~2.1拖拽后面板区域也要实时更新~~
+
 - ~~2.2添加内部元素~~
+
 - ~~2.3拖拽，连线，模式切换~~
+
 - ~~2.4控件的辅助按钮~~
+
 - ~~6.连线（先直线）~~
+
 - ~~鼠标中心缩放~~
+
 - 7右键菜单
   - ~~删除~~
+  
 - 3.anki插件（pa）
   - 卡片组
+  
 - 多个笔记
+
 - 4.内部元素的具体内容：~~editor.js（ad）~~
   - ~~quill~~
   - ~~类似命令行的舒服的格式化方式~~
@@ -75,9 +86,15 @@ In the process of  preparing for the Postgraduate entrance examination, the note
     - [x] 标题
     - [x] 下划线
     - [x] 代码块切换
+  
 - 5.存储（先本地（electron））
   - [x] ~~暂用localstorage（假装存储）~~
-  - [ ] 与本地文件绑定，自动存储
+  
+  - [x] 与本地文件绑定，自动存储
+  
+    ![](./resource/sync_2_file.gif)
+  
 - 7.每天编辑历史
+
 - 8.前后端（云端存储）
 

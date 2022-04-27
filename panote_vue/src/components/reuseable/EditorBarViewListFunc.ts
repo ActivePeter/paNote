@@ -174,7 +174,7 @@ module EditorBarViewListFunc{
         }
         export namespace Linking{
             export const set_linking_list_bar=(bar_idx:number,helper:EditorBarViewListHelper)=>{
-                const canvas=AppFunc.get_ctx().app.app_ref_getter.get_note_canvas(AppFunc.get_ctx().app)
+                const canvas=AppFunc.get_ctx()?.app.app_ref_getter.get_note_canvas(AppFunc.get_ctx()?.app)
                 canvas.content_manager.linkBarToListView.start_link(helper)
                 // helper.linkingbar=bar;
                 helper.linkingbar_id=bar_idx;
@@ -184,7 +184,7 @@ module EditorBarViewListFunc{
                     return false;
                 }
                 console.log("stop_linking_list_bar")
-                const canvas=AppFunc.get_ctx().app.app_ref_getter.get_note_canvas(AppFunc.get_ctx().app)
+                const canvas=AppFunc.get_ctx()?.app.app_ref_getter.get_note_canvas(AppFunc.get_ctx()?.app)
                 canvas.content_manager.linkBarToListView.end_link();
 
                 helper.linkingbar_id=-1;
@@ -193,7 +193,7 @@ module EditorBarViewListFunc{
             }
             export const cancel_linking_list_bar=(helper:EditorBarViewListHelper)=>{
                 console.log("stop_linking_list_bar")
-                const canvas=AppFunc.get_ctx().app.app_ref_getter.get_note_canvas(AppFunc.get_ctx().app)
+                const canvas=AppFunc.get_ctx()?.app.app_ref_getter.get_note_canvas(AppFunc.get_ctx()?.app)
                 canvas.content_manager.linkBarToListView.end_link();
                 if(helper.linkingbar_id>-1){
                     helper.bars[helper.linkingbar_id]

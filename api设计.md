@@ -35,7 +35,10 @@
 
       - notelist_manager
         - pub_notes:{} 
-          - //noteid->{name: bind_file:}
+          - //noteid->{
+            - name: 
+            - bind_file:
+            - new_edit}//bind之后的第一次以及后续修改都会将其改为true。否则无视
         - next_id
 
   - ReviewPart
@@ -57,7 +60,12 @@
 ### 运行流程
 
 - 实时存储
-  - 过10秒检查是否发生变更
+  - 过10秒检查是否发生变更(new_edit)
+    - 若变更，调用storage manager的save2file
 - 笔记数据修改后，调用NoteCanvasTs.ContentManager的backend函数
   - backend根据是否绑定文件进行决策
+    - 无论是否绑定，都会将数据存入缓存
+    - 若绑定，会将new_edit标志置为true。
+- 初始化加载
+  - 
 

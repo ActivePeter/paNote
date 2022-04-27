@@ -3,6 +3,7 @@ import {_ipc} from "@/ipc";
 import {ipcRenderer} from "electron";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {ElMessageBox} from "element-plus";
+import {Buffer} from "buffer";
 
 export namespace NoteListFuncTs{
     import Context = AppFuncTs.Context;
@@ -83,23 +84,31 @@ export namespace NoteListFuncTs{
                         console.log("read res",res)
                         if(!res.err){
                             //读取正常才应用config
-                            const data:Uint8Array=res.data
-                            const parse=_PaUtilTs.try_parse_json(data.toString())
+                            const data=Buffer.from(res.data)
+                            const datastr=data.toString()
+                            const parse=_PaUtilTs.try_parse_json(datastr)
                             const finalbind=()=>{
                                 notes[noteid].bind_file=config_info.bind_file
+                                ctx.get_notelist_manager()?.pub_set_note_newedited_flag(noteid)
                             }
+                            console.log(datastr,parse)
                             if(parse){
                                 //该文件之前不是绑定到此笔记，是否要进行绑定
                                 if("noteid" in parse&&parse["noteid"]!=noteid){
-                                    const confirmbind=await ElMessageBox.confirm(
-                                        '该文件之前不是绑定到此笔记，是否要进行绑定?',
-                                        'Warning',
-                                        {
-                                            confirmButtonText: '确认',
-                                            cancelButtonText: '取消',
-                                            type: 'warning',
-                                        })
-                                    console.log(confirmbind)
+                                    try {
+                                        await ElMessageBox.confirm(
+                                            '该文件之前不是绑定到此笔记，建议新建笔记文件\n，是否要进行绑定?',
+                                            'Warning',
+                                            {
+                                                confirmButtonText: '确认',
+                                                cancelButtonText: '取消',
+                                                type: 'warning',
+                                            })
+                                        finalbind();
+                                    }catch (e){
+
+                                        console.log(e)
+                                    }
                                 }
                             }else{//文件为空，直接绑定
                                 finalbind();
