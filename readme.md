@@ -80,7 +80,15 @@ In the process of  preparing for the Postgraduate entrance examination, the note
   
 - 3.anki插件（pa）
   
-  - 卡片组
+  - [ ] 卡片组
+    - [x] 卡片组创建
+    - [x] 卡片创建
+    - [ ] 卡片右键菜单
+      - [x] 删除
+      - [x] 编辑
+    - [x] 卡片存储
+    - [ ] 卡片数据同步到anki
+    - [ ] 复习卡片
   
 - 多个笔记
 
