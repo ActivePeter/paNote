@@ -5,9 +5,13 @@ import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {ElMessageBox} from "element-plus";
 import {Buffer} from "buffer";
 import {bus, bus_event_names} from "@/bus";
+import Storage from "@/storage/Storage";
+import {NoteContentData} from "@/components/NoteCanvasFunc";
+// import {NoteStoreToFileStruct} from "@/storage/Storage";
 
 export namespace NoteListFuncTs {
     import Context = AppFuncTs.Context;
+    import NoteStoreToFileStruct = Storage.NoteStoreToFileStruct;
 
     export class NoteConfigInfo {
         bind_file: string | null = null
@@ -18,11 +22,20 @@ export namespace NoteListFuncTs {
         next_id = 0
     }
 
-    const getNoteDataModel = () => {
-        return {
-            name: "hh",
-            //bind_file 有绑定时存在属性，没绑定时该属性不存在
+    const getNoteDataModel = (name: string = "hh", bind_file: string | null = null) => {
+        if (bind_file) {
+            return {
+                name,
+                bind_file
+                //bind_file 有绑定时存在属性，没绑定时该属性不存在
+            }
+        } else {
+            return {
+                name
+                //bind_file 有绑定时存在属性，没绑定时该属性不存在
+            }
         }
+
     }
 
     export class NoteListManager {
@@ -46,23 +59,120 @@ export namespace NoteListFuncTs {
         pub_set_note_newedited_flag(noteid: string) {
             this.data_to_storage.pub_notes[noteid].new_edit = true;
         }
+
         //打开窗口选择文件并加载笔记
-        pub_load_note_from_file(){
-            _ipc.Tasks.tasks.start_choose_pa_note_file.call().then((res)=>{
-                if(!res.canceled){
-                    console.log("pub_load_note_from_file",res)
+        pub_load_note_from_file(context: AppFuncTs.Context) {
+            const confirm_2_change_file_note_id = (fpath: string, store: NoteStoreToFileStruct, conflict_name: string) => {
+                ElMessageBox.confirm(
+                    '文件中对应的笔记id与当前列表中笔记【' + conflict_name + '】id冲突，是否要将文件载入到新的笔记中?',
+                    'Warning',
+                    {
+                        confirmButtonText: '确认',
+                        cancelButtonText: '取消',
+                        type: 'warning',
+                    }
+                )
+                    .then(() => {
+                        //confirm
+                        store.note_id = this._new_note_id();
+                        this.new_note_changefile_from_NoteStoreToFileStruct(context,fpath,store)
+                    })
+                    .catch(() => {
+                        //cancel
+                    })
+            }
+            const confirm_invalid_file_as_new_note = (fpath: string) => {
+                ElMessageBox.confirm(
+                    '文件为无效笔记文件，是否要创建为新的笔记?',
+                    'Warning',
+                    {
+                        confirmButtonText: '确认',
+                        cancelButtonText: '取消',
+                        type: 'warning',
+                    }
+                )
+                    .then(() => {
+                        //confirm
+                        this.new_note_bind_file(context, fpath)
+                    })
+                    .catch(() => {
+                        //cancel
+                    })
+            }
+            _ipc.Tasks.tasks.start_choose_pa_note_file.call().then((res) => {
+                if (!res.canceled) {
+                    context.storage_manager._load_note_from_file(res.filePaths[0]).then((f) => {
+                        // console.log("pub_load_note_from_file",res,f)
+                        if (f) {
+                            if (f.note_id in this.data_to_storage.pub_notes) {
+                                // this.open_note(context,f.note_id)
+                                //判断笔记是否与文件绑定，
+                                const nconf = get_note_config_info(this, f.note_id)
+                                if (nconf?.bind_file == res.filePaths[0]) {
+                                    // 若绑定，直接打开笔记
+                                    this.open_note(context, f.note_id)
+                                } else {
+                                    // 若未绑定, 更改文件的id号并加载到新的笔记中
+                                    confirm_2_change_file_note_id(res.filePaths[0],
+                                        f, this.data_to_storage.pub_notes[f.note_id].name);
+                                }
+
+                                // eslint-disable-next-line no-empty
+                            } else {
+                                this.new_note_from_loaded_NoteStoreToFileStruct(context, res.filePaths[0], f)
+                            }
+                        } else {
+                            confirm_invalid_file_as_new_note(res.filePaths[0])
+                        }
+                    })
                 }
             })
         }
 
+        //修改NoteStoreToFileStruct后
+        // 改变文件中的数据
+        // 创建笔记
+        new_note_changefile_from_NoteStoreToFileStruct(
+            ctx: AppFuncTs.Context, fpath: string,
+            store: NoteStoreToFileStruct) {
+            this.new_note_from_loaded_NoteStoreToFileStruct(ctx,fpath,store)
+            ctx.storage_manager.save_note_2_file(store.note_id,fpath)
+        }
+
+        //新建笔记，并且写入到文件
+        new_note_bind_file(ctx: AppFuncTs.Context, fpath: string) {
+            const newid=this._new_note_id()
+            const struct=new NoteStoreToFileStruct(newid,NoteContentData.get_default())
+            this.new_note_changefile_from_NoteStoreToFileStruct(ctx,fpath,struct)
+        }
+
+        //从刚刚加载的文件数据中新建笔记
+        new_note_from_loaded_NoteStoreToFileStruct(ctx: AppFuncTs.Context, fbind: string, store: NoteStoreToFileStruct) {
+            this.data_to_storage.pub_notes[store.note_id] = getNoteDataModel(store.note_id, fbind)
+            ctx.storage_manager.save_notelist(this);
+            ctx.storage_manager.save_note_2_buffer_from_NoteStoreToFileStruct(store)
+        }
+
+        _new_note_id(): string {
+            const now = new Date()
+            return now.getUTCFullYear() + ":" +
+                now.getUTCMonth() + ":" +
+                now.getUTCDay() + ":" +
+                now.getUTCHours() + ":" +
+                now.getUTCMinutes() + ":" +
+                now.getUTCSeconds() + ":" +
+                now.getUTCMilliseconds()
+        }
+
         add_new_note(context: AppFuncTs.Context) {
             console.log("add_new_note")
-            this.data_to_storage.pub_notes[this.data_to_storage.next_id] = getNoteDataModel()
+            const newid = this._new_note_id()
+            this.data_to_storage.pub_notes[newid] = getNoteDataModel()
             const ret = this.data_to_storage.next_id
             this.data_to_storage.next_id++;
             context.storage_manager.save_notelist(this);
 
-            return ret + "";
+            return newid;
         }
 
         delete_note(ctx: AppFuncTs.Context, note_id: string) {
@@ -83,7 +193,7 @@ export namespace NoteListFuncTs {
                     const conf = get_note_config_info(nlman, noteid);
                     if (conf) {
                         const note = await ctx.storage_manager.load_note_all(noteid, conf)
-                        if(note){
+                        if (note) {
                             const note_canvas = ctx.app.app_ref_getter.get_note_canvas(ctx.app)
                             note_canvas.content_manager.first_load_set(noteid, note_canvas, note);
                         }

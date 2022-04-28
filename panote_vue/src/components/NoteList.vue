@@ -38,7 +38,7 @@ export default {
     NoteListBar
   },
   mounted() {
-    this.$emit("get_context",this);
+    // this.$emit("get_context",this);
   },
   data() {
     return {
@@ -48,12 +48,12 @@ export default {
   },
   methods: {
     load_from_file(){
-      this.notelist_manager.pub_load_note_from_file()
+      this.notelist_manager.pub_load_note_from_file(this.context)
     },
-    set_context(ctx){
-      this.context=ctx;
-      this.notelist_manager.pub_note_list_mounted(ctx,this);
-    },
+    // set_context(ctx){
+    //   this.context=ctx;
+    //   this.notelist_manager.pub_note_list_mounted(ctx,this);
+    // },
     // open_note(note_id){
     //   this.notelist_manager.open_note(this.context,note_id)
     // },

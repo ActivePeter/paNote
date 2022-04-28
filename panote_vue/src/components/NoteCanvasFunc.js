@@ -281,6 +281,9 @@ export class NoteContentData{
     next_editor_bar_id=1000
     editor_bars={}
     paths={}
+    static get_default(){
+        return new NoteContentData(1000,{},{})
+    }
     constructor(next_editor_bar_id,editor_bars,paths) {
         this.next_editor_bar_id=next_editor_bar_id
         this.editor_bars=editor_bars

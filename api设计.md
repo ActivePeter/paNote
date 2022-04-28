@@ -33,13 +33,16 @@
 
     - 数据
 
-      - notelist_manager
-        - pub_notes:{} 
+      - notelist_manager //与笔记操作相关的
+        - 数据
+          - pub_notes:{} 
           - //noteid->{
             - name: 
             - bind_file:
             - new_edit}//bind之后的第一次以及后续修改都会将其改为true。否则无视
-        - next_id
+          - next_id
+        - 函数
+          - async open_note
 
   - ReviewPart
 

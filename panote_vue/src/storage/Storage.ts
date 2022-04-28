@@ -135,9 +135,15 @@ namespace Storage{
             // }
         }
     }
-    export class NoteStoreToFileStruct{
+    export class NoteStoreToFileStruct {
         note_content_data:NoteContentData
         note_id:string
+        static check_obj(obj:any):boolean{
+            if("note_id" in obj && _PaUtilTs._JudgeType.is_string(obj.note_id)){
+                return true
+            }
+            return false
+        }
         constructor(note_id:string,note_content_data:NoteContentData) {
             this.note_content_data=note_content_data
             this.note_id=note_id
@@ -300,7 +306,7 @@ namespace Storage{
             if(!res.err){
 
                 const obj=_PaUtilTs.try_parse_json(_PaUtilTs._Conv.UInt8Array2string(res.data))
-                if(obj){
+                if(obj && NoteStoreToFileStruct.check_obj(obj)){
                     return obj
                 }
             }
@@ -313,6 +319,11 @@ namespace Storage{
                     console.log(noteid,"saved_note_2_file")
                 }
             );
+        }
+        save_note_2_buffer_from_NoteStoreToFileStruct(data:NoteStoreToFileStruct){
+            this.save_note_paths(data.note_id,data.note_content_data.paths)
+            this.save_note_editor_bars(data.note_id,data.note_content_data.editor_bars)
+            this.save_note_next_editor_bar_id(data.note_id,data.note_content_data.next_editor_bar_id)
         }
         save_note_editor_bars(noteid:string,editor_bars:object){
             localStorage[Tags.get_note_editor_bars_tag(noteid)]=JSON.stringify(editor_bars)

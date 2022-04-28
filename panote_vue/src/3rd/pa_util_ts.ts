@@ -20,7 +20,7 @@ export namespace _PaUtilTs {
             return typeof v == "number"
         }
         export const is_string=(v:any)=>{
-            return typeof v == "number"
+            return typeof v == "string"
         }
     }
     export namespace _NodeJs {
