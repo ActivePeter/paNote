@@ -32,6 +32,7 @@
 import NoteListBar from "@/components/NoteListBar";
 import RightMenuFunc from "@/components/RightMenuFunc";
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
+import {bus_events} from "@/bus";
 export default {
   name: "NodeList",
   components:{
@@ -39,6 +40,10 @@ export default {
   },
   mounted() {
     // this.$emit("get_context",this);
+    bus_events.events.note_data_change.listen(this.note_data_change)
+  },
+  unmounted() {
+    bus_events.events.note_data_change.cancel(this.note_data_change)
   },
   data() {
     return {
@@ -47,6 +52,9 @@ export default {
     };
   },
   methods: {
+    note_data_change(noteid){
+      this.notelist_manager.pub_set_note_newedited_flag(noteid)
+    },
     load_from_file(){
       this.notelist_manager.pub_load_note_from_file(this.context)
     },

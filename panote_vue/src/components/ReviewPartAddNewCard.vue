@@ -48,7 +48,7 @@
 </template>
 
 <script>
-import ReviewPartFunc, {ReviewPartFuncNew} from "@/components/ReviewPartFunc";
+import {ReviewPartFunc, ReviewPartFuncNew} from "@/components/ReviewPartFunc";
 import EditorBarViewList from "@/components/reuseable/EditorBarViewList"
 // import AppFunc from "@/AppFunc";
 

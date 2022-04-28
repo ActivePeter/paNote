@@ -3,7 +3,7 @@ import Storage from "@/storage/Storage";
 import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
 // import {NoteListManager} from "@/components/NoteListFunc";
 import {NoteCanvasTs} from "@/components/NoteCanvasTs";
-import {bus,bus_event_names} from "@/bus";
+import {bus, bus_event_names, bus_events} from "@/bus";
 import NoteConfigDialog from "@/components/NoteConfigDialog.vue";
 
 class AppRefsGetter{
@@ -53,6 +53,7 @@ export module AppFuncTs{
         }
     }
     export const set_up_all=(ctx:Context)=>{
+        // bus_events.cancel_listen_all()
         set_up_detail.notelist_rela(ctx);
         set_up_detail.storage_rela(ctx);
     }

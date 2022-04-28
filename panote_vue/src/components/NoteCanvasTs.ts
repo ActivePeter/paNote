@@ -6,11 +6,23 @@ import {LinkCanvasBarToListView} from "@/components/LinkCanvasBarToListView";
 import {AppFuncTs} from "@/AppFunc";
 import PathFunc, {PathChange} from "@/components/PathFunc";
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
+import {ReviewPartFunc} from "@/components/ReviewPartFunc";
+import {NoteContentData} from "@/components/NoteCanvasFunc";
+import {bus, bus_events} from "@/bus";
 
 export module NoteCanvasTs{
-    export class ContentManager{
+    export class PartOfNoteContentData{
+        review_card_set_man=new ReviewPartFunc.CardSetManager()
+    }
+    export class ContentManager{//由canvas持有
         cur_note_id="-1"
         linkBarToListView=new LinkCanvasBarToListView.LinkBarToListView()
+        part_of_storage_data:null|PartOfNoteContentData=null
+
+        static from_canvas(canvas:any):ContentManager{
+            return canvas.content_manager
+        }
+
         /**@param data {NoteContentData}
          *@param noteid {string}
          * */
@@ -25,14 +37,20 @@ export module NoteCanvasTs{
 
             canvas.connecting_path=null
         }
-        first_load_set(noteid:string,canvas:any,data:any){
+        first_load_set(noteid:string,canvas:any,data:NoteContentData){
             console.log("first_load_set",data);
             canvas.next_editor_bar_id=data.next_editor_bar_id
             canvas.paths=data.paths
             canvas.editor_bars=data.editor_bars
+            this.part_of_storage_data=data.part
+            if(!this.part_of_storage_data){
+                this.part_of_storage_data=new PartOfNoteContentData()
+            }
             this.reset(canvas)
             canvas.chunk_helper.first_calc_chunks(canvas)
             this.cur_note_id=noteid
+
+            bus_events.events.note_canvas_data_loaded.call(canvas)
         }
         _backend_save_if_binded(ctx:AppFuncTs.Context){
             const nlman= ctx.get_notelist_manager()

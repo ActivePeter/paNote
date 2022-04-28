@@ -81,12 +81,13 @@
 </template>
 
 <script>
-import ReviewPartFunc from "@/components/ReviewPartFunc.ts";
+import {ReviewPartFunc} from "@/components/ReviewPartFunc.ts";
 import ReviewPartAddNewCard from "./ReviewPartAddNewCard"
 import {ReviewPartFuncNew} from "@/components/ReviewPartFunc";
 import {ElMessage} from "element-plus";
 import ReviewPartCard from "@/components/ReviewPartCard"
-import Storage from "@/storage/Storage";
+import {bus_events} from "@/bus";
+import AppFunc from "@/AppFunc";
 
 export default {
   name: "ReviewPart",
@@ -95,7 +96,11 @@ export default {
     ReviewPartCard
   },
   mounted() {
-    Storage.ReviewPart.load_all(this.review_part_man);
+    // Storage.ReviewPart.load_all(this.review_part_man);
+    bus_events.events.note_canvas_data_loaded.listen(this.note_canvas_loaded)
+  },
+  unmounted() {
+    bus_events.events.note_canvas_data_loaded.cancel(this.note_canvas_loaded)
   },
   computed: {
     show_add_new_card_view() {
@@ -108,9 +113,14 @@ export default {
       input_card_set_name: "",
 
       mode: 'review_cards',
+
     };
   },
   methods: {
+    note_canvas_loaded(canvas){
+      // console.log("note_canvas_loaded",canvas)
+      this.review_part_man.note_canvas_loaded(canvas)
+    },
     btn_add_card_to_cur_set() {
       this.mode = ReviewPartFunc.ReviewPartGuiMode.AddNewCard
     },
@@ -124,8 +134,11 @@ export default {
       // this.mode=ReviewPartFunc.ReviewPartGuiMode.ReviewCards
     },
     add_card_set() {
-      this.review_part_man.card_set_man.add_card_set(this.input_card_set_name)
-      Storage.ReviewPart.save_all(this.review_part_man)
+      ReviewPartFunc.CardSetManager.add_card_set(
+          this.review_part_man.card_set_man,
+          this.review_part_man,this.input_card_set_name
+      )
+      // Storage.ReviewPart.save_all(this.review_part_man)
       this.switch2review_card()
     },
     cancel_add_new_card() {
@@ -136,7 +149,9 @@ export default {
           this.review_part_man, front, back
       )
       if (res) {
-        Storage.ReviewPart.save_all(this.review_part_man)
+        AppFunc.get_ctx()?.storage_manager.buffer_save_note_reviewinfo(this.review_part_man.note_id,this.review_part_man.card_set_man)
+        bus_events.events.note_data_change.call(this.review_part_man.note_id)
+        // Storage.ReviewPart.save_all(this.review_part_man)
         this.switch2review_card()
       } else {
         ElMessage({

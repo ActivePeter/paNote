@@ -2,6 +2,8 @@
 import Util from "@/components/reuseable/Util";
 import EditorBarFunc from "@/components/EditorBarFunc";
 import PathFunc from "@/components/PathFunc";
+// import {ReviewPartFunc} from "@/components/ReviewPartFunc";
+import {NoteCanvasTs} from "@/components/NoteCanvasTs";
 // import {LinkCanvasBarToListView} from "@/components/LinkCanvasBarToListView";
 
 class ChunkHelper {
@@ -277,10 +279,13 @@ class LineConnectHelper {
         // canvas.paths.push(canvas.connecting_path);
     }
 }
+
+
 export class NoteContentData{
     next_editor_bar_id=1000
     editor_bars={}
     paths={}
+    part=new NoteCanvasTs.PartOfNoteContentData()
     static get_default(){
         return new NoteContentData(1000,{},{})
     }

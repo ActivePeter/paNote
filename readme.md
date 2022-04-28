@@ -96,15 +96,15 @@ In the process of  preparing for the Postgraduate entrance examination, the note
   
   - [x] 从本地文件加载，
   
-    - [ ] 无效文件会询问是否创建为新笔记
+    - [x] 无效文件会询问是否创建为新笔记
   
       ![](./resource/load_invaild_file.gif)
   
-    - [ ] 若当前笔记列表内笔记与打开文件未绑定，会询问将笔记文件加载到新的笔记中，避免冲突
+    - [x] 若当前笔记列表内笔记与打开文件未绑定，会询问将笔记文件加载到新的笔记中，避免冲突
   
       ![](./resource/conflict_file_bind.gif)
   
-    - [ ] 
+  - [x] 笔记的卡片数据存储
   
 - 7.每天编辑历史
 

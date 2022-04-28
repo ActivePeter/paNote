@@ -3,7 +3,7 @@ import NoteCanvasFunc, {NoteContentData} from "@/components/NoteCanvasFunc";
 import Util from "../components/reuseable/Util";
 import { ElMessage } from 'element-plus'
 import {AppFuncTs} from "@/AppFunc";
-import {ReviewPartFuncNew, ReviewPartManager} from "@/components/ReviewPartFunc";
+import {ReviewPartFuncNew, ReviewPartFunc} from "@/components/ReviewPartFunc";
 import {bus, bus_event_names} from "@/bus";
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {NoteListScanFileBind} from "@/storage/NoteListScanFileBind";
@@ -57,13 +57,16 @@ namespace Storage{
         export const get_note_paths_tag=(noteid:string)=>{
             return "note"+noteid+"_paths"
         }
+        export const get_note_review_tag=(noteid:string)=>{
+            return "note"+noteid+"_review"
+        }
     }
     export namespace ReviewPart{
-        export const save_all=(man:ReviewPartManager)=>{
+        export const save_all=(man:ReviewPartFunc.ReviewPartManager)=>{
             localStorage["review_card_sets"]=
                 JSON.stringify(man.card_set_man.cardsets)
         }
-        export const load_all=(man:ReviewPartManager)=>{
+        export const load_all=(man:ReviewPartFunc.ReviewPartManager)=>{
             if("review_card_sets" in localStorage&& typeof localStorage["review_card_sets"]==="string"){
                 man.card_set_man.cardsets=JSON.parse(localStorage["review_card_sets"])
             }
@@ -256,6 +259,10 @@ namespace Storage{
             }
             return load;
         }
+        buffer_load_note_review(noteid:string):null|ReviewPartFunc.CardSetManager{
+            const obj=storage_get(Tags.get_note_review_tag(noteid),Util.DataType.Obj)
+            return obj
+        }
         // eslint-disable-next-line no-unused-vars
         has_note_saved(noteid:string){
             if(
@@ -270,15 +277,20 @@ namespace Storage{
             const next_editor_bar_id=this.load_note_next_editor_bar_id(noteid)
             const editor_bars=this.load_note_editor_bars(noteid)
             const paths=this.load_note_paths(noteid)
+            const review=this.buffer_load_note_review(noteid)
             // console.log("load note all",
             //     next_editor_bar_id,
             //     editor_bars,
             //     paths
             //     )
-            return new NoteCanvasFunc.NoteContentData(
+            const ret= new NoteContentData(
                 next_editor_bar_id,
                 editor_bars,
                 paths)
+            if(review){
+                ret.part.review_card_set_man=review
+            }
+            return ret;
         }
         //根据笔记模式来加载，
         //  如果是绑定文件，则从文件中加载，
@@ -324,6 +336,7 @@ namespace Storage{
             this.save_note_paths(data.note_id,data.note_content_data.paths)
             this.save_note_editor_bars(data.note_id,data.note_content_data.editor_bars)
             this.save_note_next_editor_bar_id(data.note_id,data.note_content_data.next_editor_bar_id)
+            this.buffer_save_note_reviewinfo(data.note_id,data.note_content_data.part.review_card_set_man)
         }
         save_note_editor_bars(noteid:string,editor_bars:object){
             localStorage[Tags.get_note_editor_bars_tag(noteid)]=JSON.stringify(editor_bars)
@@ -333,6 +346,9 @@ namespace Storage{
         }
         save_note_next_editor_bar_id(noteid:string,nid:number){
             localStorage[Tags.get_note_next_editor_bar_id_tag(noteid)]=nid
+        }
+        buffer_save_note_reviewinfo(noteid:string,review:ReviewPartFunc.CardSetManager){
+            localStorage[Tags.get_note_review_tag(noteid)]=JSON.stringify(review)
         }
     }
 }

@@ -228,6 +228,9 @@ export default {
       next_editor_bar_id:1000,
       paths: {},
       //<-data to save
+      //manage data
+      content_manager:new NoteCanvasTs.ContentManager(),
+
 
       mouse_recorder: null,
 
@@ -248,7 +251,6 @@ export default {
       drag_bar_helper:new NoteCanvasFunc.DragBarHelper(),
 
       line_connect_helper:new NoteCanvasFunc.LineConnectHelper(),
-      content_manager:new NoteCanvasTs.ContentManager(),
       state_ts:new NoteCanvasTs.NoteCanvasStateTs()
     };
   },
