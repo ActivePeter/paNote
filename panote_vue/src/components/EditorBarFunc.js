@@ -1,4 +1,6 @@
-import RightMenuFunc from "@/components/RightMenuFunc";
+// import RightMenuFunc from "@/components/RightMenuFunc";
+import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
+
 class CornerDragHelper{
     editor_bar=null
     constructor(editor_bar) {
@@ -55,9 +57,9 @@ class EditorBarManager{
         )
         delete this.canvas.editor_bars[editor_bar.ebid]
         this.canvas.context.storage_manager
-            .save_note_editor_bars(this.canvas.content_manager.cur_note_id,this.canvas.editor_bars)
+            .buffer_save_note_editor_bars(this.canvas.content_manager.cur_note_id,this.canvas.editor_bars)
         this.canvas.context.storage_manager
-            .save_note_paths(this.canvas.content_manager.cur_note_id,this.canvas.paths);
+            .buffer_save_note_paths(this.canvas.content_manager.cur_note_id,this.canvas.paths);
      // console.log("delete one",editor_bar)
     }
     add_if_no(){
@@ -185,7 +187,7 @@ class EditorBarManager{
 class EditorBarRightMenuHelper {
     // eslint-disable-next-line no-unused-vars
     get_right_menu_content(editor_bar){
-        let content=new RightMenuFunc.RightMenuContent()
+        let content=new RightMenuFuncTs.RightMenuContent()
         content.add_one_selection("删除",()=>{
             console.log("删除 callback")
             editor_bar.emit_delete()

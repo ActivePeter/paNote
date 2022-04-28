@@ -16,8 +16,9 @@ module EditorBarViewListFunc{
         start_drag_event:MouseEvent|null=null
          // linking_bar=null
 
-
-
+         static from_EditorBarViewList(editor_bar_view_list:any){
+            return editor_bar_view_list.helper
+         }
         bar_start_drag(list:any,bar:any,event:MouseEvent){
             console.log("bar_start_drag")
 

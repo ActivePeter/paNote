@@ -1,4 +1,5 @@
 import mitt from "mitt";
+import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 
 export namespace bus_event_names{
     export const delete_note="delete_note"
@@ -49,9 +50,33 @@ export namespace bus_events{
             }
         }
     }
+    export namespace right_menu_open{
+        export interface IArg{
+            event:MouseEvent
+            content:RightMenuFuncTs.RightMenuContent
+        }
+        export class Class implements IEvent{
+            call(arg:IArg){
+                bus.emit(this.event_name,arg)
+            }
+
+            event_name: string="right_menu_open"
+
+            cancel(callback: (arg:IArg) => {}): void {
+                // @ts-ignore
+                bus.off(this.event_name,callback)
+            }
+
+            listen(callback: (arg:IArg) => {}): void {
+                // @ts-ignore
+                bus.on(this.event_name,callback)
+            }
+        }
+    }
     export const events={
         note_canvas_data_loaded:new note_canvas_data_loaded.Class(),
-        note_data_change:new note_data_change.Class()
+        note_data_change:new note_data_change.Class(),
+        right_menu_open:new right_menu_open.Class()
     }
 
 

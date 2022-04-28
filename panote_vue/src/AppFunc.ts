@@ -37,6 +37,9 @@ export module AppFuncTs{
             return null
         }
     }
+    export const request_for_conttext=(vueobj:any,cb:(ctx:Context)=>void)=>{
+        vueobj.$emit("request_for_conttext",cb)
+    }
     export let appctx: Context|null;
     appctx=null
     namespace set_up_detail{

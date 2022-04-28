@@ -3,7 +3,7 @@ import NoteCanvasFunc, {NoteContentData} from "@/components/NoteCanvasFunc";
 import Util from "../components/reuseable/Util";
 import { ElMessage } from 'element-plus'
 import {AppFuncTs} from "@/AppFunc";
-import {ReviewPartFuncNew, ReviewPartFunc} from "@/components/ReviewPartFunc";
+import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 import {bus, bus_event_names} from "@/bus";
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {NoteListScanFileBind} from "@/storage/NoteListScanFileBind";
@@ -333,18 +333,18 @@ namespace Storage{
             );
         }
         save_note_2_buffer_from_NoteStoreToFileStruct(data:NoteStoreToFileStruct){
-            this.save_note_paths(data.note_id,data.note_content_data.paths)
-            this.save_note_editor_bars(data.note_id,data.note_content_data.editor_bars)
-            this.save_note_next_editor_bar_id(data.note_id,data.note_content_data.next_editor_bar_id)
+            this.buffer_save_note_paths(data.note_id,data.note_content_data.paths)
+            this.buffer_save_note_editor_bars(data.note_id,data.note_content_data.editor_bars)
+            this.buffer_save_note_next_editor_bar_id(data.note_id,data.note_content_data.next_editor_bar_id)
             this.buffer_save_note_reviewinfo(data.note_id,data.note_content_data.part.review_card_set_man)
         }
-        save_note_editor_bars(noteid:string,editor_bars:object){
+        buffer_save_note_editor_bars(noteid:string,editor_bars:object){
             localStorage[Tags.get_note_editor_bars_tag(noteid)]=JSON.stringify(editor_bars)
         }
-        save_note_paths(noteid:string,paths:object){
+        buffer_save_note_paths(noteid:string,paths:object){
             localStorage[Tags.get_note_paths_tag(noteid)]=JSON.stringify(paths)
         }
-        save_note_next_editor_bar_id(noteid:string,nid:number){
+        buffer_save_note_next_editor_bar_id(noteid:string,nid:number){
             localStorage[Tags.get_note_next_editor_bar_id_tag(noteid)]=nid
         }
         buffer_save_note_reviewinfo(noteid:string,review:ReviewPartFunc.CardSetManager){

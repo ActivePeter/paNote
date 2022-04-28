@@ -30,9 +30,10 @@
 <script>
 // import NoteListFunc from "@/components/NoteListFunc";
 import NoteListBar from "@/components/NoteListBar";
-import RightMenuFunc from "@/components/RightMenuFunc";
+// import RightMenuFunc from "@/components/RightMenuFunc";
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {bus_events} from "@/bus";
+import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 export default {
   name: "NodeList",
   components:{
@@ -73,7 +74,7 @@ export default {
       this.notelist_manager.pub_note_list_mounted(context,this);
     },
     note_list_bar_right_menu(event,tag,obj){
-      RightMenuFunc.continue_emit(event,tag,obj,this);
+      RightMenuFuncTs.continue_emit(event,tag,obj,this);
     },
     note_list_bar_delete(note_list_bar){
       this.notelist_manager.delete_note(this.context,note_list_bar.id);

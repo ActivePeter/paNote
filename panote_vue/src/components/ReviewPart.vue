@@ -26,9 +26,14 @@
       </div>
     </div>
 
-    <ReviewPartAddNewCard v-if="show_add_new_card_view"
-                          @cancel_add_new_card="cancel_add_new_card"
-                          @final_add_new_card="final_add_new_card"
+    <ReviewPartAddNewCard
+        v-if="show_add_new_card_view"
+
+        :editing_mode="review_part_man.add_new_card__editing_mode"
+        :editing_mode_card="review_part_man.add_new_card__editing_mode_card"
+
+        @cancel_add_new_card="cancel_add_new_card"
+        @final_add_new_card="final_add_new_card"
     />
     <div v-if="mode==='review_cards'">
 
@@ -44,14 +49,14 @@
                    :body-style="{padding: '10px'}"
           >
             <ReviewPartCard
-
+                :card_key="i"
                 :card_data="item"
-
+                @review_part_cb="review_part_cb"
             ></ReviewPartCard>
           </el-card>
 
         </div>
-<!--        {{ review_part_man.card_set_man.cardsets[review_part_man.selected_card_set].cards }}-->
+        <!--        {{ review_part_man.card_set_man.cardsets[review_part_man.selected_card_set].cards }}-->
         <!--        {{ review_part_man.card_set_man.cardsets[review_part_man.selected_card_set]}}-->
         <!--        <div-->
         <!--            v-for="(item, i) in review_part_man.card_set_man.cardsets[review_part_man.selected_card_set].cards"-->
@@ -83,11 +88,11 @@
 <script>
 import {ReviewPartFunc} from "@/components/ReviewPartFunc.ts";
 import ReviewPartAddNewCard from "./ReviewPartAddNewCard"
-import {ReviewPartFuncNew} from "@/components/ReviewPartFunc";
-import {ElMessage} from "element-plus";
+// import {ReviewPartFuncNew} from "@/components/ReviewPartFunc";
+// import {ElMessage} from "element-plus";
 import ReviewPartCard from "@/components/ReviewPartCard"
 import {bus_events} from "@/bus";
-import AppFunc from "@/AppFunc";
+import {AppFuncTs} from "@/AppFunc";
 
 export default {
   name: "ReviewPart",
@@ -98,45 +103,51 @@ export default {
   mounted() {
     // Storage.ReviewPart.load_all(this.review_part_man);
     bus_events.events.note_canvas_data_loaded.listen(this.note_canvas_loaded)
+    AppFuncTs.request_for_conttext(this,(ctx)=>{
+      this.review_part_man.context=ctx
+    })
   },
   unmounted() {
     bus_events.events.note_canvas_data_loaded.cancel(this.note_canvas_loaded)
   },
   computed: {
     show_add_new_card_view() {
-      return this.mode === ReviewPartFunc.ReviewPartGuiMode.AddNewCard
+      return this.mode === ReviewPartFunc.ReviewPartGuiMode.AddNewCard || this.mode === ReviewPartFunc.ReviewPartGuiMode.EditCard
     }
   },
   data() {
     return {
       review_part_man: new ReviewPartFunc.ReviewPartManager(),
-      input_card_set_name: "",
-
+      input_card_set_name: "",//添加卡组模式下的输入框内容
       mode: 'review_cards',
-
     };
   },
   methods: {
-    note_canvas_loaded(canvas){
+    review_part_cb(cb) {
+      cb(this)
+    },
+
+    note_canvas_loaded(canvas) {
       // console.log("note_canvas_loaded",canvas)
       this.review_part_man.note_canvas_loaded(canvas)
     },
     btn_add_card_to_cur_set() {
       this.mode = ReviewPartFunc.ReviewPartGuiMode.AddNewCard
+      this.review_part_man.add_new_card__editing_mode=false
     },
     switch2add_card() {
       this.input_card_set_name = ''
       this.mode = ReviewPartFunc.ReviewPartGuiMode.AddCardSet
     },
     switch2review_card() {
-
-      this.mode = ReviewPartFuncNew.Enum.ReviewPartGuiMode.ReviewCards
+      // console.log("switch2review_card")
+      this.mode = ReviewPartFunc.Enum.ReviewPartGuiMode.ReviewCards
       // this.mode=ReviewPartFunc.ReviewPartGuiMode.ReviewCards
     },
     add_card_set() {
       ReviewPartFunc.CardSetManager.add_card_set(
           this.review_part_man.card_set_man,
-          this.review_part_man,this.input_card_set_name
+          this.review_part_man, this.input_card_set_name
       )
       // Storage.ReviewPart.save_all(this.review_part_man)
       this.switch2review_card()
@@ -145,20 +156,7 @@ export default {
       this.switch2review_card()
     },
     final_add_new_card(front, back) {
-      const res = ReviewPartFuncNew.final_add_new_card_2_selected_set(
-          this.review_part_man, front, back
-      )
-      if (res) {
-        AppFunc.get_ctx()?.storage_manager.buffer_save_note_reviewinfo(this.review_part_man.note_id,this.review_part_man.card_set_man)
-        bus_events.events.note_data_change.call(this.review_part_man.note_id)
-        // Storage.ReviewPart.save_all(this.review_part_man)
-        this.switch2review_card()
-      } else {
-        ElMessage({
-          message: '无法创建卡片,请检查正反面是否填写完整',
-          type: 'warning',
-        })
-      }
+      this.review_part_man.final_add_or_edit_card(this,front,back)
     }
   },
   props: {},
@@ -184,7 +182,8 @@ export default {
 .btn {
   width: 100%;
 }
-.card_list{
+
+.card_list {
 
   /*height: 100%;*/
   /*overflow-y: scroll;*/

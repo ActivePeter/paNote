@@ -21,10 +21,16 @@
 </template>
 
 <script>
+import {bus_events} from "@/bus";
+
 export default {
   name: "RightMenu",
   mounted() {
     window.addEventListener("mousedown", this.handle_mouse_down);
+    bus_events.events.right_menu_open.listen(this.bus_right_menu)
+  },
+  unmounted() {
+    bus_events.events.right_menu_open.cancel(this.bus_right_menu)
   },
   data() {
     return {
@@ -35,6 +41,12 @@ export default {
     };
   },
   methods: {
+    bus_right_menu(args){
+      this.show=true;
+      this.pos_x=args.event.clientX
+      this.pos_y=args.event.clientY
+      this.content=args.content.arr
+    },
     click_selection(item){
       item.callback()
       this.show=false

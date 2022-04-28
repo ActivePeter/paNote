@@ -70,9 +70,16 @@ In the process of  preparing for the Postgraduate entrance examination, the note
 - ~~鼠标中心缩放~~
 
 - 7右键菜单
-  - ~~删除~~
+  - [x] ~~删除~~
+  
+  - [x] 点击判断，若发生移动则不触发
+  
+    _PaUtilTs.MouseDownUpRecord
+  
+  - [ ] 
   
 - 3.anki插件（pa）
+  
   - 卡片组
   
 - 多个笔记

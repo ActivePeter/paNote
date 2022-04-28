@@ -1,5 +1,6 @@
-import RightMenuFunc from "@/components/RightMenuFunc";
+
 import {bus, bus_event_names} from "@/bus";
+import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 
 export namespace NoteListBarTs{
     export const handle_mouse_down=(notelist_bar:any,event:MouseEvent)=>{
@@ -15,6 +16,6 @@ export namespace NoteListBarTs{
                 }
             })
         }
-        RightMenuFunc.if_right_click_then_emit(event, "notelist_bar", _this);
+        RightMenuFuncTs.if_right_click_then_emit(event, "notelist_bar", _this);
     }
 }

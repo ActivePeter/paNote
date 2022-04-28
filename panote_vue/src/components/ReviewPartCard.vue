@@ -1,5 +1,5 @@
 <template>
-  <div class="ReviewPartCard">
+  <div class="ReviewPartCard" @mousedown="on_mouse_down">
 <!--    <el-row :gutter="20">-->
 <!--      <el-col :span="12"><div class="grid-content bg-purple">-->
 <!--        <el-button-->
@@ -38,6 +38,8 @@
 <script>
 import EditorBarViewList from "@/components/reuseable/EditorBarViewList"
 import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
+import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
+import {ReviewPartCardFunc} from "@/components/ReviewPartCardFunc";
 // import AppFunc from "@/AppFunc";
 
 export default {
@@ -61,6 +63,12 @@ export default {
     };
   },
   methods: {
+    on_mouse_down(e){
+      // console.log(e)
+      this.$emit("review_part_cb",(review_part)=>{
+        RightMenuFuncTs.if_right_click_then_emit_bus(e,ReviewPartCardFunc.construct_right_menu(review_part,this))
+      })
+    },
     sync_card_data(v){
       if(v){
         EditorBarViewListFunc.HelperFuncs.Setter.set_bars_directly(
@@ -75,6 +83,7 @@ export default {
     }
   },
   props: {
+    card_key:String,
     card_data:{
         type: Object,
         default: null

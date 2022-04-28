@@ -37,7 +37,9 @@
 <script>
 import QuillEditor from "@/components/QuillEditor";
 import EditorBarFunc from "@/components/EditorBarFunc";
-import RightMenuFunc from "@/components/RightMenuFunc";
+import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
+import {_PaUtilTs} from "@/3rd/pa_util_ts";
+// import RightMenuFunc from "@/components/RightMenuFunc";
 
 // import $ from "jquery"
 // import EditorJS from "@editorjs/editorjs";
@@ -57,7 +59,13 @@ export default {
     }
   },
   mounted() {
-
+    const _this=this;
+    // console.log("rigst")
+    this.mouse_up_down_rec.set_click_callback(()=>{
+      // console.log("click cb")
+      RightMenuFuncTs.if_right_click_then_emit(
+          _this.mouse_up_down_rec._up,"editor_bar",this);
+    })
     // this.hide_tool_bar();
     // new Quill(".editor_bar");
     // new EditorJS("editor_bar" + this.ebid);
@@ -81,7 +89,8 @@ export default {
       editing: false,
       mouse_over:false,
 
-      right_menu_helper:new EditorBarFunc.EditorBarRightMenuHelper()
+      right_menu_helper:new EditorBarFunc.EditorBarRightMenuHelper(),
+      mouse_up_down_rec:new _PaUtilTs.MouseDownUpRecord()
     };
   },
   methods: {
@@ -121,17 +130,20 @@ export default {
       this.corner_drag_helper.handle_mouse_drag_down(event)
       event.stopPropagation();
     },
+    // handle_mouse_click(event){
+    //   console.log("editor bar click")
+    // },
     handle_mouse_down(event) {
-
+      this.mouse_up_down_rec.down(event)
       if (event.buttons == 1) {
         // this.drag_on_x = event.offsetX;
         // this.drag_on_y = event.offsetY;
         this.$emit("left_click", event, this);
       }
-      RightMenuFunc.if_right_click_then_emit(event,"editor_bar",this);
       // event.preventDefault();
     },
     handle_mouse_up(event) {
+      this.mouse_up_down_rec.up(event)
       // console.log(this.ebid, event);
       this.$emit("drag_release", event, this);
     },

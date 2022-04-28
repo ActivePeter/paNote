@@ -5,13 +5,13 @@
         <el-button
             class="top_btn"
           @click="cancel_add_card"
-        >取消</el-button>
+        > 取消</el-button>
       </div></el-col>
       <el-col :span="12">
         <el-button type="primary"
                    class="top_btn"
                    @click="final_add_new_card"
-        >创建</el-button>
+        >{{ editing_mode?"完成":"创建" }}</el-button>
       </el-col>
     </el-row>
 
@@ -48,8 +48,9 @@
 </template>
 
 <script>
-import {ReviewPartFunc, ReviewPartFuncNew} from "@/components/ReviewPartFunc";
+import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 import EditorBarViewList from "@/components/reuseable/EditorBarViewList"
+// import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
 // import AppFunc from "@/AppFunc";
 
 export default {
@@ -59,7 +60,11 @@ export default {
   },
   computed:{
   },
-  mounted() {},
+  mounted() {
+    if(this.editing_mode){
+      this.helper.set_content_with_card(this,this.editing_mode_card)
+    }
+  },
   data() {
     return {
       helper:new ReviewPartFunc.AddNewCardHelper(),
@@ -73,13 +78,15 @@ export default {
       this.helper.add_btn_click(this.$refs.back_list,event)
     },
     cancel_add_card(){
-      ReviewPartFuncNew.AddNewCard.Funcs.emit_cancel_add_new_card(this)
+      ReviewPartFunc.AddNewCard.Funcs.emit_cancel_add_new_card(this)
     },
     final_add_new_card(){
-      ReviewPartFuncNew.AddNewCard.Funcs.emit_final_add_new_card(this)
+      ReviewPartFunc.AddNewCard.Funcs.emit_final_add_new_card(this)
     }
   },
   props: {
+    editing_mode:Boolean,
+    editing_mode_card:Object
   },
 };
 </script>

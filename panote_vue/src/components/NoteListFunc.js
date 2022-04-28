@@ -1,9 +1,10 @@
-import RightMenuFunc from "@/components/RightMenuFunc";
+// import RightMenuFunc from "@/components/RightMenuFunc";
 import {bus, bus_event_names} from "@/bus";
+import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 class NoteListBarHelper{
     // eslint-disable-next-line no-unused-vars
     get_right_menu_content(note_list_bar){
-        let content=new RightMenuFunc.RightMenuContent()
+        let content=new RightMenuFuncTs.RightMenuContent()
         content.add_one_selection("删除",()=>{
 
             // editor_bar.emit_delete()

@@ -2,6 +2,32 @@ import {Buffer} from "buffer";
 import * as buffer from "buffer";
 
 export namespace _PaUtilTs {
+    export class MouseDownUpRecord{
+        _down:MouseEvent|null=null
+        _up:MouseEvent|null=null
+        click_callback:()=>void=()=>{}
+
+        set_click_callback(cb:()=>void){
+            this.click_callback=cb
+        }
+        down(e:MouseEvent){
+            this._down=e;
+        }
+        up(e:MouseEvent){
+            this._up=e;
+            if(this._down&&this._up){
+                if(
+                    Math.abs(this._down.clientX-this._up.clientX)<2&&
+                    Math.abs(this._down.clientY-this._up.clientY)<2
+                ){
+                    this.click_callback()
+                }
+
+                this._down=null
+                this._up=null
+            }
+        }
+    }
     export namespace _Conv{
         export const UInt8Array2string=(data1:Uint8Array)=>{
             const data = Buffer.from(data1)

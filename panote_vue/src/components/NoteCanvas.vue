@@ -131,9 +131,10 @@ import NoteCanvasFunc from "./NoteCanvasFunc.js";
 import EditorTool from "@/components/EditorTool";
 import EditorToolFunc from "@/components/EditorToolFunc";
 import EditorBarFunc from "@/components/EditorBarFunc";
-import RightMenuFunc from "@/components/RightMenuFunc";
+// import RightMenuFunc from "@/components/RightMenuFunc";
 import {NoteCanvasTs} from "@/components/NoteCanvasTs";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
+import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 
 
 
@@ -263,7 +264,7 @@ export default {
     },
 
     right_menu(event,tag,obj){
-      RightMenuFunc.continue_emit(event,tag,obj,this);
+      RightMenuFuncTs.continue_emit(event,tag,obj,this);
     },
     editor_tool_change_is_show(is_show) {
       this.editor_tool_helper.switch_tool_bar(this, is_show)

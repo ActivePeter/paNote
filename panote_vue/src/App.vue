@@ -34,7 +34,9 @@
       >
         <template v-slot:sidebar>
 
-          <ReviewPart class="review_part"
+          <ReviewPart
+              class="review_part"
+              @request_for_conttext="handle_request_for_conttext"
           ></ReviewPart>
         </template>
         <template v-slot:content>
@@ -95,6 +97,9 @@ export default {
   },
 
   methods: {
+    handle_request_for_conttext(cb){
+      cb(this.context)
+    },
     get_context(obj) {
       obj.set_context(this.context)
       // obj.context=this.context;

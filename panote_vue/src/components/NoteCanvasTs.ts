@@ -80,12 +80,12 @@ export module NoteCanvasTs{
                 ]=(bar);
             canvas.next_editor_bar_id++;
             this._backend_save_mode_choose(ctx,()=>{
-                ctx.storage_manager.save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
-                ctx.storage_manager.save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
+                ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
+                ctx.storage_manager.buffer_save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
                 this._backend_save_if_binded(ctx);
             },()=>{
-                ctx.storage_manager.save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
-                ctx.storage_manager.save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
+                ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
+                ctx.storage_manager.buffer_save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
             })
             console.log("backend_add_editor_bar_and_save");
         }
@@ -98,10 +98,10 @@ export module NoteCanvasTs{
             console.log("backend_editor_bar_change_and_save");
             // if(change.type==EditorBarFunc.EditorBarChangeType.)
             this._backend_save_mode_choose(ctx,()=>{
-                ctx.storage_manager.save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
+                ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
                 this._backend_save_if_binded(ctx);
             },()=>{
-                ctx.storage_manager.save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
+                ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
             })
         }
 
@@ -111,10 +111,10 @@ export module NoteCanvasTs{
         backend_path_change_and_save(ctx:AppFuncTs.Context,canvas:any,change:PathChange){
             console.log("backend_path_change_and_save");
             this._backend_save_mode_choose(ctx,()=>{
-                ctx.storage_manager.save_note_paths(this.cur_note_id,canvas.paths);
+                ctx.storage_manager.buffer_save_note_paths(this.cur_note_id,canvas.paths);
                 this._backend_save_if_binded(ctx);
             },()=>{
-                ctx.storage_manager.save_note_paths(this.cur_note_id,canvas.paths);
+                ctx.storage_manager.buffer_save_note_paths(this.cur_note_id,canvas.paths);
             })
         }
     }
