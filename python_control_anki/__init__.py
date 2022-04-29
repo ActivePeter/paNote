@@ -1,12 +1,17 @@
 from aqt import mw
 from aqt import gui_hooks
 from aqt import utils
-
+import sys
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 import threading
 import socket
-from PyQt5.QtCore import QObject, pyqtSignal, QThread
+from PyQt5.QtCore import QObject, pyqtSignal, QThread,QTimer
 from . import tcp_pack_construct
 from . import handle_msg
+from . import anki_util
 import json
 
 
@@ -53,14 +58,14 @@ def test():
     ))
 
 
-def thread_recv_msg(new_client_socket: socket, ip_port, send:QTypeSignal):
-    pack_constructor=tcp_pack_construct.TcpPackConstructor()
+def thread_recv_msg(new_client_socket: socket, ip_port, send: QTypeSignal):
+    pack_constructor = tcp_pack_construct.TcpPackConstructor()
 
     def pack_handle(pack_data: list):
         pack_data = bytearray(pack_data)
-        str=pack_data.decode(encoding='UTF-8', errors='strict')
+        str = pack_data.decode(encoding='UTF-8', errors='strict')
         try:
-            jsonobj=json.loads(str)
+            jsonobj = json.loads(str)
             send.sendmsg.emit(jsonobj)
         except json.JSONDecodeError:
             send.sendmsg.emit(str)
@@ -91,11 +96,7 @@ class NetCtx:
 netctx = NetCtx()
 
 
-
-
-
 def thread_server(send: QTypeSignal):
-
     # global_send.emit_connect()
     global tcp_server_socket
     tcp_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -120,17 +121,42 @@ def thread_server(send: QTypeSignal):
             print('err')
 
 
+# class TimerWorker(QObject):
+    # 这是每个对象所包含的一个定时器函数
+last_n_empty=False
+def timerEvent():
+    global last_n_empty
+    # 不能在这个类下面进行终止
+    # print(event,"1")
+    # global_send.emit_connect()
+    # utils.showInfo("timer")
+    if not anki_util.tasks.empty():
+        # utils.showInfo("timer redo")
+        job = anki_util.tasks.get()
+        job()
+        last_n_empty=True
+    else:
+        if last_n_empty:
+            mw.deckBrowser.show()
+        last_n_empty=False
 
 
+# tw = TimerWorker()
+timer = QTimer()
 
 # 插件生命周期
 def init():
+    timer.timeout.connect(timerEvent)
+    timer.start(100)
+    # tw.startTimer(100)
     print('将信号绑定槽：')
     # 将信号绑定到槽函数上
     global_send.sendmsg.connect(handle_msg.slot_handle)
 
     thread = threading.Thread(target=thread_server, args=(global_send,))
     thread.start()
+
+
 def about_2_quit():
     global tcp_server_socket, global_on
     global_on = False

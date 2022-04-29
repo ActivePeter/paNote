@@ -82,12 +82,21 @@ In the process of  preparing for the Postgraduate entrance examination, the note
   
   - [ ] 卡片组
     - [x] 卡片组创建
+    
     - [x] 卡片创建
+    
     - [ ] 卡片右键菜单
       - [x] 删除
       - [x] 编辑
+      
     - [x] 卡片存储
+    
     - [ ] 卡片数据同步到anki
+    
+      - [x] 添加删除卡片
+    
+        ![](./resource/sync_2_anki_operation.gif)
+    
     - [ ] 复习卡片
   
 - 多个笔记
