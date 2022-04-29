@@ -60,6 +60,9 @@ namespace Storage{
         export const get_note_review_tag=(noteid:string)=>{
             return "note"+noteid+"_review"
         }
+        export const get_note_review_syncanki_tag=(noteid:string)=>{
+            return "note"+noteid+"_review_syncanki"
+        }
     }
     export namespace ReviewPart{
         export const save_all=(man:ReviewPartFunc.ReviewPartManager)=>{
@@ -263,6 +266,10 @@ namespace Storage{
             const obj=storage_get(Tags.get_note_review_tag(noteid),Util.DataType.Obj)
             return obj
         }
+        buffer_load_syncanki(noteid:string):null|string{
+            const obj=storage_get_raw_str(Tags.get_note_review_syncanki_tag(noteid))
+            return obj
+        }
         // eslint-disable-next-line no-unused-vars
         has_note_saved(noteid:string){
             if(
@@ -283,12 +290,16 @@ namespace Storage{
             //     editor_bars,
             //     paths
             //     )
+            const reviewsyncanki=this.buffer_load_syncanki(noteid)
             const ret= new NoteContentData(
                 next_editor_bar_id,
                 editor_bars,
                 paths)
             if(review){
                 ret.part.review_card_set_man=review
+            }
+            if(reviewsyncanki){
+                ret.part.sync_anki_serialized=reviewsyncanki
             }
             return ret;
         }
@@ -349,6 +360,9 @@ namespace Storage{
         }
         buffer_save_note_reviewinfo(noteid:string,review:ReviewPartFunc.CardSetManager){
             localStorage[Tags.get_note_review_tag(noteid)]=JSON.stringify(review)
+        }
+        buffer_save_note_review_syncanki(noteid:string,queue_serialized:string){
+            localStorage[Tags.get_note_review_syncanki_tag(noteid)]=queue_serialized
         }
     }
 }

@@ -73,6 +73,7 @@ import AppFunc from "@/AppFunc";
 import {AppFuncTs} from "@/AppFunc";
 import Storage from "@/storage/Storage";
 import NoteConfigDialog from "@/components/NoteConfigDialog";
+import {Timer} from "@/timer/Timer";
 // import electron_net from "@/electron_net";
 export default {
   name: "App",
@@ -93,9 +94,12 @@ export default {
 
     AppFunc.set_ctx(this.context)
     AppFuncTs.set_up_all(this.context)
+    Timer._TimerState.LifeTime.mount(this.context.timer)
     // this.net_manager=electron_net.load_net_manager();
   },
-
+  unmounted() {
+    Timer._TimerState.LifeTime.unmount(this.context.timer)
+  },
   methods: {
     handle_request_for_conttext(cb){
       cb(this.context)

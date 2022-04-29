@@ -280,7 +280,7 @@ class LineConnectHelper {
     }
 }
 
-
+//会被直接序列化到文件中的结构
 export class NoteContentData{
     next_editor_bar_id=1000
     editor_bars={}

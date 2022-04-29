@@ -9,10 +9,12 @@ import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 import {NoteContentData} from "@/components/NoteCanvasFunc";
 import {bus, bus_events} from "@/bus";
+import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
 
 export module NoteCanvasTs{
     export class PartOfNoteContentData{
         review_card_set_man=new ReviewPartFunc.CardSetManager()
+        sync_anki_serialized="[]"
     }
     export class ContentManager{//由canvas持有
         cur_note_id="-1"

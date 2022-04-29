@@ -7,14 +7,17 @@ const net = require("net")
 
 
 //client
-class NetManager {
-    try_send_str(str) {
+export class NetManager {
+    try_send_str(str){
         // let make=[]
-        let make = Buffer.alloc(4 + str.length);
-        make.writeUInt32BE(str.length);
-        make.subarray(4).write(str);
+        const buf1=Buffer.from(str)
+        let make = Buffer.alloc(4);
+        make.writeUInt32BE(buf1.length);
+        make=Buffer.concat([make,buf1])
+        // make.subarray(4).write(buf1);
+        // console.log("send",str,make)
         return new Promise(
-            (resolve ,_)=>{
+            (resolve)=>{
                 const _this=this;
                 this.client.write(make,()=>{
                     if(_this.client.bytesWritten===make.length){
@@ -28,21 +31,27 @@ class NetManager {
     }
 
     constructor() {
+
+        this.connected=false
         this.tcp_pack_constructor = new TcpPackConstructor()
         this.tcp_pack_constructor.set_one_pack_callback((buf) => {
             console.log("pack data:", buf.toString())
         })
         let PORT = 12357
-        let HOST = "192.168.137.92"//"127.0.0.1"
+        let HOST =// "192.168.137.133"
+        "127.0.0.1"
         let new_client = () => {
             this.client = new net.Socket();
             let _this = this;
+
             this.client.on('error', function () {
+                _this.connected=false
                 console.log('tcp_client error!');
                 _this.client.destroy();
                 // setTimeout(conn,10000 );
             })
             this.client.on('close', function () {
+                _this.connected=false
                 console.log('服务器端下线了');
                 _this.client.destroy();
                 setTimeout(conn, 10000);//重连
@@ -58,6 +67,7 @@ class NetManager {
             const _this = this;
             new_client()
                 .connect(PORT, HOST, () => {
+                    _this.connected=true
                     console.log("连接成功: " + HOST + ":" + PORT);
                     _this.try_send_str("helloworld")
                     // 建立连接后立即向服务器发送数据，服务器将收到这些数据

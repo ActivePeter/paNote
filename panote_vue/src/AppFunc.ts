@@ -27,6 +27,8 @@ export module AppFuncTs{
         app:any
         cur_open_note_id="-1"
         storage_manager=new Storage.StorageManager(this)
+        timer=new Timer.TimerState()
+
         constructor(app:any) {
             this.app=app
         }
@@ -87,6 +89,7 @@ export module AppFuncTs{
 import Context = AppFuncTs.Context;
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {NoteListScanFileBind} from "@/storage/NoteListScanFileBind";
+import {Timer} from "@/timer/Timer";
 export default {
     AppRefsGetter,
     Context,

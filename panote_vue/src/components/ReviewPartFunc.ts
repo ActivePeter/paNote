@@ -7,11 +7,15 @@ import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {bus_events} from "@/bus";
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {ElMessage} from "element-plus";
+import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
+import {_PaUtilTs} from "@/3rd/pa_util_ts";
 
 
 
 
 export namespace ReviewPartFunc{
+    import Context = AppFuncTs.Context;
+
     export class Card{
         id
         front
@@ -105,13 +109,24 @@ export namespace ReviewPartFunc{
     export class ReviewPartManager{
         card_set_man//对notecanvas中的数据的引用
         note_id=""
+        note_id_valid():boolean{
+            return this.note_id!=""
+        }
         selected_card_set=""
         add_new_card__editing_mode=false
         add_new_card__editing_mode_card:null|Card=null
+        sync_anki=new _ReviewPartSyncAnki._StoreStruct.Class()
+        note_store_part?:NoteCanvasTs.PartOfNoteContentData
 
         context:null|AppFuncTs.Context=null
         constructor() {
             this.card_set_man=new CardSetManager()
+        }
+        mount(ctx:Context){
+            this.context=ctx
+            _ReviewPartSyncAnki._StoreStruct.Funcs.LifeTime.mount(
+                ctx,this
+            )
         }
         get_selected_card_set():CardSet|null{
             return CardSetManager.get_cardset(this.card_set_man,this.selected_card_set)
@@ -122,32 +137,22 @@ export namespace ReviewPartFunc{
                 this.selected_card_set=""
                 this.note_id=NoteCanvasTs.ContentManager.from_canvas(canvas).cur_note_id
                 this.card_set_man=part.review_card_set_man
+                this.note_store_part=part
+
+                //检查是否存在，
+                if(!part.sync_anki_serialized)
+                {
+                    part.sync_anki_serialized="[]"
+                }
+
+
+                this.sync_anki.operation_queue=_PaUtilTs.DataStructure.ListSerializable.from_string(
+                    this.note_store_part.sync_anki_serialized
+                )
             }
             // console.log("note_canvas_loaded",canvas,card_set_man)
         }
-        final_add_or_edit_card(review_part:any,front:any[],back:any[]){
-            let res=null
-            if(this.add_new_card__editing_mode){
-                res=ReviewPartFunc.Funcs.try_change_card_in_select_set(
-                    this, front, back
-                )
-            }else{
-                res = ReviewPartFunc.Funcs.final_add_new_card_2_selected_set(
-                    this, front, back
-                )
-            }
-            if (res) {
-                AppFunc.get_ctx()?.storage_manager.buffer_save_note_reviewinfo(this.note_id, this.card_set_man)
-                bus_events.events.note_data_change.call(this.note_id)
-                // Storage.ReviewPart.save_all(this.review_part_man)
-                review_part.switch2review_card()
-            } else {
-                ElMessage({
-                    message: '无法创建卡片,请检查正反面是否填写完整',
-                    type: 'warning',
-                })
-            }
-        }
+
         static from_review_part(review_part:any):ReviewPartManager{
             return review_part.review_part_man
         }
@@ -178,11 +183,26 @@ export namespace ReviewPartFunc{
     }
     export const Enum: any = {ReviewPartGuiMode}
     export namespace Funcs{
+        //这里的为对数据的操作入口,
+        // 若操作成功，会将操作记录到syncanki
         export const final_add_new_card_2_selected_set=(reviewPartManager:ReviewPartManager,front:object[],back:object[])=>{
-            return ReviewPartFunc.CardSetManager.add_card_to_set(
+            const res= ReviewPartFunc.CardSetManager.add_card_to_set(
                 reviewPartManager.card_set_man,
                 reviewPartManager.selected_card_set,front,back
             )
+            if(res){
+                _ReviewPartSyncAnki._StoreStruct.Funcs.DataSet.push_new_ope(
+                    reviewPartManager,
+                    new _ReviewPartSyncAnki._OneOperation.OneOperation(
+                        _ReviewPartSyncAnki._OneOperation.OpeType.Add,
+                        _PaUtilTs.get_time_stamp(),
+                        new _ReviewPartSyncAnki._OneOperation.OpeCard(
+                            reviewPartManager.note_id,reviewPartManager.selected_card_set,res
+                        )
+                    )
+                )
+            }
+            return res;
         }
 
         export const try_change_card_in_select_set=(reviewPartManager:ReviewPartManager,front:object[],back:object[]):boolean=>{
@@ -203,13 +223,47 @@ export namespace ReviewPartFunc{
         export const _try_delete_card_in_select_set=(rpman:ReviewPartManager,cardid:string):boolean=>{
             console.log(rpman)
             const cardset=CardSetManager.get_cardset(rpman.card_set_man,rpman.selected_card_set)
-            if(cardset){
-                return CardSet.del_card(cardset,cardid)
+            if(cardset&&CardSet.del_card(cardset,cardid)){
+                _ReviewPartSyncAnki._StoreStruct.Funcs.DataSet.push_new_ope(
+                    rpman,
+                    new _ReviewPartSyncAnki._OneOperation.OneOperation(
+                        _ReviewPartSyncAnki._OneOperation.OpeType.Delete,
+                        _PaUtilTs.get_time_stamp(),
+                        new _ReviewPartSyncAnki._OneOperation.OpeCard(
+                            rpman.note_id,rpman.selected_card_set,cardid
+                        )
+                    )
+                )
+                return true
             }
             return false
         }
         //编辑数据并且将数据存储到缓存
         export namespace edit_data_with_buffer_change{
+            export const final_add_or_edit_card=(review_part:any,front:any[],back:any[])=>{
+                const rpman=ReviewPartManager.from_review_part(review_part)
+                let res=null
+                if(rpman.add_new_card__editing_mode){
+                    res=ReviewPartFunc.Funcs.try_change_card_in_select_set(
+                        rpman, front, back
+                    )
+                }else{
+                    res = ReviewPartFunc.Funcs.final_add_new_card_2_selected_set(
+                        rpman, front, back
+                    )
+                }
+                if (res) {
+                    AppFunc.get_ctx()?.storage_manager.buffer_save_note_reviewinfo(rpman.note_id, rpman.card_set_man)
+                    bus_events.events.note_data_change.call(rpman.note_id)
+                    // Storage.ReviewPart.save_all(this.review_part_man)
+                    review_part.switch2review_card()
+                } else {
+                    ElMessage({
+                        message: '无法创建卡片,请检查正反面是否填写完整',
+                        type: 'warning',
+                    })
+                }
+            }
             export const try_delete_card_in_select_set=(rpman:ReviewPartManager,cardid:string)=> {
                 const ctx=rpman.context
                 const res=_try_delete_card_in_select_set(rpman,cardid)

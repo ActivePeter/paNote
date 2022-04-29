@@ -2,50 +2,174 @@ import {Buffer} from "buffer";
 import * as buffer from "buffer";
 
 export namespace _PaUtilTs {
-    export class MouseDownUpRecord{
-        _down:MouseEvent|null=null
-        _up:MouseEvent|null=null
-        click_callback:()=>void=()=>{}
+    export namespace DataStructure {
+        export namespace ListSerializable {
+            class DoublyNode<T> {
+                constructor(
+                    public element: T,
+                    public next?: DoublyNode<T>,
+                    public prev?: DoublyNode<T>
+                ) {
 
-        set_click_callback(cb:()=>void){
-            this.click_callback=cb
-        }
-        down(e:MouseEvent){
-            this._down=e;
-        }
-        up(e:MouseEvent){
-            this._up=e;
-            if(this._down&&this._up){
-                if(
-                    Math.abs(this._down.clientX-this._up.clientX)<2&&
-                    Math.abs(this._down.clientY-this._up.clientY)<2
-                ){
-                    this.click_callback()
+                }
+            }
+
+            export class Class<T> {
+                // 多了一个尾部节点tail，重写了head
+                head?: DoublyNode<T>;
+                tail?: DoublyNode<T>;
+                count = 0;
+
+                constructor() {
+
                 }
 
-                this._down=null
-                this._up=null
+                /**
+                 * @description: 向双向链表尾部添加一个元素
+                 * @param {T} element
+                 */
+                push(element: T) {
+                    const node = new DoublyNode(element);
+
+                    if (this.head == null) {
+                        //头和尾一起赋值
+                        this.head = node;
+                        this.tail = node; //   新增
+                    } else {
+                        //   修改
+                        // 添加到尾部，互相交换指针
+                        // @ts-ignore
+                        this.tail.next = node;
+                        node.prev = this.tail;
+                        // 最后把node设为tail
+                        this.tail = node;
+                    }
+                    this.count++;
+                }
+                pop():T|undefined{
+                    if(this.head){
+                        const head=this.head
+                        this.head=this.head.next
+                        this.count--
+                        return head.element
+                    }
+                    return undefined
+                }
+                remove_node(node: DoublyNode<T>) {
+                    if (this.count == 0) {
+                        return
+                    }
+                    const prev = node.prev
+                    const next = node.next
+                    if (prev && next) {//node不是头也不是尾
+                        prev.next = next
+                        next.prev = prev
+                    } else if (prev) {//有头没尾 node是尾
+                        prev.next = undefined
+                        this.tail = prev
+                    } else if (next) {//有尾没头 node是头
+                        next.prev = undefined
+                        this.head = next
+                    } else {//没头没尾，node既是头又是尾
+                        this.head = this.tail = undefined
+                    }
+                    this.count--;
+                }
+
+                /**
+                 * @description: 清空链表
+                 */
+                clear() {
+                    this.head = this.tail = undefined
+                    this.count = 0
+                }
+
+                to_string(): string {
+                    let head = this.head
+                    let str = '['
+                    let first = true
+                    while (head) {
+                        if (!first) {
+                            str += ','
+                        }
+                        first = false
+                        str += JSON.stringify(head.element)
+                        head = head.next
+                    }
+                    str += ']'
+                    return str
+                }
+            }
+
+            export const from_string = <T>(str: string): Class<T> => {
+                const arr = JSON.parse(str)
+                const list = new Class<T>()
+                for (const key in arr) {
+                    list.push(arr[key])
+                }
+                return list
             }
         }
     }
-    export namespace _Conv{
-        export const UInt8Array2string=(data1:Uint8Array)=>{
+
+    export class MouseDownUpRecord {
+        _down: MouseEvent | null = null
+        _up: MouseEvent | null = null
+        click_callback: () => void = () => {
+        }
+
+        set_click_callback(cb: () => void) {
+            this.click_callback = cb
+        }
+
+        down(e: MouseEvent) {
+            this._down = e;
+        }
+
+        up(e: MouseEvent) {
+            this._up = e;
+            if (this._down && this._up) {
+                if (
+                    Math.abs(this._down.clientX - this._up.clientX) < 2 &&
+                    Math.abs(this._down.clientY - this._up.clientY) < 2
+                ) {
+                    this.click_callback()
+                }
+
+                this._down = null
+                this._up = null
+            }
+        }
+    }
+
+    export namespace _Conv {
+        export const UInt8Array2string = (data1: Uint8Array) => {
             const data = Buffer.from(data1)
             return data.toString()
         }
     }
-    export const try_parse_json=(str:string)=>{
+    export const try_parse_json = (str: string) => {
         try {
             return JSON.parse(str)
-        }catch (e){
+        } catch (e) {
             return null
         }
     }
-    export namespace _JudgeType{
-        export const is_number=(v:any)=>{
+    export const get_time_stamp = (): string => {
+        const now = new Date()
+        return now.getUTCFullYear() + ":" +
+            now.getUTCMonth() + ":" +
+            now.getUTCDay() + ":" +
+            now.getUTCHours() + ":" +
+            now.getUTCMinutes() + ":" +
+            now.getUTCSeconds() + ":" +
+            now.getUTCMilliseconds()
+    }
+    export namespace _JudgeType {
+        export const is_number = (v: any) => {
             return typeof v == "number"
         }
-        export const is_string=(v:any)=>{
+        export const is_string = (v: any) => {
             return typeof v == "string"
         }
     }
@@ -54,9 +178,9 @@ export namespace _PaUtilTs {
             //old data wouldnt be hold
             export const EfficentExpand = (
                 buffer: Buffer,
-                target_size_at_least: number):Buffer=> {
+                target_size_at_least: number): Buffer => {
                 //目标size 比当前小
-                if(target_size_at_least<=buffer.length){
+                if (target_size_at_least <= buffer.length) {
                     return buffer;
                 }
                 let n = target_size_at_least;
@@ -65,7 +189,7 @@ export namespace _PaUtilTs {
                 n |= n >> 4;
                 n |= n >> 8;
                 n |= n >> 16;
-                const new_size= (n < 0) ? 1 : (n >= 2147483647) ? 2147483647 : n + 1;
+                const new_size = (n < 0) ? 1 : (n >= 2147483647) ? 2147483647 : n + 1;
                 // console.log(new_size)
                 return Buffer.alloc(new_size)
             }

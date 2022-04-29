@@ -1,6 +1,8 @@
 // import ipcMain = Electron.Main.ipcMain;
 import {dialog, ipcMain, ipcRenderer} from "electron";
 import * as fs from "fs";
+import electron_net, {NetManager} from "@/electron_net";
+import {SendState} from "@/electron_net_ts";
 
 export namespace _ipc {
     export namespace _channels {
@@ -37,8 +39,36 @@ export namespace _ipc {
                 }
             }
         }
+        namespace send_to_anki{
+            interface Return{
+                canceled: boolean
+                filePaths: string[]
+            }
+            export class Class implements ITask{
+                channel="send_to_anki"
+                call(get_serialized_data:any):Promise<Return>{
+                    return ipcRenderer.invoke(this.channel,get_serialized_data)
+                }
+                regist(){
+                    ipcMain.handle(this.channel, async (event,get_serialized_data) =>{
+                        console.log("send_to_anki",get_serialized_data)
+                        const netman:null|NetManager=electron_net.get_net_manager()
+                        if(!netman){
+                            return false
+                        }
+                        const res=await netman.try_send_str(get_serialized_data);
+                        if(res==SendState.Succ){
+                            return true
+                        }
+                        return false
+                    })
+                }
+            }
+        }
+        //底下的regist函数会遍历regist
         export const tasks={
-            start_choose_pa_note_file:new start_choose_pa_note_file.Class()
+            start_choose_pa_note_file:new start_choose_pa_note_file.Class(),
+            send_to_anki:new send_to_anki.Class()
         }
     }
     export const regist = () => {

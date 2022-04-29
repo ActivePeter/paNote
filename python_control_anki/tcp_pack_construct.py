@@ -66,7 +66,7 @@ class TcpPackConstructor:
 
     def _calc_pack_head(self):
         self.packlen = int.from_bytes(self.head_buf,byteorder='big',signed=False)
-        print('packlen:',self.packlen)
+        # print('packlen:',self.packlen)
 
     def _write_data_2_body(self, buf: list, cnt: int):
         for i in range(0, cnt):

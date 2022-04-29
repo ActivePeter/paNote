@@ -6,6 +6,7 @@ import threading
 import socket
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
 from . import tcp_pack_construct
+from . import handle_msg
 import json
 
 
@@ -52,13 +53,20 @@ def test():
     ))
 
 
-def thread_recv_msg(new_client_socket: socket, ip_port, send):
+def thread_recv_msg(new_client_socket: socket, ip_port, send:QTypeSignal):
     pack_constructor=tcp_pack_construct.TcpPackConstructor()
 
     def pack_handle(pack_data: list):
         pack_data = bytearray(pack_data)
-        jsonobj=json.loads(pack_data.decode(encoding='UTF-8', errors='strict'))
-        if 'id' in 
+        str=pack_data.decode(encoding='UTF-8', errors='strict')
+        try:
+            jsonobj=json.loads(str)
+            send.sendmsg.emit(jsonobj)
+        except json.JSONDecodeError:
+            send.sendmsg.emit(str)
+
+        # print("recv:",jsonobj)
+        # send.sendmsg.emit(jsonobj)
         # print("recv:", pack_data.decode(encoding='UTF-8', errors='strict'))
 
     pack_constructor.set_detahandle_callback(pack_handle)
@@ -115,16 +123,11 @@ def thread_server(send: QTypeSignal):
 
 
 
-def slot_handle(msg):
-    utils.showInfo(msg + "panote 客户端已经连接上anki插件")
-
-
-
 # 插件生命周期
 def init():
     print('将信号绑定槽：')
     # 将信号绑定到槽函数上
-    global_send.sendmsg.connect(slot_handle)
+    global_send.sendmsg.connect(handle_msg.slot_handle)
 
     thread = threading.Thread(target=thread_server, args=(global_send,))
     thread.start()

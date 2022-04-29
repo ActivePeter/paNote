@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    {{review_part_man.note_store_part?review_part_man.note_store_part.sync_anki_serialized:""}}
     <div ref="top">
       <el-select v-model="review_part_man.selected_card_set" class="m-2" placeholder="Select">
         <el-option
@@ -104,7 +105,7 @@ export default {
     // Storage.ReviewPart.load_all(this.review_part_man);
     bus_events.events.note_canvas_data_loaded.listen(this.note_canvas_loaded)
     AppFuncTs.request_for_conttext(this,(ctx)=>{
-      this.review_part_man.context=ctx
+      this.review_part_man.mount(ctx)
     })
   },
   unmounted() {
@@ -156,7 +157,9 @@ export default {
       this.switch2review_card()
     },
     final_add_new_card(front, back) {
-      this.review_part_man.final_add_or_edit_card(this,front,back)
+      ReviewPartFunc.Funcs.edit_data_with_buffer_change.final_add_or_edit_card(
+          this,front,back
+      )
     }
   },
   props: {},
