@@ -77,6 +77,7 @@ def thread_recv_msg(new_client_socket: socket, ip_port, send: QTypeSignal):
 
     pack_constructor.set_detahandle_callback(pack_handle)
     while global_on:
+        #todo 这里要换成try，否则可能会崩掉
         recv_data = new_client_socket.recv(1024)
         # 判断是否有消息返回
         if recv_data:

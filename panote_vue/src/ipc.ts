@@ -35,6 +35,9 @@ export namespace _ipc {
                 cb:any
                 regist(context:AppFuncTs.Context){
                     this.cb=(event:any,noteid:string,cardsetid:string,cardid:string) => {
+                        console.log("start_review_card cb",
+                            noteid,cardsetid,cardid
+                            )
 
                     }
                     ipcRenderer.on(this.channel,this.cb)

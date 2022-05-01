@@ -36,6 +36,7 @@
 
           <ReviewPart
               class="review_part"
+              ref="review_part_ref"
               @request_for_conttext="handle_request_for_conttext"
           ></ReviewPart>
         </template>

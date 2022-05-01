@@ -23,6 +23,7 @@ class AppRefsGetter{
 
 
 export module AppFuncTs{
+    
     export class Context{
         app:any
         cur_open_note_id="-1"
