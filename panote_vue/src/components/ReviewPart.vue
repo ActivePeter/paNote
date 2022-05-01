@@ -42,11 +42,15 @@
     <div v-if="mode==='review_cards'&&review_part_man.selected_card_set!==''">
 
       <!--      <div v-if="">-->
+
       <div class="card_list" :style="{
           height:'calc(100vh - ' +($refs.top.offsetHeight+80)+'px)'
         }">
+        <ReviewPartReviewing v-if="review_part_man.reviewing"></ReviewPartReviewing>
+        <el-card
+            v-else
 
-        <el-card shadow="hover"
+            shadow="hover"
                  style="margin-bottom: 10px"
                  v-for="(item, i) in review_part_man.card_set_man.cardsets[review_part_man.selected_card_set].cards"
                  :key="i"
@@ -101,12 +105,13 @@ import {_ipc} from "@/ipc";
 import electron_net from "@/electron_net";
 import {TalkPacker} from "@/talk_packer";
 import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
-
+import ReviewPartReviewing from "@/components/ReviewPartReviewing";
 export default {
   name: "ReviewPart",
   components: {
     ReviewPartAddNewCard,
-    ReviewPartCard
+    ReviewPartCard,
+    ReviewPartReviewing
   },
   mounted() {
     // Storage.ReviewPart.load_all(this.review_part_man);

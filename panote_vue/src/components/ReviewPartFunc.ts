@@ -106,6 +106,16 @@ export namespace ReviewPartFunc{
         }
     }
 
+    export class ReviewPartManFromAnkiFunc{
+        start_review(note:string,cardset:string,card:string){
+            const rpman=this.rpman
+            if(rpman.note_id==note&&rpman.selected_card_set==cardset){
+                rpman.reviewing=true
+            }
+        }
+        constructor(private rpman:ReviewPartManager) {
+        }
+    }
     export class ReviewPartManager{
         card_set_man//对notecanvas中的数据的引用
         note_id=""
@@ -117,17 +127,23 @@ export namespace ReviewPartFunc{
         add_new_card__editing_mode_card:null|Card=null
         sync_anki=new _ReviewPartSyncAnki._StoreStruct.Class()
         note_store_part?:NoteCanvasTs.PartOfNoteContentData
+        reviewing=false
 
         context:null|AppFuncTs.Context=null
         constructor() {
             this.card_set_man=new CardSetManager()
         }
+        f_from_anki(){
+            return new ReviewPartManFromAnkiFunc(this)
+        }
+
         mount(ctx:Context){
             this.context=ctx
             _ReviewPartSyncAnki._StoreStruct.Funcs.LifeTime.mount(
                 ctx,this
             )
         }
+
         get_selected_card_set():CardSet|null{
             return CardSetManager.get_cardset(this.card_set_man,this.selected_card_set)
         }
@@ -183,6 +199,7 @@ export namespace ReviewPartFunc{
     }
     export const Enum: any = {ReviewPartGuiMode}
     export namespace Funcs{
+
         //这里的为对数据的操作入口,
         // 若操作成功，会将操作记录到syncanki
         export const final_add_new_card_2_selected_set=(reviewPartManager:ReviewPartManager,front:object[],back:object[])=>{

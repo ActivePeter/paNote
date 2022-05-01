@@ -5,6 +5,8 @@ import electron_net, {NetManager} from "@/electron_net";
 import {SendState} from "@/electron_net_ts";
 // import {win} from "@/background";
 import {AppFuncTs} from "@/AppFunc";
+import {start_review_card} from "@/ipc_tasks/main_call_render/start_review_card"
+import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 // import {electron_bg} from "@/background";
 
 export namespace _ipc {
@@ -20,32 +22,6 @@ export namespace _ipc {
             channel:string
             regist(context:AppFuncTs.Context):void
             unregist():void
-        }
-        namespace start_review_card{
-            export class Class implements ITask{
-                channel="start_review_card"
-                call(noteid:string,cardsetid:string,cardid:string){
-                    if(_ipc.win_ref){
-                        _ipc.win_ref.webContents.send(this.channel,noteid,cardsetid,cardid)
-                    }
-                    // if(electron_bg.get_win()){
-                    //     electron_bg.get_win().webContents.send(this.channel,noteid,cardsetid,cardid)
-                    // }
-                }
-                cb:any
-                regist(context:AppFuncTs.Context){
-                    this.cb=(event:any,noteid:string,cardsetid:string,cardid:string) => {
-                        console.log("start_review_card cb",
-                            noteid,cardsetid,cardid
-                            )
-
-                    }
-                    ipcRenderer.on(this.channel,this.cb)
-                }
-                unregist() {
-                    ipcRenderer.off(this.channel,this.cb)
-                }
-            }
         }
         export const tasks={
             start_review_card:new start_review_card.Class()

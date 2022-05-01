@@ -23,13 +23,22 @@ class AppRefsGetter{
 
 
 export module AppFuncTs{
-    
+    class ContextGetter{
+        review_part_man():ReviewPartFunc.ReviewPartManager{
+            return this.ctx.app.$refs.review_part_ref.review_part_man
+        }
+        constructor(private ctx:Context) {
+
+        }
+    }
     export class Context{
         app:any
         cur_open_note_id="-1"
         storage_manager=new Storage.StorageManager(this)
         timer=new Timer.TimerState()
-
+        getter(){
+            return new ContextGetter(this)
+        }
         constructor(app:any) {
             this.app=app
         }
@@ -94,6 +103,7 @@ import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {NoteListScanFileBind} from "@/storage/NoteListScanFileBind";
 import {Timer} from "@/timer/Timer";
 import {_ipc} from "@/ipc";
+import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 export default {
     AppRefsGetter,
     Context,
