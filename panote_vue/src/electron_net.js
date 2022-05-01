@@ -1,6 +1,7 @@
 import {TcpPackConstructor} from "@/electron_net_ts";
 import {Buffer} from "buffer";
 import {SendState} from "@/electron_net_ts";
+import {NetPackRecv} from "@/net_pack_recv";
 
 const net = require("net")
 
@@ -35,7 +36,8 @@ export class NetManager {
         this.connected=false
         this.tcp_pack_constructor = new TcpPackConstructor()
         this.tcp_pack_constructor.set_one_pack_callback((buf) => {
-            console.log("pack data:", buf.toString())
+            // console.log("pack data:", buf.toString())
+            NetPackRecv.handle(buf.toString())
         })
         let PORT = 12357
         let HOST =// "192.168.137.133"

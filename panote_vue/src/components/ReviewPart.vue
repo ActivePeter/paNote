@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    {{review_part_man.note_store_part?review_part_man.note_store_part.sync_anki_serialized:""}}
+    {{ review_part_man.note_store_part ? review_part_man.note_store_part.sync_anki_serialized : "" }}
     <div ref="top">
       <el-select v-model="review_part_man.selected_card_set" class="m-2" placeholder="Select">
         <el-option
@@ -23,7 +23,10 @@
         <div v-if="review_part_man.selected_card_set!==''">
           <el-button class="add_btn" @click="btn_add_card_to_cur_set">添加卡片到当前组</el-button>
           <div style="height: 10px"></div>
+          <el-button class="add_btn" @click="start_review_cur_card_set">开始复习</el-button>
+          <div style="height: 10px"></div>
         </div>
+
       </div>
     </div>
 
@@ -36,36 +39,36 @@
         @cancel_add_new_card="cancel_add_new_card"
         @final_add_new_card="final_add_new_card"
     />
-    <div v-if="mode==='review_cards'">
+    <div v-if="mode==='review_cards'&&review_part_man.selected_card_set!==''">
 
-      <div v-if="review_part_man.selected_card_set!==''">
-        <div class="card_list" :style="{
+      <!--      <div v-if="">-->
+      <div class="card_list" :style="{
           height:'calc(100vh - ' +($refs.top.offsetHeight+80)+'px)'
         }">
 
-          <el-card shadow="hover"
-                   style="margin-bottom: 10px"
-                   v-for="(item, i) in review_part_man.card_set_man.cardsets[review_part_man.selected_card_set].cards"
-                   :key="i"
-                   :body-style="{padding: '10px'}"
-          >
-            <ReviewPartCard
-                :card_key="i"
-                :card_data="item"
-                @review_part_cb="review_part_cb"
-            ></ReviewPartCard>
-          </el-card>
+        <el-card shadow="hover"
+                 style="margin-bottom: 10px"
+                 v-for="(item, i) in review_part_man.card_set_man.cardsets[review_part_man.selected_card_set].cards"
+                 :key="i"
+                 :body-style="{padding: '10px'}"
+        >
+          <ReviewPartCard
+              :card_key="i"
+              :card_data="item"
+              @review_part_cb="review_part_cb"
+          ></ReviewPartCard>
+        </el-card>
 
-        </div>
-        <!--        {{ review_part_man.card_set_man.cardsets[review_part_man.selected_card_set].cards }}-->
-        <!--        {{ review_part_man.card_set_man.cardsets[review_part_man.selected_card_set]}}-->
-        <!--        <div-->
-        <!--            v-for="(item, i) in review_part_man.card_set_man.cardsets[review_part_man.selected_card_set].cards"-->
-        <!--            :key="i"-->
-        <!--        >-->
-        <!--          {{item}}-->
-        <!--        </div>-->
       </div>
+      <!--        {{ review_part_man.card_set_man.cardsets[review_part_man.selected_card_set].cards }}-->
+      <!--        {{ review_part_man.card_set_man.cardsets[review_part_man.selected_card_set]}}-->
+      <!--        <div-->
+      <!--            v-for="(item, i) in review_part_man.card_set_man.cardsets[review_part_man.selected_card_set].cards"-->
+      <!--            :key="i"-->
+      <!--        >-->
+      <!--          {{item}}-->
+      <!--        </div>-->
+      <!--      </div>-->
 
     </div>
     <div v-if="mode==='add_card_set'">
@@ -94,6 +97,10 @@ import ReviewPartAddNewCard from "./ReviewPartAddNewCard"
 import ReviewPartCard from "@/components/ReviewPartCard"
 import {bus_events} from "@/bus";
 import {AppFuncTs} from "@/AppFunc";
+import {_ipc} from "@/ipc";
+import electron_net from "@/electron_net";
+import {TalkPacker} from "@/talk_packer";
+import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
 
 export default {
   name: "ReviewPart",
@@ -104,7 +111,7 @@ export default {
   mounted() {
     // Storage.ReviewPart.load_all(this.review_part_man);
     bus_events.events.note_canvas_data_loaded.listen(this.note_canvas_loaded)
-    AppFuncTs.request_for_conttext(this,(ctx)=>{
+    AppFuncTs.request_for_conttext(this, (ctx) => {
       this.review_part_man.mount(ctx)
     })
   },
@@ -134,7 +141,7 @@ export default {
     },
     btn_add_card_to_cur_set() {
       this.mode = ReviewPartFunc.ReviewPartGuiMode.AddNewCard
-      this.review_part_man.add_new_card__editing_mode=false
+      this.review_part_man.add_new_card__editing_mode = false
     },
     switch2add_card() {
       this.input_card_set_name = ''
@@ -158,8 +165,17 @@ export default {
     },
     final_add_new_card(front, back) {
       ReviewPartFunc.Funcs.edit_data_with_buffer_change.final_add_or_edit_card(
-          this,front,back
+          this, front, back
       )
+    },
+    start_review_cur_card_set() {
+      const netman = electron_net.get_net_manager()
+      if (netman && netman.connected) {
+        _ipc.Tasks.tasks.send_to_anki.call(TalkPacker.pack_start_review(
+            new _ReviewPartSyncAnki._OneOperation.OpeCardSet(
+                this.review_part_man.note_id, this.review_part_man.selected_card_set))
+            .serialize())
+      }
     }
   },
   props: {},

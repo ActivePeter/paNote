@@ -22,14 +22,44 @@ from typing import (
 )
 import queue
 
-tasks = queue.Queue()
+from . import net_send
 
+tasks = queue.Queue()
+tasks_1s= queue.Queue()
+
+tasks_timed_add_queue=queue.Queue()
+tasks_timed_next_key=0
+tasks_timed={}
+timed_time_cnt=0
+
+class TimedTask:
+    def __init__(self,begin_time,sleeptime,cb):
+        self.begin_time=begin_time
+        self.sleeptime=sleeptime
+        self.cb=cb
+
+class TaskPutter:
+
+    def put_100ms_task(self,task):
+        tasks.put(task)
+
+    def put_1s_task(self,task):
+        tasks_1s.put(task)
+        return self
+
+    def put_timed_task(self,cb,delay_time):
+        tasks_timed_add_queue.put(TimedTask(timed_time_cnt,delay_time,cb))
+        # tasks_timed[self.next_timed_task_id]=TimedTask(timed_time_cnt,delay_time,cb)
+        # self.next_timed_task_id+=1
+    
+task_putter=TaskPutter()
 
 def new_dic(name: str):
     panote_dic = mw.col.decks.id(name)
 
     if panote_dic is None:
         mw.col.decks.add_normal_deck_with_name(name)
+
     panote_dic = mw.col.decks.id(name)
     return panote_dic
 
@@ -46,10 +76,107 @@ def test():
         new_parent=father
     )
 
+# # call when init
+# def add_review_one_card_hook():
+#     utils.showInfo("add_review_one_card_hook")
+#
+#     # gui_hooks.card
+#     # gui_hooks.reviewer_did_answer_card.append(cb)
+
+# ():
+#     # 超过10s,就失效
+#     if timed_time_cnt- cur_review_deck__set_time<1000:
+#         # 10s之内将对应的卡片号发给panote
+#         deckid=mw.reviewer.card.current_deck_id()
+#         utils.showInfo(str(deckid))
+#         utils.showInfo(str(cur_review_deck))
+#         if deckid==cur_review_deck:
+#             utils.showInfo("send__start_review_card")
+
+
+# cur_review_deck=None
+# cur_review_deck__set_time=0
+# cur_review_deck__note=""
+# cur_review_deck__card_set=""
+def start_review_cardset(note: str, card_set: str):
+    panote_dic = get_or_create_deck("panote")  # mw.col.decks.id("panote")
+    deck_tree_root = \
+        mw.col.decks.deck_tree()
+    deck_tree_root = mw.col.decks.find_deck_in_tree(deck_tree_root, panote_dic)
+    fail = False
+    if deck_tree_root:
+        note_node = find_or_create_deck_in_node(deck_tree_root, note)
+        if note_node is not None:
+            card_set_node = find_or_create_deck_in_node(note_node, card_set)
+            if card_set_node is not None:
+                # mw.overview
+                # cnt=0
+                # while mw.state!="review" and cnt<100:
+
+                mw.deckBrowser.set_current_deck(card_set_node.deck_id)
+                # cur_review_deck=card_set_node.deck_id
+                # cur_review_deck__set_time=timed_time_cnt
+                # cur_review_deck__note=note
+                # cur_review_deck__card_set=card_set
+                    # cnt+=1
+                #
+                # # def on_change(str,str1):
+                # #     if str1=="overview":
+                # #         mw.moveToState("review")
+                # #         gui_hooks.state_id_change.remove(on_change)
+
+                def to_reviw():
+
+                    if mw.state!="review":
+                        # utils.showInfo("to_reviw_fail")
+                        mw.moveToState("review")
+                        task_putter.put_timed_task(
+                            to_reviw
+                            # lambda :utils.showInfo("emmmmmmmmm")
+                            ,30)
+                    else:
+                        utils.showInfo("to_reviw_succ")
+                        net_send.send__start_review_card(
+                            note,
+                            card_set,
+                            mw.reviewer.card.note().fields[0]
+                        )
+                        # task_putter.put_1s_task(to_reviw)
+
+                task_putter.put_timed_task(to_reviw, 30)
+                # task_putter.put_1s_task(to_reviw)
+                # task_putter\
+                #     .put_1s_task(mw.moveToState("review"))\
+                #     .put_1s_task(mw.moveToState("review"))
+
+                    
+                
+                # tasks.put(lambda: tasks.put())
+                # tasks.put(lambda: tasks.put(mw.moveToState("review")))
+                
+                # gui_hooks.state_did_change.append(on_change)
+                # def start_review():
+                #     mw.reviewer.show()
+                #     # # mw.col.startTimebox()
+                #     # utils.showInfo(mw.state)
+                #     # mw.moveToState("review")
+                #     # utils.showInfo(mw.state)
+                #
+                # tasks.put(start_review)
+                #
+
+            else:
+                fail = True
+        else:
+            fail = True
+    if fail:
+        utils.showInfo("note or card_set not exist in anki")
+
 
 def del_card(card: str, card_set: str, note: str):
     def redo():
         del_card(card, card_set, note)
+
     # 找到根deck
     panote_dic = get_or_create_deck("panote")  # mw.col.decks.id("panote")
     deck_tree_root = \
@@ -77,13 +204,13 @@ def del_card(card: str, card_set: str, note: str):
             # utils.showInfo("redo push")
             tasks.put(redo)
 
-
         # utils.showInfo(str(deck_tree_root.children))
 
 
 def add_card(card: str, card_set: str, note: str):
     def redo():
         add_card(card, card_set, note)
+
     # 找到根deck
     panote_dic = get_or_create_deck("panote")  # mw.col.decks.id("panote")
     deck_tree_root = \

@@ -61,6 +61,8 @@ export module AppFuncTs{
         // bus_events.cancel_listen_all()
         set_up_detail.notelist_rela(ctx);
         set_up_detail.storage_rela(ctx);
+
+        _ipc.MainCallRender.regist(ctx)
     }
     export module NoteCanvasRelate{
         export const locate_editor_bar=(barinfo:EditorBarViewListFunc.LinkingInfo)=>{
@@ -90,6 +92,7 @@ import Context = AppFuncTs.Context;
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {NoteListScanFileBind} from "@/storage/NoteListScanFileBind";
 import {Timer} from "@/timer/Timer";
+import {_ipc} from "@/ipc";
 export default {
     AppRefsGetter,
     Context,

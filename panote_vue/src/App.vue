@@ -74,6 +74,7 @@ import {AppFuncTs} from "@/AppFunc";
 import Storage from "@/storage/Storage";
 import NoteConfigDialog from "@/components/NoteConfigDialog";
 import {Timer} from "@/timer/Timer";
+import {_ipc} from "@/ipc";
 // import electron_net from "@/electron_net";
 export default {
   name: "App",
@@ -99,6 +100,7 @@ export default {
   },
   unmounted() {
     Timer._TimerState.LifeTime.unmount(this.context.timer)
+    _ipc.MainCallRender.unregist()
   },
   methods: {
     handle_request_for_conttext(cb){

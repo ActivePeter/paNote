@@ -12,6 +12,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QThread,QTimer
 from . import tcp_pack_construct
 from . import handle_msg
 from . import anki_util
+from . import net_send
 import json
 
 
@@ -79,6 +80,7 @@ def thread_recv_msg(new_client_socket: socket, ip_port, send: QTypeSignal):
         recv_data = new_client_socket.recv(1024)
         # 判断是否有消息返回
         if recv_data:
+            net_send.cur_tcp_socket=new_client_socket
             pack_constructor.handle_slice(list(recv_data))
             # recv_text = recv_data.decode('UTF-8')
             # print("来自【%s】的消息：%s" % (str(ip_port), recv_text))
@@ -100,6 +102,7 @@ def thread_server(send: QTypeSignal):
     # global_send.emit_connect()
     global tcp_server_socket
     tcp_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
     # 设置地址可复用
     # tcp_server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
     # 绑定TCP端口
@@ -126,10 +129,6 @@ def thread_server(send: QTypeSignal):
 last_n_empty=False
 def timerEvent():
     global last_n_empty
-    # 不能在这个类下面进行终止
-    # print(event,"1")
-    # global_send.emit_connect()
-    # utils.showInfo("timer")
     if not anki_util.tasks.empty():
         # utils.showInfo("timer redo")
         job = anki_util.tasks.get()
@@ -140,14 +139,47 @@ def timerEvent():
             mw.deckBrowser.show()
         last_n_empty=False
 
+def timer_event_1s():
+    if not anki_util.tasks_1s.empty():
+        job=anki_util.tasks_1s.get()
+        job()
+
+def timer_event_timed():
+    # 计时
+    anki_util.timed_time_cnt+=1
+    while not anki_util.tasks_timed_add_queue.empty():
+        anki_util.tasks_timed[anki_util.tasks_timed_next_key]=anki_util.tasks_timed_add_queue.get()
+        anki_util.tasks_timed_next_key+=1
+        # self.next_timed_task_id+=1
+    if anki_util.tasks_timed:
+        queue=[]
+        for key in anki_util.tasks_timed:
+            task:anki_util.TimedTask=anki_util.tasks_timed[key]
+            if anki_util.timed_time_cnt-task.begin_time>=task.sleeptime:
+                task.cb()
+                queue.append(key)
+                # del anki_util.tasks_timed[key]
+        for key in queue:
+            del anki_util.tasks_timed[key]
 
 # tw = TimerWorker()
 timer = QTimer()
+timer_1s=QTimer()
+timer_timed=QTimer()
 
 # 插件生命周期
 def init():
     timer.timeout.connect(timerEvent)
     timer.start(100)
+
+    timer_1s.timeout.connect(timer_event_1s)
+    timer_1s.start(1000)
+
+    timer_timed.timeout.connect(timer_event_timed)
+    timer_timed.start(10)
+
+    # anki_util.add_review_one_card_hook()
+
     # tw.startTimer(100)
     print('将信号绑定槽：')
     # 将信号绑定到槽函数上

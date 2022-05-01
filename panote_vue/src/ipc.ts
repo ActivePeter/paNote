@@ -3,15 +3,64 @@ import {dialog, ipcMain, ipcRenderer} from "electron";
 import * as fs from "fs";
 import electron_net, {NetManager} from "@/electron_net";
 import {SendState} from "@/electron_net_ts";
+// import {win} from "@/background";
+import {AppFuncTs} from "@/AppFunc";
+// import {electron_bg} from "@/background";
 
 export namespace _ipc {
+    export let win_ref:any
     export namespace _channels {
         export const start_choose_file_bind = "start_choose_file_bind"
         export const read_file_content="read_file_content" //filepath
         export const overwrite_file_str="overwrite_file_str"
         // export const start
     }
-    export namespace Tasks{
+    export namespace MainCallRender{
+        export interface ITask{
+            channel:string
+            regist(context:AppFuncTs.Context):void
+            unregist():void
+        }
+        namespace start_review_card{
+            export class Class implements ITask{
+                channel="start_review_card"
+                call(noteid:string,cardsetid:string,cardid:string){
+                    if(_ipc.win_ref){
+                        _ipc.win_ref.webContents.send(this.channel,noteid,cardsetid,cardid)
+                    }
+                    // if(electron_bg.get_win()){
+                    //     electron_bg.get_win().webContents.send(this.channel,noteid,cardsetid,cardid)
+                    // }
+                }
+                cb:any
+                regist(context:AppFuncTs.Context){
+                    this.cb=(event:any,noteid:string,cardsetid:string,cardid:string) => {
+
+                    }
+                    ipcRenderer.on(this.channel,this.cb)
+                }
+                unregist() {
+                    ipcRenderer.off(this.channel,this.cb)
+                }
+            }
+        }
+        export const tasks={
+            start_review_card:new start_review_card.Class()
+        }
+        export const regist=(ctx:AppFuncTs.Context)=>{
+            for(const key in tasks){
+                // @ts-ignore
+                (tasks[key]).regist(ctx);
+            }
+        }
+        export const unregist=()=>{
+            for(const key in tasks){
+                // @ts-ignore
+                (tasks[key]).unregist()
+            }
+        }
+    }
+    export namespace Tasks{//RenderCallMain
         export interface ITask{
             channel:string
             regist():void
@@ -68,8 +117,9 @@ export namespace _ipc {
         //底下的regist函数会遍历regist
         export const tasks={
             start_choose_pa_note_file:new start_choose_pa_note_file.Class(),
-            send_to_anki:new send_to_anki.Class()
+            send_to_anki:new send_to_anki.Class()//发送前先判断是否连接
         }
+
     }
     export const regist = () => {
         ipcMain.handle(_channels.start_choose_file_bind, async () => {
