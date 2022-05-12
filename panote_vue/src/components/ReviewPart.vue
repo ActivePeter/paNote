@@ -18,13 +18,28 @@
       <div style="height: 10px"></div>
 
       <div v-if="mode==='review_cards'">
-        <el-button class="add_btn" @click="switch2add_card">添加卡片组</el-button>
+        <el-row :gutter="10">
+          <el-col :span="12">
+            <el-button class="add_btn" @click="switch2add_card">管理卡片组</el-button>
+          </el-col>
+          <el-col :span="12">
+            <el-button class="add_btn" @click="switch2add_card">添加卡片组</el-button>
+          </el-col>
+        </el-row>
+
+<!--        <div style="height: 10px"></div>-->
+
         <div style="height: 10px"></div>
         <div v-if="review_part_man.selected_card_set!==''">
           <el-button class="add_btn" @click="btn_add_card_to_cur_set">添加卡片到当前组</el-button>
           <div style="height: 10px"></div>
-          <el-button class="add_btn" @click="start_review_cur_card_set">开始复习</el-button>
-          <div style="height: 10px"></div>
+
+          <el-button
+              style="margin-bottom: 10px"
+              class="add_btn" @click="start_review_cur_card_set">
+            {{review_part_man.reviewing_state.card_id===''?"开始复习":"停止复习"}}
+          </el-button>
+          <!--          <div style="height: 10px"></div>-->
         </div>
 
       </div>
@@ -46,22 +61,30 @@
       <div class="card_list" :style="{
           height:'calc(100vh - ' +($refs.top.offsetHeight+80)+'px)'
         }">
-        <ReviewPartReviewing v-if="review_part_man.reviewing"></ReviewPartReviewing>
-        <el-card
-            v-else
+        <ReviewPartReviewing
+            v-if="review_part_man.reviewing_state.card_id!==''"
+            :rpman="review_part_man"
+        ></ReviewPartReviewing>
+<!--        <el-card-->
+<!--            v-else-->
+<!--            v-for="(item, i) in review_part_man.card_set_man.cardsets[review_part_man.selected_card_set].cards"-->
+<!--            :key="i"-->
 
-            shadow="hover"
-                 style="margin-bottom: 10px"
-                 v-for="(item, i) in review_part_man.card_set_man.cardsets[review_part_man.selected_card_set].cards"
-                 :key="i"
-                 :body-style="{padding: '10px'}"
-        >
+<!--            shadow="hover"-->
+<!--            style="margin-bottom: 10px"-->
+<!--            :body-style="{padding: '10px'}"-->
+<!--        >-->
           <ReviewPartCard
+              v-else
+              v-for="(item, i) in review_part_man.card_set_man.cardsets[review_part_man.selected_card_set].cards"
+              :key="i"
+
               :card_key="i"
               :card_data="item"
+              :show_back="true"
               @review_part_cb="review_part_cb"
           ></ReviewPartCard>
-        </el-card>
+<!--        </el-card>-->
 
       </div>
       <!--        {{ review_part_man.card_set_man.cardsets[review_part_man.selected_card_set].cards }}-->
@@ -106,6 +129,7 @@ import electron_net from "@/electron_net";
 import {TalkPacker} from "@/talk_packer";
 import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
 import ReviewPartReviewing from "@/components/ReviewPartReviewing";
+
 export default {
   name: "ReviewPart",
   components: {
@@ -114,11 +138,15 @@ export default {
     ReviewPartReviewing
   },
   mounted() {
+    console.log("")
     // Storage.ReviewPart.load_all(this.review_part_man);
     bus_events.events.note_canvas_data_loaded.listen(this.note_canvas_loaded)
     AppFuncTs.request_for_conttext(this, (ctx) => {
       this.review_part_man.mount(ctx)
     })
+    // for(const key in this.mount_getrpman_cbs){
+    //   this.mount_getrpman_cbs[key]
+    // }
   },
   unmounted() {
     bus_events.events.note_canvas_data_loaded.cancel(this.note_canvas_loaded)
@@ -130,6 +158,7 @@ export default {
   },
   data() {
     return {
+      mount_getrpman_cbs:[],
       review_part_man: new ReviewPartFunc.ReviewPartManager(),
       input_card_set_name: "",//添加卡组模式下的输入框内容
       mode: 'review_cards',
@@ -139,7 +168,6 @@ export default {
     review_part_cb(cb) {
       cb(this)
     },
-
     note_canvas_loaded(canvas) {
       // console.log("note_canvas_loaded",canvas)
       this.review_part_man.note_canvas_loaded(canvas)
@@ -174,6 +202,7 @@ export default {
       )
     },
     start_review_cur_card_set() {
+      this.review_part_man.reviewing_state.try_start_review_flag=true;
       const netman = electron_net.get_net_manager()
       if (netman && netman.connected) {
         _ipc.Tasks.tasks.send_to_anki.call(TalkPacker.pack_start_review(
@@ -210,6 +239,6 @@ export default {
 .card_list {
 
   /*height: 100%;*/
-  /*overflow-y: scroll;*/
+  overflow-y: scroll;
 }
 </style>

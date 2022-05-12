@@ -18,6 +18,10 @@ export namespace ReviewPartFunc{
 
     export class Card{
         id
+
+        //.bartype 相关可看EditorBarViewList
+        //   ===1 脑图块
+        //   ===0
         front
         back
         constructor(id:string,front:object[],back:object[]) {
@@ -26,7 +30,7 @@ export namespace ReviewPartFunc{
             this.front=front;
         }
     }
-    class CardSet{
+   export class CardSet{
         value:string=""
         next_card_id:number=0
         cards:any={}
@@ -110,10 +114,67 @@ export namespace ReviewPartFunc{
         start_review(note:string,cardset:string,card:string){
             const rpman=this.rpman
             if(rpman.note_id==note&&rpman.selected_card_set==cardset){
-                rpman.reviewing=true
+                // const _card_set=ReviewPartFunc.CardSetManager.get_cardset(rpman.card_set_man,cardset)
+                rpman.reviewing_state.new_review_card_chosen(card,rpman)
+                // rpman.reviewing=true
+            }
+        }
+        answer_showned(answer_selections:string[]){
+            console.log("answer_showned",answer_selections)
+            this.rpman.reviewing_state.show_answer=true
+            this.rpman.reviewing_state.answer_selections=answer_selections;
+        }
+        no_card_to_review(note:string,cardset:string){
+            // if(this.rpman.reviewing_state.)
+            if(this.rpman.reviewing_state.try_start_review_flag){
+                this.rpman.reviewing_state.try_start_review_flag=false;
+                ElMessage({
+                    message: '当前卡片为空或已经复习完，明天可再进行复习！',
+                    type: 'success',
+                })
+                // 提示当前没有需要复习的卡片
+
+            }
+            else if(this.rpman.reviewing_state.is_reviewing()){
+                this.rpman.reviewing_state.stop_reviewing()
+                //提示已经复习完
+                ElMessage({
+                    message: '该卡片组今天已经复习完啦！',
+                    type: 'success',
+                })
             }
         }
         constructor(private rpman:ReviewPartManager) {
+        }
+    }
+    export class ReviewingState{
+        card_id=""
+        show_answer=false
+        answer_selections:string[]=[]//在接收到客户端的answer showned 后修改
+        //正面链接了的卡片,用来在复习模式时，隐藏其余卡片
+        front_linked_note_ids:any={} //map:string->dum data
+        try_start_review_flag=false //接收到复习卡片组为空时如果该标志位为true.则提示当前卡组没有需要复习的卡片。
+        stop_reviewing(){
+            this.card_id=""
+        }
+        is_reviewing():boolean{
+            return this.card_id!=""
+        }
+        new_review_card_chosen(id:string,rpman:ReviewPartManager){
+            this.card_id=id;
+            this.show_answer=false
+            this.front_linked_note_ids={}
+            this.try_start_review_flag=false
+            const front=CardSet.get_card(rpman.get_selected_card_set()?.cards,id)?.front
+            if(front){
+                for(const key in front){
+                    const bar_data=front[key] as EditorBarViewListFunc.BarData
+                    if(bar_data.bartype==EditorBarViewListFunc.BarType.Link){
+                        // @ts-ignore
+                        this.front_linked_note_ids[bar_data.linking_info.barid]=0
+                    }
+                }
+            }
         }
     }
     export class ReviewPartManager{
@@ -127,7 +188,10 @@ export namespace ReviewPartFunc{
         add_new_card__editing_mode_card:null|Card=null
         sync_anki=new _ReviewPartSyncAnki._StoreStruct.Class()
         note_store_part?:NoteCanvasTs.PartOfNoteContentData
-        reviewing=false
+        // reviewing=false
+        // reviewing_card_id=""
+        // reviewing_card_show_answer=false
+        reviewing_state=new ReviewingState()
 
         context:null|AppFuncTs.Context=null
         constructor() {
@@ -154,7 +218,7 @@ export namespace ReviewPartFunc{
                 this.note_id=NoteCanvasTs.ContentManager.from_canvas(canvas).cur_note_id
                 this.card_set_man=part.review_card_set_man
                 this.note_store_part=part
-
+                NoteCanvasTs.ContentManager.from_canvas(canvas).reviewing_state=this.reviewing_state
                 //检查是否存在，
                 if(!part.sync_anki_serialized)
                 {

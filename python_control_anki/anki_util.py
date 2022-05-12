@@ -25,34 +25,92 @@ import queue
 from . import net_send
 
 tasks = queue.Queue()
-tasks_1s= queue.Queue()
+tasks_1s = queue.Queue()
 
-tasks_timed_add_queue=queue.Queue()
-tasks_timed_next_key=0
-tasks_timed={}
-timed_time_cnt=0
+tasks_timed_add_queue = queue.Queue()
+tasks_timed_next_key = 0
+tasks_timed = {}
+timed_time_cnt = 0
+
+# 状态，用来记录
+class States:
+    cur_review_note=""
+    cur_review_cardset=""
+    def start_review(self,note:str,cardset:str):
+        self.cur_review_note=note
+        self.cur_review_cardset=cardset
+    def clear_review_state(self):
+        self.cur_review_note=""
+        self.cur_review_cardset=""
+    def is_reviewing(self):
+        return self.cur_review_note!=""
+states=States()
 
 class TimedTask:
-    def __init__(self,begin_time,sleeptime,cb):
-        self.begin_time=begin_time
-        self.sleeptime=sleeptime
-        self.cb=cb
+    def __init__(self, begin_time, sleeptime, cb):
+        self.begin_time = begin_time
+        self.sleeptime = sleeptime
+        self.cb = cb
+
 
 class TaskPutter:
 
-    def put_100ms_task(self,task):
+    def put_100ms_task(self, task):
         tasks.put(task)
 
-    def put_1s_task(self,task):
+    def put_1s_task(self, task):
         tasks_1s.put(task)
         return self
 
-    def put_timed_task(self,cb,delay_time):
-        tasks_timed_add_queue.put(TimedTask(timed_time_cnt,delay_time,cb))
+    def put_timed_task(self, cb, delay_time):
+        tasks_timed_add_queue.put(TimedTask(timed_time_cnt, delay_time, cb))
         # tasks_timed[self.next_timed_task_id]=TimedTask(timed_time_cnt,delay_time,cb)
         # self.next_timed_task_id+=1
-    
-task_putter=TaskPutter()
+
+
+task_putter = TaskPutter()
+
+
+# some hooks
+def init():
+    def if_panote_review(card):
+
+        if states.is_reviewing():
+            # utils.showInfo("if_panote_review" + str(states.cur_review_note))
+            # utils.showInfo("panote question show")
+            # states.start_review(states., card_set)
+            net_send.send__start_review_card(
+                states.cur_review_note,
+                states.cur_review_cardset,
+                mw.reviewer.card.note().fields[0]
+            )
+    gui_hooks.reviewer_did_show_question.append(if_panote_review)
+    def state_change(from1:str,to1:str):
+        if mw.state!="review":
+            # 如果为预览模式，可能是刚刚set deck
+            if(mw.state=="overview"):
+                if states.is_reviewing():
+                    # 没有要复习的卡片了
+                    if mw.col.sched._is_finished():
+                        net_send.send__no_card_to_review(
+                            states.cur_review_note,
+                            states.cur_review_cardset
+                        )
+                    # 有卡片，准备开始复习
+                    else:
+                        # def task_try_to_review:
+                        mw.moveToState("review")
+                        # task_putter.put_timed_task(to_reviw, 30)
+
+                        # utils.showInfo("try mw.moveToState(review)")
+                        # 若成功。则会调用上面if_panote_review的netsend
+                        # if mw.state=="review":
+            else:
+                states.clear_review_state()
+    gui_hooks.state_did_change.append(state_change)
+
+    # gui_hooks.reviewer_
+
 
 def new_dic(name: str):
     panote_dic = mw.col.decks.id(name)
@@ -76,6 +134,7 @@ def test():
         new_parent=father
     )
 
+
 # # call when init
 # def add_review_one_card_hook():
 #     utils.showInfo("add_review_one_card_hook")
@@ -93,11 +152,21 @@ def test():
 #         if deckid==cur_review_deck:
 #             utils.showInfo("send__start_review_card")
 
+def answer_cur_card(index: int):
+    if mw.state == "review":
+        mw.reviewer._answerCard(index + 1)
+
 
 # cur_review_deck=None
 # cur_review_deck__set_time=0
 # cur_review_deck__note=""
 # cur_review_deck__card_set=""
+def show_answer_if_reviewing():
+    if mw.state == "review":
+        mw.reviewer._showAnswer()
+        net_send.send__answer_showned(mw.reviewer._answerButtons())
+
+
 def start_review_cardset(note: str, card_set: str):
     panote_dic = get_or_create_deck("panote")  # mw.col.decks.id("panote")
     deck_tree_root = \
@@ -113,47 +182,61 @@ def start_review_cardset(note: str, card_set: str):
                 # cnt=0
                 # while mw.state!="review" and cnt<100:
 
+                states.start_review(note, card_set)
                 mw.deckBrowser.set_current_deck(card_set_node.deck_id)
+
                 # cur_review_deck=card_set_node.deck_id
                 # cur_review_deck__set_time=timed_time_cnt
                 # cur_review_deck__note=note
                 # cur_review_deck__card_set=card_set
-                    # cnt+=1
+                # cnt+=1
                 #
                 # # def on_change(str,str1):
                 # #     if str1=="overview":
                 # #         mw.moveToState("review")
                 # #         gui_hooks.state_id_change.remove(on_change)
 
-                def to_reviw():
-
-                    if mw.state!="review":
-                        # utils.showInfo("to_reviw_fail")
-                        mw.moveToState("review")
-                        task_putter.put_timed_task(
-                            to_reviw
-                            # lambda :utils.showInfo("emmmmmmmmm")
-                            ,30)
-                    else:
-                        utils.showInfo("to_reviw_succ")
-                        net_send.send__start_review_card(
-                            note,
-                            card_set,
-                            mw.reviewer.card.note().fields[0]
-                        )
-                        # task_putter.put_1s_task(to_reviw)
-
-                task_putter.put_timed_task(to_reviw, 30)
+                # def to_reviw():
+                #
+                #     # if mw.state != "review":
+                #     #
+                #     #     if mw.state=="overview":
+                #     #         # mw.moveToState("review")
+                #     #         # if mw.state == "overview":
+                #     #         #     # 没有要复习的卡片了
+                #     #         #     net_send.send__no_card_to_review(note,card_set)
+                #     #     else:
+                #     #
+                #     #     # utils.showInfo("mw_cur_state:"+mw.state)
+                #     #     # if mw.state=="overview":
+                #     #     #     mw.overview.
+                #     #     # # utils.showInfo("to_reviw_fail")
+                #     #         mw.moveToState("review")
+                #     #         task_putter.put_timed_task(
+                #     #             to_reviw
+                #     #             # lambda :utils.showInfo("emmmmmmmmm")
+                #     #             , 30)
+                #     # else:
+                #     #     # utils.showInfo("to_reviw_succ")
+                #     #
+                #     #     # 首次开始，不设置当前复习状态，确保发送操作在此进行
+                #     #     net_send.send__start_review_card(
+                #     #         note,
+                #     #         card_set,
+                #     #         mw.reviewer.card.note().fields[0]
+                #     #     )
+                #     #     states.start_review(note, card_set)
+                #         # task_putter.put_1s_task(to_reviw)
+                # # 延迟执行
+                # task_putter.put_timed_task(to_reviw, 30)
                 # task_putter.put_1s_task(to_reviw)
                 # task_putter\
                 #     .put_1s_task(mw.moveToState("review"))\
                 #     .put_1s_task(mw.moveToState("review"))
 
-                    
-                
                 # tasks.put(lambda: tasks.put())
                 # tasks.put(lambda: tasks.put(mw.moveToState("review")))
-                
+
                 # gui_hooks.state_did_change.append(on_change)
                 # def start_review():
                 #     mw.reviewer.show()

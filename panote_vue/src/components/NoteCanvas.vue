@@ -97,6 +97,10 @@
               :ebid="i"
               :editing_ebid="editing_editor_bar_id"
               :toolbar_on="editor_tool_helper.tool_bar_on"
+              v-show="content_manager.reviewing_state.card_id===''||
+                (!content_manager.reviewing_state.show_answer&&i in content_manager.reviewing_state.front_linked_note_ids)||
+                content_manager.reviewing_state.show_answer
+              "
 
               :width="item.width"
               :height="item.height"

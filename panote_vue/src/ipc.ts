@@ -5,7 +5,11 @@ import electron_net, {NetManager} from "@/electron_net";
 import {SendState} from "@/electron_net_ts";
 // import {win} from "@/background";
 import {AppFuncTs} from "@/AppFunc";
+
 import {start_review_card} from "@/ipc_tasks/main_call_render/start_review_card"
+import {answer_showned} from "@/ipc_tasks/main_call_render/answer_showned";
+import {no_card_2_review} from "@/ipc_tasks/main_call_render/no_card_2_review";
+import {anki_state_not_match} from "@/ipc_tasks/main_call_render/anki_state_not_match";
 import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 // import {electron_bg} from "@/background";
 
@@ -24,7 +28,10 @@ export namespace _ipc {
             unregist():void
         }
         export const tasks={
-            start_review_card:new start_review_card.Class()
+            start_review_card:new start_review_card.Class(),
+            answer_showned:new answer_showned.Class(),
+            no_card_2_review:new no_card_2_review.Class(),
+            anki_state_not_match:new anki_state_not_match.Class()
         }
         export const regist=(ctx:AppFuncTs.Context)=>{
             for(const key in tasks){
@@ -74,7 +81,7 @@ export namespace _ipc {
             }
             export class Class implements ITask{
                 channel="send_to_anki"
-                call(get_serialized_data:any):Promise<Return>{
+                call(get_serialized_data:string):Promise<Return>{
                     return ipcRenderer.invoke(this.channel,get_serialized_data)
                 }
                 regist(){

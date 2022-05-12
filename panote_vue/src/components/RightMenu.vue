@@ -22,6 +22,7 @@
 
 <script>
 import {bus_events} from "@/bus";
+import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 
 export default {
   name: "RightMenu",
@@ -42,10 +43,8 @@ export default {
   },
   methods: {
     bus_right_menu(args){
-      this.show=true;
-      this.pos_x=args.event.clientX
-      this.pos_y=args.event.clientY
-      this.content=args.content.arr
+      RightMenuFuncTs.Ope.with(this)
+        .on_bus_right_menu(args)
     },
     click_selection(item){
       item.callback()
@@ -76,13 +75,20 @@ export default {
       event.stopPropagation();
     },
     handle_mouse_down(event){
-      console.log("right menu mouse down")
-      if(this.$refs.right_menu_ref){
+      // console.log("right menu mouse down")
+      if(this.$refs.right_menu_ref&&this.show){
         let rect=this.$refs.right_menu_ref.getBoundingClientRect();
+        {
+          rect.x -= 1;
+          rect.y -= 1;
+          rect.height += 2;
+          rect.width += 2;
+        }
         // console.log(event.clientX,event.clientY,rect)
         if(!(event.clientX>=rect.left&&event.clientX<=rect.right
             &&event.clientY<=rect.bottom&&event.clientY>=rect.top)
         ){
+          console.log("click out of right menu")
           this.show=false;
         }
       }

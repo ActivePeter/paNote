@@ -180,6 +180,7 @@ def init():
     timer_timed.start(10)
 
     # anki_util.add_review_one_card_hook()
+    anki_util.init()
 
     # tw.startTimer(100)
     print('将信号绑定槽：')

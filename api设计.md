@@ -79,21 +79,38 @@
           - 组件
             - EditorBarViewList ref="front_list" 卡片正面
             - EditorBarViewList  ref="back_list"  卡片背面
+        
+      - ReviewPartReviewing
 
+        - v-if="review_part_man.reviewing_state.card_id!==''"
+        - 
+  
     - data
-
-      - ReviewPartFunc.ReviewPartManager
+  
+      - ReviewPartFunc.ReviewPartManager rpman
+        - reviewing_state
+          - card_id=""
+            - 不为空时，代表正在复习
+          - show_answer=false
+          - answer_selections:string[]=[]
+            - 回答卡片的选项的 **时间备注**
+            - //在接收到客户端的answer showned 后修改
+          - front_linked_note_ids:any={} //map:string->dum data
+            - //正面链接了的卡片,用来在复习模式时，隐藏其余卡片
+          - try_start_review_flag=false
+            -  //接收到复习卡片组为空时如果该标志位为true.则提示当前卡组没有需要复习的卡片。需要记得清除
+          - 
       - mode
       - 
-
+  
   - NoteCanvas ref="note_canvas_ref"
-
+  
   - RightMenu ref="right_menu_ref"
-
+  
   - 
-
+  
   数据
-
+  
   - AppFunc.Context
     - app
     - cur_open_note_id

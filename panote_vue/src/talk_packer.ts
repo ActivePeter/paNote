@@ -28,4 +28,10 @@ export namespace TalkPacker{
     export const pack_start_review=(card_set_info:_ReviewPartSyncAnki._OneOperation.OpeCardSet):Serializer=>{
         return new Serializer({packid:"start_review",packobj:card_set_info})
     }
+    export const pack_show_answer=():Serializer=>{
+        return new Serializer({packid:"show_answer"})
+    }
+    export const pack_answer=(answeri:number):Serializer=>{
+        return new Serializer({packid:"answer",packobj:{answeri:answeri}})
+    }
 }

@@ -21,6 +21,9 @@ export module NoteCanvasTs{
         linkBarToListView=new LinkCanvasBarToListView.LinkBarToListView()
         part_of_storage_data:null|PartOfNoteContentData=null
 
+        //在reviewpart初始化canvas时设置
+        reviewing_state?:ReviewPartFunc.ReviewingState
+
         static from_canvas(canvas:any):ContentManager{
             return canvas.content_manager
         }

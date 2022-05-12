@@ -29,6 +29,7 @@
     "quill-resize-module": "^1.2.4",
     "vue": "^3.0.0",
     "vue-class-component": "^8.0.0-0",
+    "vue-property-decorator": "^9.1.2",
     "vue-quill-editor": "^3.0.6",
     "vue3-quill": "^0.2.6"
   },
