@@ -10,6 +10,7 @@ import {start_review_card} from "@/ipc_tasks/main_call_render/start_review_card"
 import {answer_showned} from "@/ipc_tasks/main_call_render/answer_showned";
 import {no_card_2_review} from "@/ipc_tasks/main_call_render/no_card_2_review";
 import {anki_state_not_match} from "@/ipc_tasks/main_call_render/anki_state_not_match";
+import {auto_update} from "@/ipc_tasks/main_call_render/auto_update";
 import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 // import {electron_bg} from "@/background";
 
@@ -31,7 +32,8 @@ export namespace _ipc {
             start_review_card:new start_review_card.Class(),
             answer_showned:new answer_showned.Class(),
             no_card_2_review:new no_card_2_review.Class(),
-            anki_state_not_match:new anki_state_not_match.Class()
+            anki_state_not_match:new anki_state_not_match.Class(),
+            auto_update:new auto_update.Class()
         }
         export const regist=(ctx:AppFuncTs.Context)=>{
             for(const key in tasks){

@@ -5,6 +5,7 @@ import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc"
 import {NoteCanvasTs} from "@/components/NoteCanvasTs";
 import {bus, bus_event_names, bus_events} from "@/bus";
 import NoteConfigDialog from "@/components/NoteConfigDialog.vue";
+import {ElMessage} from "element-plus";
 
 class AppRefsGetter{
     get_note_canvas(app:any){
@@ -31,11 +32,17 @@ export module AppFuncTs{
 
         }
     }
+    class ContextElement{
+        _ElMessage=ElMessage
+    }
     export class Context{
         app:any
         cur_open_note_id="-1"
         storage_manager=new Storage.StorageManager(this)
         timer=new Timer.TimerState()
+        element_plus(){
+            return new ContextElement()
+        }
         getter(){
             return new ContextGetter(this)
         }

@@ -59,6 +59,7 @@
 
   <RightMenu ref="right_menu_ref"/>
   <NoteConfigDialog ref="note_config_dialog_ref"></NoteConfigDialog>
+  <BottomLine/>
   <!-- <img alt="Vue logo" src="./assets/logo.png" />
   <HelloWorld msg="Welcome to Your Vue.js App" /> -->
 </template>
@@ -70,6 +71,8 @@ import RightMenu from "@/components/RightMenu";
 import ReviewPart from "@/components/ReviewPart";
 import SideBarContainer from "@/components/reuseable/SideBarContainer";
 import NoteList from "@/components/NoteList";
+import BottomLine from "@/components/BottomLine"
+
 import AppFunc from "@/AppFunc";
 import {AppFuncTs} from "@/AppFunc";
 import Storage from "@/storage/Storage";
@@ -86,6 +89,7 @@ export default {
     ReviewPart,
     SideBarContainer,
     NoteList,
+    BottomLine,
     // eslint-disable-next-line vue/no-unused-components
     NoteConfigDialog
   },
@@ -173,6 +177,9 @@ export default {
 </script>
 
 <style>
+body{
+  margin: 0px;
+}
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -188,7 +195,7 @@ export default {
 
 .note_canvas_border {
   border: 1px solid #000;
-  height: calc(100vh - 80px);
+  height: calc(100vh - 100px);
 }
 
 .note_canvas {
@@ -196,7 +203,7 @@ export default {
 }
 
 .review_part {
-  height: calc(100vh - 80px);
+  height: calc(100vh - 100px);
   overflow-y: hidden;
 }
 </style>
