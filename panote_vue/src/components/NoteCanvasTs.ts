@@ -13,7 +13,9 @@ import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
 
 export module NoteCanvasTs{
     export class PartOfNoteContentData{
+        //复习的卡片组信息
         review_card_set_man=new ReviewPartFunc.CardSetManager()
+        //同步到anki的变更的序列化数组
         sync_anki_serialized="[]"
     }
     export class ContentManager{//由canvas持有
@@ -57,7 +59,7 @@ export module NoteCanvasTs{
 
             bus_events.events.note_canvas_data_loaded.call(canvas)
         }
-        _backend_save_if_binded(ctx:AppFuncTs.Context){
+        _backend_set_curnote_newedit_flag(ctx:AppFuncTs.Context){
             const nlman= ctx.get_notelist_manager()
             if(nlman){
                 //设置标志，后续扫描到即进行保存
@@ -85,12 +87,15 @@ export module NoteCanvasTs{
                 ]=(bar);
             canvas.next_editor_bar_id++;
             this._backend_save_mode_choose(ctx,()=>{
-                ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
-                ctx.storage_manager.buffer_save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
-                this._backend_save_if_binded(ctx);
+                ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
+                // ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
+                // ctx.storage_manager.buffer_save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
+                this._backend_set_curnote_newedit_flag(ctx);
             },()=>{
-                ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
-                ctx.storage_manager.buffer_save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
+                ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
+                this._backend_set_curnote_newedit_flag(ctx);
+                // ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
+                // ctx.storage_manager.buffer_save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
             })
             console.log("backend_add_editor_bar_and_save");
         }
@@ -103,10 +108,13 @@ export module NoteCanvasTs{
             console.log("backend_editor_bar_change_and_save");
             // if(change.type==EditorBarFunc.EditorBarChangeType.)
             this._backend_save_mode_choose(ctx,()=>{
-                ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
-                this._backend_save_if_binded(ctx);
+                ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
+                // ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
+                this._backend_set_curnote_newedit_flag(ctx);
             },()=>{
-                ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
+                ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
+                this._backend_set_curnote_newedit_flag(ctx);
+                // ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
             })
         }
 
@@ -116,10 +124,14 @@ export module NoteCanvasTs{
         backend_path_change_and_save(ctx:AppFuncTs.Context,canvas:any,change:PathChange){
             console.log("backend_path_change_and_save");
             this._backend_save_mode_choose(ctx,()=>{
-                ctx.storage_manager.buffer_save_note_paths(this.cur_note_id,canvas.paths);
-                this._backend_save_if_binded(ctx);
+                ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
+                // ctx.storage_manager.buffer_save_note_paths(this.cur_note_id,canvas.paths);
+                this._backend_set_curnote_newedit_flag(ctx);
             },()=>{
-                ctx.storage_manager.buffer_save_note_paths(this.cur_note_id,canvas.paths);
+                ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
+                this._backend_set_curnote_newedit_flag(ctx);
+                // ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,)
+                // ctx.storage_manager.buffer_save_note_paths(this.cur_note_id,canvas.paths);
             })
         }
     }

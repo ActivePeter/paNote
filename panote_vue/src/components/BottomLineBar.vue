@@ -20,6 +20,7 @@
         >
           x
         </div>
+        <UpdateState ref="update_state_ref" v-if="$props.id==='update_state'"/>
       </div>
       <template #reference>
         {{ $props.name}}
@@ -33,9 +34,11 @@ import {Options, Vue} from 'vue-class-component';
 // import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 import {BottomLineFunc} from "@/components/BottomLineFunc";
 import {Watch} from "vue-property-decorator";
+import UpdateState from "@/components/UpdateState.vue";
 
 @Options({
   components:{
+    UpdateState
   },
   props: {
     name:String,
@@ -58,6 +61,9 @@ export default class BottomLineBar extends Vue {
     type:string,
     bottom_focus_id:string,
     id:string
+  }
+  $refs!:{
+    update_state_ref:UpdateState
   }
   popo_visible=false
   update_popo_visible(){
@@ -113,6 +119,8 @@ t<!-- Add "scoped" attribute to limit CSS to this component only -->
 }
 .floatwin_title{
   display: inline-block;
+  font-size: 16px;
+  margin-bottom: 8px;
 }
 .floatwin_close{
   float: right;

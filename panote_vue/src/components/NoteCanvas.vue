@@ -233,6 +233,7 @@ export default {
       next_editor_bar_id:1000,
       paths: {},
       //<-data to save
+
       //manage data
       content_manager:new NoteCanvasTs.ContentManager(),
 

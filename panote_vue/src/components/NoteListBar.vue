@@ -10,13 +10,13 @@
     </div>
     <div v-show="!editing">
       {{ name }}
-      <span v-if="'bind_file' in data">
+      <span>
         <el-tooltip
             v-if=" 'new_edit' in data && data['new_edit']"
 
             class="box-item"
             effect="light"
-            content="数据变更即将同步至文件"
+            :content="'bind_file' in data?'数据变更即将同步至文件':'数据变更即将同步至缓存'"
             placement="right-start"
         >
           <el-icon color="#409EFC" class="is-loading">
@@ -28,12 +28,22 @@
 
             class="box-item"
             effect="light"
-            content="数据已同步至文件"
+            :content="'bind_file' in data?'数据已同步至文件':'数据已同步至缓存'"
             placement="right-start"
         >
 
           <el-icon color="#409EFC">
             <Finished/>
+          </el-icon>
+        </el-tooltip>
+        <el-tooltip
+            v-if="'bind_file' in data"
+            effect="light"
+            content="已绑定到文件"
+            placement="right-start"
+        >
+        <el-icon color="#">
+            <Link/>
           </el-icon>
         </el-tooltip>
       </span>
@@ -46,14 +56,15 @@
 import NoteListFunc from "@/components/NoteListFunc";
 // import RightMenuFunc from "@/components/RightMenuFunc";
 import ClickDetector from "@/components/ClickDetector";
-import {Loading, Finished} from "@element-plus/icons-vue";
+import {Loading, Finished,Link} from "@element-plus/icons-vue";
 import {NoteListBarTs} from "@/components/NoteListBarTs";
 
 export default {
   name: "NoteListBar",
   components: {
     Loading,
-    Finished
+    Finished,
+    Link
   },
   mounted() {
     window.addEventListener("keydown", this.handle_key_down);

@@ -1,5 +1,7 @@
 由于太久没写，发现都忘了一些数据操作的入口了，后面还是规范点写道一起来
 
+
+
 ### 对笔记数据的操作分为
 
 - 用户操作
@@ -8,13 +10,7 @@
 
 ## code rule
 
-- 数据与操作分离
-  - namespace _VueComp
-    - class Data
-      - context:Context
-      - store_data
-      - comp:VueComp|any
-    - namespace Funcs
+- 函数的模块化，可以吧一组功能放到一个类下，这个类可持有操作对象
 - 
 
 ### 结构

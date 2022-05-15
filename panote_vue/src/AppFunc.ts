@@ -5,7 +5,7 @@ import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc"
 import {NoteCanvasTs} from "@/components/NoteCanvasTs";
 import {bus, bus_event_names, bus_events} from "@/bus";
 import NoteConfigDialog from "@/components/NoteConfigDialog.vue";
-import {ElMessage} from "element-plus";
+import {ElMessage, ElMessageBox} from "element-plus";
 
 class AppRefsGetter{
     get_note_canvas(app:any){
@@ -34,12 +34,23 @@ export module AppFuncTs{
     }
     class ContextElement{
         _ElMessage=ElMessage
+        _ElMessageBox=ElMessageBox
+    }
+    class ContextUiRefGetter{
+        cur_canvas():any{
+            return this.ctx.app.$refs.note_canvas_ref;
+        }
+        constructor(private ctx:Context) {
+        }
     }
     export class Context{
         app:any
         cur_open_note_id="-1"
         storage_manager=new Storage.StorageManager(this)
         timer=new Timer.TimerState()
+        ui_refs(){
+            return new ContextUiRefGetter(this)
+        }
         element_plus(){
             return new ContextElement()
         }
@@ -52,6 +63,12 @@ export module AppFuncTs{
         get_notelist_manager():NoteListFuncTs.NoteListManager|null{
             if(this.app){
                 return this.app.app_ref_getter.get_note_list(this.app).notelist_manager
+            }
+            return null
+        }
+        get_bottom_line():BottomLine|null{
+            if(this.app){
+                return this.app.$refs.bottom_line_ref;
             }
             return null
         }
@@ -111,6 +128,7 @@ import {NoteListScanFileBind} from "@/storage/NoteListScanFileBind";
 import {Timer} from "@/timer/Timer";
 import {_ipc} from "@/ipc";
 import {ReviewPartFunc} from "@/components/ReviewPartFunc";
+import BottomLine from "@/components/BottomLine.vue";
 export default {
     AppRefsGetter,
     Context,

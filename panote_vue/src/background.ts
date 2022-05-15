@@ -6,6 +6,8 @@ import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 // @ts-ignore
 import electron_net from "@/electron_net"
 import {_ipc} from "@/ipc";
+import {auto_update} from "@/auto_update";
+
 // import ipcMain = Electron.Main.ipcMain;
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -27,7 +29,8 @@ async function createWindow() {
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
       nodeIntegration: true,//process.env.ELECTRON_NODE_INTEGRATION,
       contextIsolation: false//!process.env.ELECTRON_NODE_INTEGRATION
-    }
+    },
+
   })
   _ipc.win_ref=win
   if (process.env.WEBPACK_DEV_SERVER_URL) {
@@ -43,12 +46,17 @@ async function createWindow() {
 
   electron_net.get_net_manager();
   _ipc.regist();
+  auto_update.regist()
+  auto_update.start_check_for_once()
+
 }
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
+  auto_update.quiet_install_if_need()
+
   if (process.platform !== 'darwin') {
     app.quit()
   }

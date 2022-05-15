@@ -4,6 +4,7 @@
       <BottomLineBar class="right_bar"
                      :name=" '更新状态'"
             :id="'update_state'" v-model:bottom_focus_id="bottom_focus"
+                     ref="bar_update_state"
       />
     </div>
   </div>
@@ -24,11 +25,14 @@ import {Watch} from "vue-property-decorator";
 export default class BottomLine extends Vue {
   // review_part_man?:ReviewPartFunc.ReviewPartManager
   bottom_focus="_"
+
   @Watch('bottom_focus')
   on_bottom_focus(v:string){
     console.log("on_bottom_focus",v)
   }
-
+  $refs!:{
+    bar_update_state:BottomLineBar
+  }
   mounted(){
     // const _this=this
     // this.$props.father_mount_get_rpmancb.push((rpman:ReviewPartFunc.ReviewPartManager)=>{

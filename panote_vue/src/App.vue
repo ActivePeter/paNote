@@ -59,7 +59,7 @@
 
   <RightMenu ref="right_menu_ref"/>
   <NoteConfigDialog ref="note_config_dialog_ref"></NoteConfigDialog>
-  <BottomLine/>
+  <BottomLine ref="bottom_line_ref"/>
   <!-- <img alt="Vue logo" src="./assets/logo.png" />
   <HelloWorld msg="Welcome to Your Vue.js App" /> -->
 </template>

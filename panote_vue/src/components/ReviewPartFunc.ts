@@ -9,6 +9,7 @@ import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {ElMessage} from "element-plus";
 import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
+import {NoteContentData} from "@/components/NoteCanvasFunc";
 
 
 
@@ -83,8 +84,14 @@ export namespace ReviewPartFunc{
                 return;
             }
             _this.cardsets[name]=new CardSet(name);
-            AppFunc.get_ctx()?.storage_manager.buffer_save_note_reviewinfo(reviewPartManager.note_id,reviewPartManager.card_set_man)
-            bus_events.events.note_data_change.call(reviewPartManager.note_id)
+
+            const ctx=reviewPartManager.context
+            if(ctx){
+                ctx.storage_manager.
+                memory_holder.hold_note(reviewPartManager.note_id,NoteContentData.of_canvas(ctx.ui_refs().cur_canvas()))
+                // AppFunc.get_ctx()?.storage_manager.buffer_save_note_reviewinfo(reviewPartManager.note_id,reviewPartManager.card_set_man)
+                bus_events.events.note_data_change.call(reviewPartManager.note_id)
+            }
         }
 
         static add_card_to_set(_this:CardSetManager,
@@ -334,10 +341,15 @@ export namespace ReviewPartFunc{
                     )
                 }
                 if (res) {
-                    AppFunc.get_ctx()?.storage_manager.buffer_save_note_reviewinfo(rpman.note_id, rpman.card_set_man)
-                    bus_events.events.note_data_change.call(rpman.note_id)
-                    // Storage.ReviewPart.save_all(this.review_part_man)
-                    review_part.switch2review_card()
+                    const ctx=rpman.context
+                    if(ctx){
+                        ctx.storage_manager.
+                            memory_holder.hold_note(rpman.note_id,NoteContentData.of_canvas(ctx.ui_refs().cur_canvas()))
+                        // buffer_save_note_reviewinfo(rpman.note_id, rpman.card_set_man)
+                        bus_events.events.note_data_change.call(rpman.note_id)
+                        // Storage.ReviewPart.save_all(this.review_part_man)
+                        review_part.switch2review_card()
+                    }
                 } else {
                     ElMessage({
                         message: '无法创建卡片,请检查正反面是否填写完整',
@@ -349,7 +361,9 @@ export namespace ReviewPartFunc{
                 const ctx=rpman.context
                 const res=_try_delete_card_in_select_set(rpman,cardid)
                 if(res&&ctx){
-                    ctx.storage_manager.buffer_save_note_reviewinfo(rpman.note_id,rpman.card_set_man)
+                    ctx.storage_manager.
+                        memory_holder.hold_note(rpman.note_id,NoteContentData.of_canvas(ctx.ui_refs().cur_canvas()))
+                    // ctx.storage_manager.buffer_save_note_reviewinfo(rpman.note_id,rpman.card_set_man)
                     ctx.get_notelist_manager()?.pub_set_note_newedited_flag(rpman.note_id)
                 }
             }

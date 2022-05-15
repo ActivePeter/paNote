@@ -289,6 +289,16 @@ export class NoteContentData{
     static get_default(){
         return new NoteContentData(1000,{},{})
     }
+    static of_canvas(canvas){
+        const ret=new NoteContentData(
+            canvas.next_editor_bar_id,
+            canvas.editor_bars,
+            canvas.paths)
+        if(canvas.content_manager.part_of_storage_data){
+            ret.part=canvas.content_manager.part_of_storage_data
+        }
+        return ret
+    }
     constructor(next_editor_bar_id,editor_bars,paths) {
         this.next_editor_bar_id=next_editor_bar_id
         this.editor_bars=editor_bars

@@ -150,7 +150,7 @@ export namespace NoteListFuncTs {
         new_note_from_loaded_NoteStoreToFileStruct(ctx: AppFuncTs.Context, fbind: string, store: NoteStoreToFileStruct) {
             this.data_to_storage.pub_notes[store.note_id] = getNoteDataModel(store.note_id, fbind)
             ctx.storage_manager.save_notelist(this);
-            ctx.storage_manager.save_note_2_buffer_from_NoteStoreToFileStruct(store)
+            // ctx.storage_manager.save_note_2_buffer_from_NoteStoreToFileStruct(store)
         }
 
         _new_note_id(): string {
@@ -189,11 +189,17 @@ export namespace NoteListFuncTs {
                 ctx.cur_open_note_id = noteid
                 console.log("open_note", ctx, noteid);
                 const nlman = ctx.get_notelist_manager()
+                // console.log("nlman")
                 if (nlman) {
                     const conf = get_note_config_info(nlman, noteid);
+                    // console.log("conf",conf)
                     if (conf) {
-                        const note = await ctx.storage_manager.load_note_all(noteid, conf)
-                        if (note) {
+                        let note = await ctx.storage_manager.load_note_all(noteid, conf)
+                        if(!note){
+                            note=NoteContentData.get_default()
+                        }
+                        // if (note)
+                        {
                             const note_canvas = ctx.app.app_ref_getter.get_note_canvas(ctx.app)
                             note_canvas.content_manager.first_load_set(noteid, note_canvas, note);
                         }

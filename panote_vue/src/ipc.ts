@@ -12,6 +12,7 @@ import {no_card_2_review} from "@/ipc_tasks/main_call_render/no_card_2_review";
 import {anki_state_not_match} from "@/ipc_tasks/main_call_render/anki_state_not_match";
 import {auto_update} from "@/ipc_tasks/main_call_render/auto_update";
 import {ReviewPartFunc} from "@/components/ReviewPartFunc";
+import {auto_update as _auto_update} from "@/auto_update"
 // import {electron_bg} from "@/background";
 
 export namespace _ipc {
@@ -102,10 +103,44 @@ export namespace _ipc {
                 }
             }
         }
+        namespace auto_update_render_call_main{
+
+            export class Class implements ITask{
+                channel="auto_update_render_call_main"
+
+                //"set_quiet_install"
+                //"quit_and_install"
+                call(cmds:string){
+                    return ipcRenderer.invoke(this.channel,cmds)
+                }
+                regist(){
+                    ipcMain.handle(this.channel, async (event,cmd:string) =>{
+                        console.log(cmd)
+                        if(cmd=="set_quiet_install"){
+                            _auto_update.set_quiet_install()
+                        }else if(cmd=="quit_and_install"){
+                            _auto_update.quit_and_install()
+                        }
+
+                        // console.log("send_to_anki",get_serialized_data)
+                        // const netman:null|NetManager=electron_net.get_net_manager()
+                        // if(!netman){
+                        //     return false
+                        // }
+                        // const res=await netman.try_send_str(get_serialized_data);
+                        // if(res==SendState.Succ){
+                        //     return true
+                        // }
+                        // return false
+                    })
+                }
+            }
+        }
         //底下的regist函数会遍历regist
         export const tasks={
             start_choose_pa_note_file:new start_choose_pa_note_file.Class(),
-            send_to_anki:new send_to_anki.Class()//发送前先判断是否连接
+            send_to_anki:new send_to_anki.Class(),//发送前先判断是否连接
+            auto_update_render_call_main:new auto_update_render_call_main.Class()
         }
 
     }

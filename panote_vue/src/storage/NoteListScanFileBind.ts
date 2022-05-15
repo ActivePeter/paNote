@@ -7,7 +7,7 @@ export namespace NoteListScanFileBind {
 
     export const start = (ctx: AppFuncTs.Context) => {
         const tick = () => {
-            // console.log("NoteListScanFileBind hhh")
+            console.log("NoteListScanFileBind hhh")
             if (!ctx) {
                 return;
             }
@@ -20,13 +20,27 @@ export namespace NoteListScanFileBind {
                     const conf = NoteListFuncTs.get_note_config_info(nlman, key)
 
                     // console.log(conf,item)
-                    if (conf && conf.bind_file) {
-                        // console.log("NoteListScanFileBind",conf)
-                        //绑定到文件
-                        if (conf && conf.bind_file && "new_edit" in item && item["new_edit"]) {
+                    if("new_edit" in item && item["new_edit"]){
+                        let binded=false;
+                        if (conf && conf.bind_file)
+                        {
+                            // console.log("NoteListScanFileBind",conf)
+                            //绑定到文件
+                            // if (
+                            //     conf && conf.bind_file
+                            //     // &&
+                            //     // "new_edit" in item && item["new_edit"]
+                            // )
+                            {
+                                item["new_edit"] = false
+                                // console.log("note new edit and save",key)
+                                ctx.storage_manager.save_note_2_file(key,conf.bind_file)
+                                binded=true
+                            }
+                        }
+                        if(!binded){
+                            ctx.storage_manager.save_unbinded_note(key)
                             item["new_edit"] = false
-                            console.log("note new edit and save",)
-                            ctx.storage_manager.save_note_2_file(key,conf.bind_file)
                         }
                     }
                 }
