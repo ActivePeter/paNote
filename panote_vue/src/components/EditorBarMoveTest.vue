@@ -12,7 +12,7 @@
     <quill-editor
       :value="content"
       :options="editorOption"
-      :disabled="ebid!=editing_ebid"
+      :disabled="ebid!==editing_ebid"
       @update:value="content_change"
       ref="quill_editor_ref"
     />
@@ -25,10 +25,10 @@
 
       <div
           @click="switch_mode"
-          v-show="ebid==editing_ebid||mouse_over"
+          v-show="ebid===editing_ebid||mouse_over"
           class="tool_line_bar">
 
-        {{ ebid==editing_ebid ? "done" : "edit" }}
+        {{ ebid===editing_ebid ? "done" : "edit" }}
       </div>
     </div>
   </div>
@@ -135,7 +135,7 @@ export default {
     // },
     handle_mouse_down(event) {
       this.mouse_up_down_rec.down(event)
-      if (event.buttons == 1) {
+      if (event.buttons === 1) {
         // this.drag_on_x = event.offsetX;
         // this.drag_on_y = event.offsetY;
         this.$emit("left_click", event, this);

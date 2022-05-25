@@ -72,8 +72,8 @@ export namespace auto_update{
         // )
     }
     const download_latest=async ()=>{
-        const res= await download("http://s5.nsloop.com:28204/down/Uwd4e79JygA5")
         try {
+            const res= await download("http://s5.nsloop.com:28204/down/Uwd4e79JygA5")
             const doc = yaml.load(res);
             console.log("yaml",doc);
             if(doc.version!=app.getVersion()){

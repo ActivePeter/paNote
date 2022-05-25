@@ -133,7 +133,7 @@ class EditorBarManager{
         eb.pos_y = y;
         this.canvas.line_connect_helper.bar_move(this.canvas, ebid);
         let ck = this.canvas.chunk_helper.calc_chunk_pos(x, y);
-        if (old_ck != ck) {
+        if (old_ck !== ck) {
             console.log("ck", ck);
 
             this.canvas.chunk_helper.move_chunk(this.canvas.non_empty_chunks, old_ck, ck);

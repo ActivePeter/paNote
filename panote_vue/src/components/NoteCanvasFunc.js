@@ -403,85 +403,7 @@ class Storage{
         // reader.readAsText(file);
     }
 }
-class DragBarHelper{
-    update_cnt=0;
-    update_moving_obj_pos(canvas) {
-        this.update_cnt++;
-        let bar_data = canvas.editor_bars[canvas.moving_obj.ebid];
-        let origin_pos = canvas.get_content_origin_pos();
-        //   var bar_pos = this.get_moving_obj_pos();
-        let dx =
-            canvas.mouse_recorder.mouse_cur_x -
-            origin_pos.x -
-            canvas.moving_obj.drag_on_x * canvas.scale;
-        let dy =
-            canvas.mouse_recorder.mouse_cur_y -
-            origin_pos.y -
-            canvas.moving_obj.drag_on_y * canvas.scale;
-        //   console.log("canvas dx dy", dx, dy, bar_pos);
-        canvas.editor_bar_set_new_pos(
-            canvas.moving_obj.ebid,
-            bar_data,
-            dx / canvas.scale,
-            dy / canvas.scale
-        );
-    }
-    start_drag(NoteCanvasFunc,canvas,event,eb){
-        let ebpos=canvas.editor_bar_manager.get_editor_bar_client_pos(eb.ebid);
-        // console.log(ebpos)
-        eb.drag_on_x=event.clientX-ebpos.x
-        eb.drag_on_y=event.clientY-ebpos.y
 
-        this.update_cnt=0;
-        canvas.mouse_recorder.call_before_move(
-            event.clientX,
-            event.clientY
-            //   event.screenX, event.screenY
-        );
-        // event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
-        if (canvas.cursor_mode === "拖拽") {
-            console.log("开始拖拽")
-            if(canvas.editor_bar_manager.corner_drag_helper==null){
-                canvas.moving_obj = eb;
-            }
-        } else if (canvas.cursor_mode === "连线") {
-            let bar_data = canvas.editor_bars[eb.ebid];
-            canvas.line_connect_helper.begin_connect_from_canvaspos(
-                NoteCanvasFunc,
-                canvas,
-                bar_data.pos_x,
-                bar_data.pos_y,
-                eb.ebid
-            );
-        }
-    }
-    end_drag(ctx,canvas){
-        // console.log("end_drag",canvas.moving_obj)
-        if(canvas.moving_obj!=null){
-            canvas.moving_obj = null;
-            // console.log(" end_drag", canvas.moving_obj )
-            if(this.update_cnt>0){
-                canvas.content_manager.
-                    backend_editor_bar_change_and_save(
-                        canvas.context,canvas,
-                        new EditorBarFunc.EditorBarChange(
-                            EditorBarFunc.EditorBarChangeType.Move,
-                            null,
-                        )
-                    )
-                canvas.content_manager
-                    .backend_path_change_and_save(
-                        canvas.context,canvas,
-                        new PathFunc.PathChange(
-                            PathFunc.PathChangeType.MoveSome,
-                            null,null
-                        )
-                    )
-                // canvas.storage.save_all()
-            }
-        }
-    }
-}
 
 export default {
     new_mouse_recorder: function () {
@@ -525,7 +447,7 @@ export default {
     },
     LineConnectHelper,
     Storage,
-    DragBarHelper,
+    // DragBarHelper,
     // ContentManager,
     NoteContentData
 }

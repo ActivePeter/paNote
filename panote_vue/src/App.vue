@@ -16,7 +16,7 @@
         <el-row class="tool_line">
           <el-button @click="add_editor_bar">add note bar</el-button>
           <div style="width: 10px"></div>
-          <el-radio-group v-model="cursor_mode_select" size="medium">
+          <el-radio-group v-model="cursor_mode_select" >
             <el-radio-button label="拖拽"></el-radio-button>
             <el-radio-button label="连线"></el-radio-button>
             <el-radio-button label="选择"></el-radio-button>

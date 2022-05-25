@@ -12,6 +12,90 @@ import {bus, bus_events} from "@/bus";
 import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
 
 export module NoteCanvasTs{
+    export class DragBarHelper{
+        update_cnt=0;
+        update_moving_obj_pos(canvas:any) {
+            this.update_cnt++;
+            const bar_data = canvas.editor_bars[canvas.moving_obj.ebid];
+            console.log("update_moving_obj_pos get_content_origin_pos");
+            const origin_pos = canvas.get_content_origin_pos();
+            //   var bar_pos = this.get_moving_obj_pos();
+
+            const dx =
+                canvas.mouse_recorder.mouse_cur_x -
+                origin_pos.x -
+                canvas.moving_obj.drag_on_x;// / canvas.scale;
+            const dy =
+                canvas.mouse_recorder.mouse_cur_y -
+                origin_pos.y -
+                canvas.moving_obj.drag_on_y;// / canvas.scale;
+            //   console.log("canvas dx dy", dx, dy, bar_pos);
+            canvas.editor_bar_set_new_pos(
+                canvas.moving_obj.ebid,
+                bar_data,
+                dx / canvas.scale,
+                dy / canvas.scale
+            );
+        }
+        start_drag(NoteCanvasFunc:any,canvas:any,event:MouseEvent,eb:any){
+            const ebpos=canvas.editor_bar_manager.get_editor_bar_client_pos(eb.ebid);
+            // console.log(ebpos)
+
+            //点下时记录鼠标与文本块的相对坐标
+            eb.drag_on_x=event.clientX-ebpos.x
+            eb.drag_on_y=event.clientY-ebpos.y
+
+            this.update_cnt=0;
+            canvas.mouse_recorder.call_before_move(
+                event.clientX,
+                event.clientY
+                //   event.screenX, event.screenY
+            );
+            // event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
+            if (canvas.cursor_mode === "拖拽") {
+                console.log("开始拖拽")
+                if(canvas.editor_bar_manager.corner_drag_helper==null){
+                    canvas.moving_obj = eb;
+                }
+            } else if (canvas.cursor_mode === "连线") {
+                const bar_data = canvas.editor_bars[eb.ebid];
+                canvas.line_connect_helper.begin_connect_from_canvaspos(
+                    NoteCanvasFunc,
+                    canvas,
+                    bar_data.pos_x,
+                    bar_data.pos_y,
+                    eb.ebid
+                );
+            }
+        }
+        end_drag(canvas:any){
+            // console.log("end_drag",canvas.moving_obj)
+
+            if(canvas.moving_obj!=null){
+                canvas.moving_obj = null;
+                // console.log(" end_drag", canvas.moving_obj )
+                if(this.update_cnt>0){
+                    canvas.content_manager.
+                    backend_editor_bar_change_and_save(
+                        canvas.context,canvas,
+                        new EditorBarFunc.EditorBarChange(
+                            EditorBarFunc.EditorBarChangeType.Move,
+                            null,
+                        )
+                    )
+                    canvas.content_manager
+                        .backend_path_change_and_save(
+                            canvas.context,canvas,
+                            new PathFunc.PathChange(
+                                PathFunc.PathChangeType.MoveSome,
+                                null,null
+                            )
+                        )
+                    // canvas.storage.save_all()
+                }
+            }
+        }
+    }
     export class PartOfNoteContentData{
         //复习的卡片组信息
         review_card_set_man=new ReviewPartFunc.CardSetManager()

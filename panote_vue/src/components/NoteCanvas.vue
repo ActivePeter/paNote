@@ -122,7 +122,7 @@
     </div>
     <div class="info">
       scroll_enabled:{{ scroll_enabled }}, scale: {{ scale }}, dragging:
-      {{ canvas_mouse_drag_helper ? canvas_mouse_drag_helper.dragging : false }}
+      {{ canvas_mouse_drag_helper ? canvas_mouse_drag_helper.dragging : false }},{{moving_obj?"moving_obj":"no moving_obj"}}
     </div>
   </div>
 </template>
@@ -254,7 +254,7 @@ export default {
       editor_tool_helper: new EditorToolFunc.EditorToolHelper(),
 
       storage:null,
-      drag_bar_helper:new NoteCanvasFunc.DragBarHelper(),
+      drag_bar_helper:new NoteCanvasTs.DragBarHelper(),
 
       line_connect_helper:new NoteCanvasFunc.LineConnectHelper(),
       state_ts:new NoteCanvasTs.NoteCanvasStateTs()
@@ -385,7 +385,7 @@ export default {
       //   this.dragging = false;
       console.log("handle_mouse_up")
 
-      this.drag_bar_helper.end_drag(this.context,this);
+      this.drag_bar_helper.end_drag(this);
       this.canvas_mouse_drag_helper.end_drag_canvas(event);
       if (this.connecting_path) {
         this.connecting_path = null;

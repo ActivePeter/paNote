@@ -101,6 +101,26 @@
   
   - NoteCanvas ref="note_canvas_ref"
   
+    - NoteCanvasTs
+  
+      - DragBarHelper
+  
+        文本块的拖拽功能
+  
+    - NoteCanvas(Comp)
+  
+      - fn
+  
+        - editor_bar_set_new_pos(ebid, eb, x, y)
+  
+          判断是否未拖拽模式并设置坐标
+  
+          该坐标为 editor_bar 与canvas原点的相对位置，
+  
+          ​	为canvas参考系（没有缩放）
+  
+        - 
+  
   - RightMenu ref="right_menu_ref"
   
   - 
