@@ -168,7 +168,7 @@ export default {
 
 <style scoped>
 .editor_bar {
-  background: rgb(235, 234, 234);
+  background: rgba(235, 234, 234,90%);
   /*width: 280px;*/
   /*height: 380px;*/
   /*border: 1px solid #000;*/
