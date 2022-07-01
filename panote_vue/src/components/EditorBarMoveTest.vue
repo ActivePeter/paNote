@@ -1,14 +1,13 @@
 <template>
   <div
-    class="editor_bar"
+    :class="'editor_bar'+select_class"
     @mousedown="handle_mouse_down"
     @mouseup="handle_mouse_up"
     @mouseover="handle_mouse_over"
     @mouseleave="handle_mouse_leave"
-    :style="{height: height+'px',width:width+'px'}"
+    :style="{height: height+'px',width:width+'px',opacity:opacity_str}"
     :id="'editor_'+ebid"
   >
-
     <quill-editor
       :value="content"
       :options="editorOption"
@@ -58,6 +57,24 @@ export default {
       }
     }
   },
+  computed:{
+    select_class(){
+      if(this.selected){
+        return ' selected'
+      }else{
+        return ''
+      }
+    },
+    opacity_str(){
+      if(!this.search_ing){
+        return "100%"
+      }
+      if(this.search_tar){
+        return "100%"
+      }
+      return "20%"
+    }
+  },
   mounted() {
     const _this=this;
     // console.log("rigst")
@@ -65,6 +82,9 @@ export default {
       // console.log("click cb")
       RightMenuFuncTs.if_right_click_then_emit(
           _this.mouse_up_down_rec._up,"editor_bar",this);
+    })
+    this.$nextTick(()=>{
+      this.editor_bar_manager.editor_bar_comp_mounted(this)
     })
     // this.hide_tool_bar();
     // new Quill(".editor_bar");
@@ -96,6 +116,9 @@ export default {
   methods: {
     emit_delete(){
       this.$emit("delete",this)
+    },
+    emit_copy(){
+      this.$emit("copy",this)
     },
     content_change(content){
       // this.content=content;
@@ -138,7 +161,7 @@ export default {
       if (event.buttons === 1) {
         // this.drag_on_x = event.offsetX;
         // this.drag_on_y = event.offsetY;
-        this.$emit("left_click", event, this);
+        this.$emit("leftmousedown", event, this);
       }
       // event.preventDefault();
     },
@@ -162,16 +185,27 @@ export default {
     width:Number,
     height:Number,
     content:String,
+    search_ing:Boolean,
+    search_tar:Boolean,
+    selected:Boolean(false),
+
+    editor_bar_manager:Object,//vmodel
   },
 };
 </script>
 
 <style scoped>
+.editor_bar.selected{
+  border-width: 4px;
+  margin-left: -3px;
+  margin-top: -3px;
+}
 .editor_bar {
   background: rgba(235, 234, 234,90%);
   /*width: 280px;*/
   /*height: 380px;*/
-  /*border: 1px solid #000;*/
+  /*box-sizing: border-box;*/
+  border: 1px solid #000;
 }
 .editor {
   height: 100%;

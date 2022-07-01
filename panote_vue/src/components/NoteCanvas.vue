@@ -7,6 +7,9 @@
         @change_is_show="editor_tool_change_is_show"
         @choose_tool="choose_tool"
     />
+    <NoteCanvasSearchBar class="canvas_relative canvas_right"
+      v-model:note_canvas_datareacher="data_reacher"
+    />
     <div
         class="range noselect"
         ref="range_ref"
@@ -43,7 +46,9 @@
               version="1.1"
               :height="item.h"
               :width="item.w"
-              :style="{ top: item.oy + 'px', left: item.ox + 'px' }"
+              :style="{ top: item.oy + 'px', left: item.ox + 'px' ,
+                opacity:path_opacity
+              }"
           >
             <path
                 :d="
@@ -89,6 +94,7 @@
               top: -padding_add_up + 'px',
               bottom: -padding_add_down + 'px',
             }"
+              @mousedown="background_click"
           ></div>
 <!--          <EditorBar/>-->
           <EditorBarMove
@@ -97,6 +103,11 @@
               :ebid="i"
               :editing_ebid="editing_editor_bar_id"
               :toolbar_on="editor_tool_helper.tool_bar_on"
+              :search_ing="content_manager.search_in_canvas.searching"
+              :search_tar="i in content_manager.search_in_canvas.searched_bars"
+              :selected="i in editor_bar_manager.focused_ebids"
+              v-model:editor_bar_manager="editor_bar_manager"
+
               v-show="content_manager.reviewing_state.card_id===''||
                 (!content_manager.reviewing_state.show_answer&&i in content_manager.reviewing_state.front_linked_note_ids)||
                 content_manager.reviewing_state.show_answer
@@ -110,35 +121,45 @@
               class="editor_bar_move"
 
               @content_change="editor_bar_content_change"
-              @left_click="editor_bar_left_click"
+              @leftmousedown="editor_bar_left_mousedown"
               @drag_release="editor_bar_drag_release"
               @switch_mode="editor_bar_switch_mode"
               @corner_drag_start="editor_bar_corner_drag_start"
               @right_menu="right_menu"
               @delete="editor_bar_delete"
+              @copy="editor_bar_copy_lside"
           />
         </div>
       </div>
     </div>
     <div class="info">
       scroll_enabled:{{ scroll_enabled }}, scale: {{ scale }}, dragging:
-      {{ canvas_mouse_drag_helper ? canvas_mouse_drag_helper.dragging : false }},{{moving_obj?"moving_obj":"no moving_obj"}}
+      {{ canvas_mouse_drag_helper ? canvas_mouse_drag_helper.dragging : false }},
+<!--      {{moving_obj?"moving_obj":"no moving_obj"}},-->
+      searching:{{this.content_manager.search_in_canvas.searching}},
+      {{this.content_manager.search_in_canvas.search_time}},
+{{this.content_manager.search_in_canvas.ui_match_case}},
+      {{this.content_manager.search_in_canvas.ui_keyword_any_or_each}}
     </div>
   </div>
 </template>
 
 <script>
-import ElementResizeDetectorMaker from "element-resize-detector";
 // import EditorBar from "./EditorBar.vue";
+
+import ElementResizeDetectorMaker from "element-resize-detector";
 import EditorBarMove from "./EditorBarMoveTest.vue";
-import NoteCanvasFunc from "./NoteCanvasFunc.js";
 import EditorTool from "@/components/EditorTool";
+import NoteCanvasSearchBar from "@/components/NoteCanvasSearchBar"
+
+import NoteCanvasFunc from "./NoteCanvasFunc.js";
 import EditorToolFunc from "@/components/EditorToolFunc";
 import EditorBarFunc from "@/components/EditorBarFunc";
 // import RightMenuFunc from "@/components/RightMenuFunc";
 import {NoteCanvasTs} from "@/components/NoteCanvasTs";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
+import {EditorBarTs} from "@/components/EditorBarTs";
 
 
 
@@ -149,6 +170,7 @@ export default {
     // eslint-disable-next-line vue/no-unused-components
     EditorBarMove,
     EditorTool,
+    NoteCanvasSearchBar,
   },
   watch: {
     cursor_mode(val) {
@@ -161,15 +183,23 @@ export default {
     }
   },
   computed:{
+    path_opacity(){
+      if(this.content_manager.search_in_canvas.searching){
+        return "30%"
+      }else{
+        return "100%"
+      }
+    }
   },
   mounted() {
     this.$emit("get_context",this);
 
     this.chunk_helper = NoteCanvasFunc.new_chunk_helper();
     this.storage=new NoteCanvasFunc.Storage(this)
-    this.editor_bar_manager=new EditorBarFunc.EditorBarManager(this)
+    // this.editor_bar_manager=new EditorBarTs.EditorBarManager(this)
     this.mouse_recorder = NoteCanvasFunc.new_mouse_recorder();
     this.canvas_mouse_drag_helper = new NoteCanvasFunc.CanvasMouseDragHelper();
+    this.content_manager.search_in_canvas.init_refs(this.editor_bars,this.editor_bar_manager)
 
     // this.storage.load_all();
     // this.editor_bar_manager.add_if_no()
@@ -212,51 +242,55 @@ export default {
   },
   data() {
     return {
+      //context ref
+      data_reacher:new NoteCanvasTs.NoteCanvasDataReacher(this),
       context:null,
 
+      //界面效果相关
       scroll_enabled: false,
       scale: 1,
       scale_step: 0.1,
       edge_size_w: 100,
       edge_size_h: 100,
 
+      //note chunk边界计算值
       padding_add_up: 0,
       padding_add_down: 0,
       padding_add_left: 0,
       padding_add_right: 0,
-
-      moving_obj: null,
       //   record_content_rect: null, //for moving
 
       //data to save->
       editor_bars: {},
       next_editor_bar_id:1000,
       paths: {},
-      //<-data to save
 
       //manage data
       content_manager:new NoteCanvasTs.ContentManager(),
 
-
-      mouse_recorder: null,
-
+      //区块管理
       chunk_helper: null,
       non_empty_chunks: {
         "0,0": 0,
       },
-      canvas_mouse_drag_helper: null,
-      connecting_path: null,
 
+      //交互相关
+      canvas_mouse_drag_helper: null,
+      mouse_recorder: null,
+      drag_bar_helper:new NoteCanvasTs.DragBarHelper(),
+      moving_obj: null,
+      connecting_path: null,
+      line_connect_helper:new NoteCanvasFunc.LineConnectHelper(),
+
+      //文本块编辑
       editing_editor_bar: null,
       editing_editor_bar_id: "-1",
-      editor_bar_manager: null,
-
+      editor_bar_manager: new EditorBarTs.EditorBarManager(this),
       editor_tool_helper: new EditorToolFunc.EditorToolHelper(),
 
+      //存储
       storage:null,
-      drag_bar_helper:new NoteCanvasTs.DragBarHelper(),
 
-      line_connect_helper:new NoteCanvasFunc.LineConnectHelper(),
       state_ts:new NoteCanvasTs.NoteCanvasStateTs()
     };
   },
@@ -315,7 +349,7 @@ export default {
     },
     handle_key_down(val) {
       if (val.key === "b"&&val.ctrlKey) {
-        console.log("handle_key_down", val);
+        // console.log("handle_key_down", val);
         this.scroll_enabled = true;
       }
       if (val.key === "/") {
@@ -385,12 +419,18 @@ export default {
       //   this.dragging = false;
       console.log("handle_mouse_up")
 
-      this.drag_bar_helper.end_drag(this);
+      this.drag_bar_helper.end_drag(event,this);
       this.canvas_mouse_drag_helper.end_drag_canvas(event);
       if (this.connecting_path) {
         this.connecting_path = null;
       }
       this.editor_bar_manager.on_mouse_up();
+    },
+    background_click(event){
+      console.log("background_click",event)
+      if(event.buttons===1){
+        this.editor_bar_manager.focus_clear()
+      }
     },
     get_canvas_client_pos() {
       let r = this.$refs.range_ref.getBoundingClientRect();
@@ -461,6 +501,9 @@ export default {
 
       return pos;
     },
+    editor_bar_copy_lside(editorbar){
+      this.editor_bar_manager.copy_editor_bar_left_side(this,editorbar.ebid)
+    },
     editor_bar_delete(editor_bar){
       if(this.content_manager.linkBarToListView.is_linking){
         return;
@@ -490,32 +533,34 @@ export default {
         );
       }
     },
-    editor_bar_set_new_pos(ebid, eb, x, y) {
-      if(this.content_manager.linkBarToListView.is_linking){
-        return;
-      }
-      this.editor_bar_manager.set_new_pos(ebid,eb,x,y);
-      //   let ebw = 100;
-      //   let ebh = 100;
-      //超出原有范围需要重新设置背景面板的size
-    },
+    // editor_bar_set_new_pos(ebid, x, y) {
+    //
+    //   //   let ebw = 100;
+    //   //   let ebh = 100;
+    //   //超出原有范围需要重新设置背景面板的size
+    // },
     editor_bar_content_change(ebid,content){
       if(this.content_manager.linkBarToListView.is_linking){
         return;
       }
       this.editor_bar_manager.content_change(ebid,content);
     },
-    editor_bar_left_click(event, eb) {
+    editor_bar_left_mousedown(event, eb) {
+      //连接到复习卡片的listview
       if(this.content_manager.linkBarToListView.is_linking){
         this.content_manager.linkBarToListView.link_canvas_bar(this,eb)
         return;
       }
       //   console.log(eb);
       //   let cp = this.get_canvas_client_pos();
+
+      //检查是否未拖拽模式
       this.drag_bar_helper.start_drag(NoteCanvasFunc,this,
         event,eb
       )
 
+      //检查是否为选择模式
+      this.editor_bar_manager.select_click_check(event,eb)
       //   this.record_content_rect = this.$refs.content_ref.getBoundingClientRect();
     },
   },
@@ -586,5 +631,16 @@ export default {
 
 not supported by any browser */
 
+}
+.canvas_relative{
+  position: absolute;
+
+}
+.canvas_right{
+  right: 25px;
+  top:10px;
+}
+.note_canvas{
+  position: relative;
 }
 </style>

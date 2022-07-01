@@ -10,7 +10,7 @@ import {Options, Vue} from 'vue-class-component';
   props: {
   }
 })
-export default class BindNote2LocalFileDialog extends Vue {
+export default class SideBarSwitch extends Vue {
   $props!: {
   }
   start_edit(){

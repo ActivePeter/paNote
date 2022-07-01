@@ -173,6 +173,9 @@ export default {
       quill_format(op_type,op_arg){
         state.quill.format(op_type, op_arg, Quill.sources.USER);
       },
+      get_raw_quill(){
+        return state.quill
+      },
       do_operation(op_type,op_arg){
         switch (op_type){
           case 'indent':

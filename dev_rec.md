@@ -143,7 +143,12 @@ export const request_for_conttext=(vueobj:any,cb:(ctx:Context)=>void)=>{
 }
 ```
 
+### 右键菜单
 
+- old：
+  - 通过父子传递
+- new：
+  - 通过全局bus传递
 
 ### 运行流程
 

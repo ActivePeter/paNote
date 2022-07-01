@@ -10,40 +10,91 @@ import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 import {NoteContentData} from "@/components/NoteCanvasFunc";
 import {bus, bus_events} from "@/bus";
 import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
+import {search} from "@/search";
+import {_PaUtilTs} from "@/3rd/pa_util_ts";
+import {EditorBarTs} from "@/components/EditorBarTs";
 
 export module NoteCanvasTs{
     export class DragBarHelper{
         update_cnt=0;
+        dragging=false;
+        // cb=(moved:boolean,updown_dt:number)=>{}
+        _start_ms=0;
+        begin_pos=new _PaUtilTs.Pos2D(0,0)
+        start_in_case3=false
+        // _end_ms=0;
         update_moving_obj_pos(canvas:any) {
+            const ebman=canvas.editor_bar_manager as EditorBarTs.EditorBarManager
+
             this.update_cnt++;
-            const bar_data = canvas.editor_bars[canvas.moving_obj.ebid];
+            // const bar_data = canvas.editor_bars[canvas.moving_obj.ebid];
             console.log("update_moving_obj_pos get_content_origin_pos");
             const origin_pos = canvas.get_content_origin_pos();
             //   var bar_pos = this.get_moving_obj_pos();
 
-            const dx =
+            const tarx =
                 canvas.mouse_recorder.mouse_cur_x -
                 origin_pos.x -
                 canvas.moving_obj.drag_on_x;// / canvas.scale;
-            const dy =
+            const tary =
                 canvas.mouse_recorder.mouse_cur_y -
                 origin_pos.y -
                 canvas.moving_obj.drag_on_y;// / canvas.scale;
             //   console.log("canvas dx dy", dx, dy, bar_pos);
-            canvas.editor_bar_set_new_pos(
-                canvas.moving_obj.ebid,
-                bar_data,
-                dx / canvas.scale,
-                dy / canvas.scale
-            );
+
+            // canvas.editor_bar_manager.get_editor_bar_data_by_ebid()
+            if(canvas.content_manager.linkBarToListView.is_linking){
+                return;
+            }
+            ebman.focus_setnewpos_with_one(canvas.moving_obj.ebid,
+                tarx / canvas.scale,
+                tary / canvas.scale
+                )
+
+            //
+            // canvas.editor_bar_set_new_pos(
+            //
+            // );
         }
+
         start_drag(NoteCanvasFunc:any,canvas:any,event:MouseEvent,eb:any){
-            const ebpos=canvas.editor_bar_manager.get_editor_bar_client_pos(eb.ebid);
+            const ebman=canvas.editor_bar_manager as EditorBarTs.EditorBarManager
+            const ebid=eb.ebid as string
+            this.start_in_case3=false
+            //情况分析
+            if(!(ebid in ebman.focused_ebids)){
+                // 1.未选中，存在别的选中
+                //   别的取消选中，当前选中，并拖拽
+                if(!event.shiftKey){
+                    if(ebman.focused_cnt()!=0){
+                        ebman.focus_clear()
+                        // ebman.focus_add(ebid)
+                    }
+                }
+                // 2.未选中，不存在别的选中
+                //   当前选中，并拖拽
+                ebman.focus_add(ebid)
+            }else{
+                // 3.选中. 存在别的选中
+                //   3.1.发生拖拽(update)。一起被拖拽
+                //   3.2.未发生拖拽。点击操作（取消其他选择）
+                if(ebman.focused_cnt()!=1){
+                    this.start_in_case3=true;
+                }
+                // 4.选中，不存在别的选中
+                //   拖拽
+                // else{
+                //
+                // }
+            }
+            this._start_ms=_PaUtilTs.time_stamp_number()
+            // this.cb=end_cb
+            const ebcpos=canvas.editor_bar_manager.get_editor_bar_client_pos(eb.ebid);
             // console.log(ebpos)
 
             //点下时记录鼠标与文本块的相对坐标
-            eb.drag_on_x=event.clientX-ebpos.x
-            eb.drag_on_y=event.clientY-ebpos.y
+            eb.drag_on_x=event.clientX-ebcpos.x
+            eb.drag_on_y=event.clientY-ebcpos.y
 
             this.update_cnt=0;
             canvas.mouse_recorder.call_before_move(
@@ -68,11 +119,12 @@ export module NoteCanvasTs{
                 );
             }
         }
-        end_drag(canvas:any){
+        end_drag(event:MouseEvent,canvas:any){
             // console.log("end_drag",canvas.moving_obj)
+            const end_ms=_PaUtilTs.time_stamp_number()
 
             if(canvas.moving_obj!=null){
-                canvas.moving_obj = null;
+
                 // console.log(" end_drag", canvas.moving_obj )
                 if(this.update_cnt>0){
                     canvas.content_manager.
@@ -92,7 +144,15 @@ export module NoteCanvasTs{
                             )
                         )
                     // canvas.storage.save_all()
+                }else if(this.start_in_case3){
+                    //有其他选中无拖拽，相当于点击
+                    const ebman=canvas.editor_bar_manager as EditorBarTs.EditorBarManager
+                    if(!event.shiftKey){
+                        ebman.focus_clear()
+                    }
+                    ebman.focus_add(canvas.moving_obj.ebid)
                 }
+                canvas.moving_obj = null;
             }
         }
     }
@@ -103,12 +163,14 @@ export module NoteCanvasTs{
         sync_anki_serialized="[]"
     }
     export class ContentManager{//由canvas持有
+        search_in_canvas=new search.SearchInCanvas()
         cur_note_id="-1"
         linkBarToListView=new LinkCanvasBarToListView.LinkBarToListView()
         part_of_storage_data:null|PartOfNoteContentData=null
 
         //在reviewpart初始化canvas时设置
         reviewing_state?:ReviewPartFunc.ReviewingState
+
 
         static from_canvas(canvas:any):ContentManager{
             return canvas.content_manager
@@ -140,8 +202,8 @@ export module NoteCanvasTs{
             this.reset(canvas)
             canvas.chunk_helper.first_calc_chunks(canvas)
             this.cur_note_id=noteid
-
             bus_events.events.note_canvas_data_loaded.call(canvas)
+            this.search_in_canvas.init_refs(canvas.editor_bars,canvas.editor_bar_manager)
         }
         _backend_set_curnote_newedit_flag(ctx:AppFuncTs.Context){
             const nlman= ctx.get_notelist_manager()
@@ -221,6 +283,27 @@ export module NoteCanvasTs{
     }
     export class NoteCanvasStateTs{
         gradient_scroll=new Gradient.Common()
+    }
+    export class NoteCanvasDataReacher{
+        notecanvas:any
+        constructor(notecanvas:any) {
+            this.notecanvas=notecanvas
+        }
+        static create(notecanvas:any):NoteCanvasDataReacher{
+            return new NoteCanvasDataReacher(notecanvas);
+        }
+        get_editor_bars(){
+            return this.notecanvas.editor_bars
+        }
+        get_paths(){
+            return this.notecanvas.paths
+        }
+        get_next_editor_bar_id(){
+            return this.notecanvas.next_editor_bar_id
+        }
+        get_content_manager():ContentManager{
+            return this.notecanvas.content_manager
+        }
     }
     export module EditorBar{
         export const get_editor_bar_data=(canvas:object,editor_bar_id:string)=>{

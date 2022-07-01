@@ -2,6 +2,18 @@ import {Buffer} from "buffer";
 import * as buffer from "buffer";
 
 export namespace _PaUtilTs {
+    export class Pos2D{
+        x=0
+        y=0
+        constructor(x:number,y:number) {
+            this.x=x;this.y=y;
+        }
+        update(x:number,y:number){
+            this.x=x;
+            this.y=y;
+        }
+    }
+    export type Vec2D=Pos2D
     export namespace DataStructure {
         export namespace ListSerializable {
             class DoublyNode<T> {
@@ -164,6 +176,9 @@ export namespace _PaUtilTs {
             now.getUTCMinutes() + ":" +
             now.getUTCSeconds() + ":" +
             now.getUTCMilliseconds()
+    }
+    export const time_stamp_number=():number=>{
+        return new Date().getTime()
     }
     export namespace _JudgeType {
         export const is_number = (v: any) => {
