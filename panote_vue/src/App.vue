@@ -194,7 +194,7 @@ body{
 }
 
 .note_canvas_border {
-  border: 1px solid #000;
+  border: 1px solid gainsboro;
   height: calc(100vh - 100px);
 }
 

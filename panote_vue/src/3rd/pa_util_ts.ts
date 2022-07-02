@@ -14,6 +14,15 @@ export namespace _PaUtilTs {
         }
     }
     export type Vec2D=Pos2D
+    export class Rect{
+        x:number
+        y:number
+        w:number
+        h:number
+        constructor(x:number,y:number,w:number,h:number){
+            this.x=x;this.y=y;this.w=w;this.h=h;
+        }
+    }
     export namespace DataStructure {
         export namespace ListSerializable {
             class DoublyNode<T> {
@@ -123,7 +132,21 @@ export namespace _PaUtilTs {
             }
         }
     }
-
+    export namespace Algrithms{
+        export const distance_2p=(p:Pos2D,p1:Pos2D):number=>{
+            const dx=p.x-p1.x
+            const dy=p.y-p1.y
+            return Math.sqrt(dx*dx+dy*dy)
+        }
+        export const aabb_test=(r1:Rect,r2:Rect):boolean=>{
+            const mx1=r1.x+r1.w/2
+            const mx2=r2.x+r2.w/2
+            const my1=r1.y+r1.h/2
+            const my2=r2.y+r2.h/2
+            return Math.abs(mx1-mx2)<(r1.w/2+r2.w/2)&&
+                Math.abs(my1-my2)<(r1.h/2+r2.h/2)
+        }
+    }
     export class MouseDownUpRecord {
         _down: MouseEvent | null = null
         _up: MouseEvent | null = null

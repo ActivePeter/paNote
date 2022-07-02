@@ -157,6 +157,7 @@ export default {
     //   console.log("editor bar click")
     // },
     handle_mouse_down(event) {
+      // console.log("eb mouse down")
       this.mouse_up_down_rec.down(event)
       if (event.buttons === 1) {
         // this.drag_on_x = event.offsetX;

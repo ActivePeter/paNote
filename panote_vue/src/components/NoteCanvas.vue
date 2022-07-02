@@ -31,6 +31,7 @@
             (edge_size_w + padding_add_left * scale) +
             'px',
         }"
+          @mousedown="content_manager.user_interact.event_mousedown_bg"
       >
         <div
             ref="content_ref"
@@ -129,9 +130,12 @@
               @delete="editor_bar_delete"
               @copy="editor_bar_copy_lside"
           />
+          <NoteCanvasSelectRange class="select_range" ref="select_range"/>
         </div>
       </div>
+
     </div>
+
     <div class="info">
       scroll_enabled:{{ scroll_enabled }}, scale: {{ scale }}, dragging:
       {{ canvas_mouse_drag_helper ? canvas_mouse_drag_helper.dragging : false }},
@@ -151,6 +155,7 @@ import ElementResizeDetectorMaker from "element-resize-detector";
 import EditorBarMove from "./EditorBarMoveTest.vue";
 import EditorTool from "@/components/EditorTool";
 import NoteCanvasSearchBar from "@/components/NoteCanvasSearchBar"
+// import SelectRange from "@/3rd/pa_comps/SelectRange"
 
 import NoteCanvasFunc from "./NoteCanvasFunc.js";
 import EditorToolFunc from "@/components/EditorToolFunc";
@@ -160,12 +165,14 @@ import {NoteCanvasTs} from "@/components/NoteCanvasTs";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {EditorBarTs} from "@/components/EditorBarTs";
+import NoteCanvasSelectRange from "@/components/NoteCanvasSelectRange";
 
 
 
 export default {
   name: "NoteCanvas",
   components: {
+    NoteCanvasSelectRange,
     // EditorBar,
     // eslint-disable-next-line vue/no-unused-components
     EditorBarMove,
@@ -190,6 +197,18 @@ export default {
         return "100%"
       }
     }
+  },
+  created() {
+    this.data_reacher=new NoteCanvasTs.NoteCanvasDataReacher(this)
+    this.content_manager=new NoteCanvasTs.ContentManager(this)
+  },
+  unmounted() {
+    window.removeEventListener("keyup", this.handle_key_up);
+    window.removeEventListener("keydown", this.handle_key_down);
+
+    window.removeEventListener("mousewheel", this.handle_scroll);
+    window.removeEventListener("mouseup", this.handle_mouse_up);
+    window.removeEventListener("mousemove", this.handle_mouse_move);
   },
   mounted() {
     this.$emit("get_context",this);
@@ -219,6 +238,9 @@ export default {
         "mousewheel",
         this.handle_range_scroll
     );
+
+    this.$refs.select_range.init(this.data_reacher,this.content_manager.user_interact.select_range_down_check_ok)
+
     let _this = this;
     let erd = ElementResizeDetectorMaker();
 
@@ -243,7 +265,7 @@ export default {
   data() {
     return {
       //context ref
-      data_reacher:new NoteCanvasTs.NoteCanvasDataReacher(this),
+      data_reacher:null,
       context:null,
 
       //界面效果相关
@@ -266,7 +288,7 @@ export default {
       paths: {},
 
       //manage data
-      content_manager:new NoteCanvasTs.ContentManager(),
+      content_manager:null,
 
       //区块管理
       chunk_helper: null,
@@ -277,7 +299,7 @@ export default {
       //交互相关
       canvas_mouse_drag_helper: null,
       mouse_recorder: null,
-      drag_bar_helper:new NoteCanvasTs.DragBarHelper(),
+      drag_bar_helper:new EditorBarTs.DragBarHelper(),
       moving_obj: null,
       connecting_path: null,
       line_connect_helper:new NoteCanvasFunc.LineConnectHelper(),
@@ -334,6 +356,7 @@ export default {
         console.log("handle_scroll_bar",this.moving_obj,event);
         this.update_moving_obj_pos();
       }
+      this.content_manager.user_interact.event_canvas_move()
     },
     handle_range_scroll(event) {
       //缩放模式下，阻止原生滚动事件
@@ -375,6 +398,7 @@ export default {
     },
     handle_mouse_move(val) {
       if (val.buttons != 0) {
+        this.content_manager.user_interact.event_mouse_move(val)
         //有按键按下
         // let cp = this.get_canvas_client_pos();
         this.mouse_recorder.update_pos_on_move(
@@ -416,6 +440,7 @@ export default {
       }
     },
     handle_mouse_up(event) {
+      this.content_manager.user_interact.event_mouse_up(event)
       //   this.dragging = false;
       console.log("handle_mouse_up")
 
@@ -484,7 +509,7 @@ export default {
 
     //区域原点的client坐标
     get_content_origin_pos() {
-      console.log("get_content_origin_pos",this,this.$refs.range_ref)
+      // console.log("get_content_origin_pos",this,this.$refs.range_ref)
       let range_rec = this.$refs.range_ref.getBoundingClientRect();
       let pos = {
         x:
@@ -546,6 +571,7 @@ export default {
       this.editor_bar_manager.content_change(ebid,content);
     },
     editor_bar_left_mousedown(event, eb) {
+      this.content_manager.user_interact.recent_eb_mouse_down=event;
       //连接到复习卡片的listview
       if(this.content_manager.linkBarToListView.is_linking){
         this.content_manager.linkBarToListView.link_canvas_bar(this,eb)
@@ -581,6 +607,7 @@ export default {
 .range {
   height: 100%;
   overflow: scroll;
+
 }
 
 .content {

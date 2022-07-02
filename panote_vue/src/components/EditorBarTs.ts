@@ -1,5 +1,6 @@
 import EditorBarFunc, {EditorBar, EditorBarChange} from "@/components/EditorBarFunc";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
+import PathFunc from "@/components/PathFunc";
 
 export namespace EditorBarTs{
     export const CursorMode={
@@ -96,6 +97,10 @@ export namespace EditorBarTs{
         }
         get_editor_bar_data_by_ebid(ebid:string):EditorBar{
             return this.canvas.editor_bars[ebid]
+        }
+        get_editor_bar_rect_by_ebid(ebid:string):_PaUtilTs.Rect{
+            const eb=this.get_editor_bar_data_by_ebid(ebid)
+            return new _PaUtilTs.Rect(eb.pos_x,eb.pos_y,eb.width,eb.height)
         }
         new_editor_bar(px:number,py:number):EditorBar{
             return new EditorBar(px,py)
@@ -224,5 +229,160 @@ export namespace EditorBarTs{
             this.corner_drag_helper=null
         }
 
+    }
+    export class DragBarHelper{
+        update_cnt=0;
+        dragging=false;
+        // cb=(moved:boolean,updown_dt:number)=>{}
+        _start_ms=0;
+        mouse_last_pos=new _PaUtilTs.Pos2D(0,0)
+        start_in_case3=false
+        mouse_move_distance=0
+        mouse_down_eb:any
+        // _end_ms=0;
+        update_moving_obj_pos(canvas:any) {
+            const ebman=canvas.editor_bar_manager as EditorBarTs.EditorBarManager
+
+            this.update_cnt++;
+            // const bar_data = canvas.editor_bars[canvas.moving_obj.ebid];
+            console.log("update_moving_obj_pos get_content_origin_pos");
+            const origin_pos = canvas.get_content_origin_pos();
+            //   var bar_pos = this.get_moving_obj_pos();
+
+            const tarx =
+                canvas.mouse_recorder.mouse_cur_x -
+                origin_pos.x -
+                canvas.moving_obj.drag_on_x;// / canvas.scale;
+            const tary =
+                canvas.mouse_recorder.mouse_cur_y -
+                origin_pos.y -
+                canvas.moving_obj.drag_on_y;// / canvas.scale;
+            //   console.log("canvas dx dy", dx, dy, bar_pos);
+
+            // canvas.editor_bar_manager.get_editor_bar_data_by_ebid()
+            if(canvas.content_manager.linkBarToListView.is_linking){
+                return;
+            }
+            const newp=new _PaUtilTs.Pos2D(
+                canvas.mouse_recorder.mouse_cur_x
+                ,canvas.mouse_recorder.mouse_cur_y)
+            this.mouse_move_distance+=_PaUtilTs.Algrithms.distance_2p(newp,this.mouse_last_pos)
+            this.mouse_last_pos=newp
+            ebman.focus_setnewpos_with_one(canvas.moving_obj.ebid,
+                tarx / canvas.scale,
+                tary / canvas.scale
+            )
+
+            //
+            // canvas.editor_bar_set_new_pos(
+            //
+            // );
+        }
+
+        start_drag(NoteCanvasFunc:any,canvas:any,event:MouseEvent,eb:any){
+            const ebman=canvas.editor_bar_manager as EditorBarTs.EditorBarManager
+            const ebid=eb.ebid as string
+            this.mouse_down_eb=eb
+            this.start_in_case3=false
+            this.mouse_move_distance=0
+            this.mouse_last_pos=new _PaUtilTs.Pos2D(event.clientX,event.clientY)
+            //情况分析
+            if(!(ebid in ebman.focused_ebids)){
+                // 1.未选中，存在别的选中
+                //   别的取消选中，当前选中，并拖拽
+                if(!event.shiftKey){
+                    if(ebman.focused_cnt()!=0){
+                        ebman.focus_clear()
+                        // ebman.focus_add(ebid)
+                    }
+                }
+                // 2.未选中，不存在别的选中
+                //   当前选中，并拖拽
+                ebman.focus_add(ebid)
+            }else{
+                // 3.选中. 存在别的选中
+                //   3.1.发生拖拽(update)。一起被拖拽
+                //   3.2.未发生拖拽。点击操作（取消其他选择）
+                if(ebman.focused_cnt()!=1){
+                    this.start_in_case3=true;
+                }
+                // 4.选中，不存在别的选中
+                //   拖拽
+                // else{
+                //
+                // }
+            }
+            this._start_ms=_PaUtilTs.time_stamp_number()
+            // this.cb=end_cb
+            const ebcpos=canvas.editor_bar_manager.get_editor_bar_client_pos(eb.ebid);
+            // console.log(ebpos)
+
+            //点下时记录鼠标与文本块的相对坐标
+            eb.drag_on_x=event.clientX-ebcpos.x
+            eb.drag_on_y=event.clientY-ebcpos.y
+
+            this.update_cnt=0;
+            canvas.mouse_recorder.call_before_move(
+                event.clientX,
+                event.clientY
+                //   event.screenX, event.screenY
+            );
+            // event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
+            if (canvas.cursor_mode === "拖拽") {
+                console.log("开始拖拽")
+                if(canvas.editor_bar_manager.corner_drag_helper==null){
+                    canvas.moving_obj = eb;
+                }
+            } else if (canvas.cursor_mode === "连线") {
+                const bar_data = canvas.editor_bars[eb.ebid];
+                canvas.line_connect_helper.begin_connect_from_canvaspos(
+                    NoteCanvasFunc,
+                    canvas,
+                    bar_data.pos_x,
+                    bar_data.pos_y,
+                    eb.ebid
+                );
+            }
+        }
+        end_drag(event:MouseEvent,canvas:any){
+            // console.log("end_drag",canvas.moving_obj)
+            const end_ms=_PaUtilTs.time_stamp_number()
+
+            if(canvas.moving_obj!=null){
+
+                // console.log(" end_drag", canvas.moving_obj )
+                if(this.update_cnt>0){
+                    canvas.content_manager.
+                    backend_editor_bar_change_and_save(
+                        canvas.context,canvas,
+                        new EditorBarFunc.EditorBarChange(
+                            EditorBarFunc.EditorBarChangeType.Move,
+                            null,
+                        )
+                    )
+                    canvas.content_manager
+                        .backend_path_change_and_save(
+                            canvas.context,canvas,
+                            new PathFunc.PathChange(
+                                PathFunc.PathChangeType.MoveSome,
+                                null,null
+                            )
+                        )
+                    // canvas.storage.save_all()
+                }
+                // console.log(this.mouse_move_distance)
+
+                canvas.moving_obj = null;
+            }
+            if(this.mouse_down_eb&&this.mouse_move_distance<2){
+                //有其他选中无拖拽，相当于点击
+                const ebman=canvas.editor_bar_manager as EditorBarTs.EditorBarManager
+                if(!event.shiftKey){
+                    ebman.focus_clear()
+                }
+                ebman.focus_add(this.mouse_down_eb.ebid)
+            }
+            this.mouse_down_eb=null;
+        }
     }
 }

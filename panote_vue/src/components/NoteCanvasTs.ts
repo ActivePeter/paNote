@@ -15,145 +15,79 @@ import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {EditorBarTs} from "@/components/EditorBarTs";
 
 export module NoteCanvasTs{
-    export class DragBarHelper{
-        update_cnt=0;
-        dragging=false;
-        // cb=(moved:boolean,updown_dt:number)=>{}
-        _start_ms=0;
-        begin_pos=new _PaUtilTs.Pos2D(0,0)
-        start_in_case3=false
-        // _end_ms=0;
-        update_moving_obj_pos(canvas:any) {
-            const ebman=canvas.editor_bar_manager as EditorBarTs.EditorBarManager
 
-            this.update_cnt++;
-            // const bar_data = canvas.editor_bars[canvas.moving_obj.ebid];
-            console.log("update_moving_obj_pos get_content_origin_pos");
-            const origin_pos = canvas.get_content_origin_pos();
-            //   var bar_pos = this.get_moving_obj_pos();
-
-            const tarx =
-                canvas.mouse_recorder.mouse_cur_x -
-                origin_pos.x -
-                canvas.moving_obj.drag_on_x;// / canvas.scale;
-            const tary =
-                canvas.mouse_recorder.mouse_cur_y -
-                origin_pos.y -
-                canvas.moving_obj.drag_on_y;// / canvas.scale;
-            //   console.log("canvas dx dy", dx, dy, bar_pos);
-
-            // canvas.editor_bar_manager.get_editor_bar_data_by_ebid()
-            if(canvas.content_manager.linkBarToListView.is_linking){
-                return;
-            }
-            ebman.focus_setnewpos_with_one(canvas.moving_obj.ebid,
-                tarx / canvas.scale,
-                tary / canvas.scale
-                )
-
-            //
-            // canvas.editor_bar_set_new_pos(
-            //
-            // );
+    import MouseDownUpRecord = _PaUtilTs.MouseDownUpRecord;
+    export class CanvasMouseDragEvent{
+        static Types={
+            down:1,
+            move:2,
+            up:3,
         }
-
-        start_drag(NoteCanvasFunc:any,canvas:any,event:MouseEvent,eb:any){
-            const ebman=canvas.editor_bar_manager as EditorBarTs.EditorBarManager
-            const ebid=eb.ebid as string
-            this.start_in_case3=false
-            //情况分析
-            if(!(ebid in ebman.focused_ebids)){
-                // 1.未选中，存在别的选中
-                //   别的取消选中，当前选中，并拖拽
-                if(!event.shiftKey){
-                    if(ebman.focused_cnt()!=0){
-                        ebman.focus_clear()
-                        // ebman.focus_add(ebid)
-                    }
-                }
-                // 2.未选中，不存在别的选中
-                //   当前选中，并拖拽
-                ebman.focus_add(ebid)
-            }else{
-                // 3.选中. 存在别的选中
-                //   3.1.发生拖拽(update)。一起被拖拽
-                //   3.2.未发生拖拽。点击操作（取消其他选择）
-                if(ebman.focused_cnt()!=1){
-                    this.start_in_case3=true;
-                }
-                // 4.选中，不存在别的选中
-                //   拖拽
-                // else{
-                //
-                // }
-            }
-            this._start_ms=_PaUtilTs.time_stamp_number()
-            // this.cb=end_cb
-            const ebcpos=canvas.editor_bar_manager.get_editor_bar_client_pos(eb.ebid);
-            // console.log(ebpos)
-
-            //点下时记录鼠标与文本块的相对坐标
-            eb.drag_on_x=event.clientX-ebcpos.x
-            eb.drag_on_y=event.clientY-ebcpos.y
-
-            this.update_cnt=0;
-            canvas.mouse_recorder.call_before_move(
-                event.clientX,
-                event.clientY
-                //   event.screenX, event.screenY
-            );
-            // event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
-            if (canvas.cursor_mode === "拖拽") {
-                console.log("开始拖拽")
-                if(canvas.editor_bar_manager.corner_drag_helper==null){
-                    canvas.moving_obj = eb;
-                }
-            } else if (canvas.cursor_mode === "连线") {
-                const bar_data = canvas.editor_bars[eb.ebid];
-                canvas.line_connect_helper.begin_connect_from_canvaspos(
-                    NoteCanvasFunc,
-                    canvas,
-                    bar_data.pos_x,
-                    bar_data.pos_y,
-                    eb.ebid
-                );
+        // cv_x=0
+        // cv_y=0
+        // event:MouseEvent
+        constructor(
+            public type:number,// type=-1 //1 down, 2 move, 3 up
+            public event:MouseEvent,
+            public cv_x:number,
+            public cv_y:number) {
+        }
+    }
+    enum CanvasMouseDragDownCallers{
+        editor_bar,
+        canvas_bg,
+    }
+    export class CanvasMouseDragRecorder{
+        down_callers=CanvasMouseDragDownCallers
+        state=-1 //1 down, 2 move, 3 up
+        cbs:any={}//caller->cb()
+        down_event:undefined|CanvasMouseDragEvent
+        down_caller:undefined|CanvasMouseDragDownCallers
+        listen(caller:CanvasMouseDragDownCallers,cb:(recorder:CanvasMouseDragRecorder,
+                   event:CanvasMouseDragEvent)=>void){
+            this.cbs[caller]=cb
+        }
+        unlisten(caller:CanvasMouseDragDownCallers){
+            if(caller in this.cbs){
+                delete this.cbs[caller]
             }
         }
-        end_drag(event:MouseEvent,canvas:any){
-            // console.log("end_drag",canvas.moving_obj)
-            const end_ms=_PaUtilTs.time_stamp_number()
-
-            if(canvas.moving_obj!=null){
-
-                // console.log(" end_drag", canvas.moving_obj )
-                if(this.update_cnt>0){
-                    canvas.content_manager.
-                    backend_editor_bar_change_and_save(
-                        canvas.context,canvas,
-                        new EditorBarFunc.EditorBarChange(
-                            EditorBarFunc.EditorBarChangeType.Move,
-                            null,
-                        )
-                    )
-                    canvas.content_manager
-                        .backend_path_change_and_save(
-                            canvas.context,canvas,
-                            new PathFunc.PathChange(
-                                PathFunc.PathChangeType.MoveSome,
-                                null,null
-                            )
-                        )
-                    // canvas.storage.save_all()
-                }else if(this.start_in_case3){
-                    //有其他选中无拖拽，相当于点击
-                    const ebman=canvas.editor_bar_manager as EditorBarTs.EditorBarManager
-                    if(!event.shiftKey){
-                        ebman.focus_clear()
-                    }
-                    ebman.focus_add(canvas.moving_obj.ebid)
-                }
-                canvas.moving_obj = null;
+        _call_cb(event:CanvasMouseDragEvent){
+            if(this.down_caller&&this.down_caller in this.cbs){
+                // console.log("CanvasMouseDragRecorder _call_cb")
+                this.cbs[this.down_caller](this,event)
             }
+        }
+
+
+        //鼠标下落的触发为不同组件,需要组件主动调用
+        down(canvas:NoteCanvasDataReacher,event:MouseEvent,
+             downcaller:CanvasMouseDragDownCallers){
+            // console.log("CanvasMouseDragRecorder","down")
+            if(!(downcaller in this.cbs)){
+                return
+            }
+            this.down_caller=downcaller
+            const cman=canvas.get_content_manager()
+            const cvpos=cman.pos_from_uipos_2_canvaspos(new _PaUtilTs.Pos2D(event.clientX,event.clientY))
+            this.down_event=new CanvasMouseDragEvent(CanvasMouseDragEvent.Types.down,event,cvpos.x,cvpos.y)
+            this._call_cb(this.down_event)
+        }
+        //canvas鼠标移动监听 调用
+        move(canvas:NoteCanvasDataReacher,event:MouseEvent){
+            const cman=canvas.get_content_manager()
+            const cvpos=cman.pos_from_uipos_2_canvaspos(new _PaUtilTs.Pos2D(event.clientX,event.clientY))
+            const drage=new CanvasMouseDragEvent(CanvasMouseDragEvent.Types.move,event,cvpos.x,cvpos.y)
+            this._call_cb(drage)
+        }
+        //canvas鼠标抬起调用
+        up(canvas:NoteCanvasDataReacher,event:MouseEvent){
+            const cman=canvas.get_content_manager()
+            const cvpos=cman.pos_from_uipos_2_canvaspos(new _PaUtilTs.Pos2D(event.clientX,event.clientY))
+            const drage=new CanvasMouseDragEvent(CanvasMouseDragEvent.Types.up,event,cvpos.x,cvpos.y)
+            this._call_cb(drage)
+            this.down_caller=undefined
+            this.down_event=undefined
         }
     }
     export class PartOfNoteContentData{
@@ -162,20 +96,69 @@ export module NoteCanvasTs{
         //同步到anki的变更的序列化数组
         sync_anki_serialized="[]"
     }
+    export class UserInteract{
+        mouse_drag_recorder=new CanvasMouseDragRecorder()
+        _recent_eb_mouse_down:undefined|MouseEvent
+        _recent_mouse_move:undefined|MouseEvent
+        canvas:NoteCanvasDataReacher
+        set recent_eb_mouse_down(v:MouseEvent){
+            this._recent_eb_mouse_down=v;
+        }
+        constructor(canvas:NoteCanvasDataReacher) {
+            this.canvas=canvas
+        }
+        select_range_down_check_ok=(event:MouseEvent)=>{
+            return event!=this._recent_eb_mouse_down;
+        }
+        event_canvas_move(){
+            if (this._recent_mouse_move){
+                this.mouse_drag_recorder.move(this.canvas,this._recent_mouse_move)
+            }
+        }
+        event_mousedown_bg(event:MouseEvent){
+            // console.log(this)
+            this.mouse_drag_recorder.down(this.canvas,event,this.mouse_drag_recorder.down_callers.canvas_bg)
+        }
+        event_mouse_move(event:MouseEvent){
+            this.mouse_drag_recorder.move(this.canvas,event)
+            this._recent_mouse_move=event
+        }
+        event_mouse_up(event:MouseEvent){
+            this._recent_mouse_move=undefined
+            this.mouse_drag_recorder.up(this.canvas,event)
+        }
+    }
     export class ContentManager{//由canvas持有
         search_in_canvas=new search.SearchInCanvas()
         cur_note_id="-1"
         linkBarToListView=new LinkCanvasBarToListView.LinkBarToListView()
         part_of_storage_data:null|PartOfNoteContentData=null
-
+        user_interact:UserInteract
         //在reviewpart初始化canvas时设置
         reviewing_state?:ReviewPartFunc.ReviewingState
-
-
+        canvas:NoteCanvasDataReacher
+        // canvas:any
+        constructor(canvas:any) {
+            this.canvas=canvas.data_reacher
+            // console.log("new ContentManager",this.canvas)
+            this.user_interact=new UserInteract(this.canvas)
+        }
         static from_canvas(canvas:any):ContentManager{
             return canvas.content_manager
         }
+        pos_from_uipos_2_canvaspos(pos:_PaUtilTs.Pos2D):_PaUtilTs.Pos2D{
+            const canvas=this.canvas
+            const origin_pos = canvas.get_content_origin_pos();
+            //   var bar_pos = this.get_moving_obj_pos();
 
+            const tarx =
+                pos.x -
+                origin_pos.x ;// / canvas.scale;
+            const tary =
+                pos.y -
+                origin_pos.y ;
+            return new _PaUtilTs.Pos2D(tarx/canvas.get_scale(),tary/canvas.get_scale())
+        }
         /**@param data {NoteContentData}
          *@param noteid {string}
          * */
@@ -190,6 +173,7 @@ export module NoteCanvasTs{
 
             canvas.connecting_path=null
         }
+
         first_load_set(noteid:string,canvas:any,data:NoteContentData){
             console.log("first_load_set",data);
             canvas.next_editor_bar_id=data.next_editor_bar_id
@@ -227,7 +211,7 @@ export module NoteCanvasTs{
         /**@param bar {EditorBarFunc.EditorBar}
          **/
         backend_add_editor_bar_and_save(ctx:AppFuncTs.Context,canvas:any,bar:EditorBar){
-            console.log("backend_add_editor_bar_and_save",canvas,bar)
+            // console.log("backend_add_editor_bar_and_save",canvas,bar)
             canvas.editor_bars[
                 canvas.next_editor_bar_id
                 ]=(bar);
@@ -243,7 +227,7 @@ export module NoteCanvasTs{
                 // ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
                 // ctx.storage_manager.buffer_save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
             })
-            console.log("backend_add_editor_bar_and_save");
+            // console.log("backend_add_editor_bar_and_save");
         }
 
         /**@param change {EditorBarFunc.EditorBarChange}
@@ -251,7 +235,7 @@ export module NoteCanvasTs{
          **/
         // eslint-disable-next-line no-unused-vars
         backend_editor_bar_change_and_save(ctx:AppFuncTs.Context,canvas:any,change:EditorBarChange){
-            console.log("backend_editor_bar_change_and_save");
+            // console.log("backend_editor_bar_change_and_save");
             // if(change.type==EditorBarFunc.EditorBarChangeType.)
             this._backend_save_mode_choose(ctx,()=>{
                 ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
@@ -268,7 +252,7 @@ export module NoteCanvasTs{
          **/
         // eslint-disable-next-line no-unused-vars
         backend_path_change_and_save(ctx:AppFuncTs.Context,canvas:any,change:PathChange){
-            console.log("backend_path_change_and_save");
+            // console.log("backend_path_change_and_save");
             this._backend_save_mode_choose(ctx,()=>{
                 ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
                 // ctx.storage_manager.buffer_save_note_paths(this.cur_note_id,canvas.paths);
@@ -292,6 +276,9 @@ export module NoteCanvasTs{
         static create(notecanvas:any):NoteCanvasDataReacher{
             return new NoteCanvasDataReacher(notecanvas);
         }
+        get_scale(){
+            return this.notecanvas.scale
+        }
         get_editor_bars(){
             return this.notecanvas.editor_bars
         }
@@ -301,8 +288,14 @@ export module NoteCanvasTs{
         get_next_editor_bar_id(){
             return this.notecanvas.next_editor_bar_id
         }
+        get_editorbar_man():EditorBarTs.EditorBarManager{
+            return this.notecanvas.editor_bar_manager
+        }
         get_content_manager():ContentManager{
             return this.notecanvas.content_manager
+        }
+        get_content_origin_pos(){
+            return this.notecanvas.get_content_origin_pos()
         }
     }
     export module EditorBar{
@@ -373,7 +366,7 @@ export module NoteCanvasTs{
             // this.padding_add_up * this.scale,
         }
         export const locate_editor_bar=(canvas:any, editor_bar_id:string)=>{
-            console.log("locate_editor_bar",editor_bar_id)
+            // console.log("locate_editor_bar",editor_bar_id)
             const bar_data=EditorBar.get_editor_bar_data(canvas,editor_bar_id)
 
             const locate=(bar_data:EditorBar)=>{
@@ -396,7 +389,7 @@ export module NoteCanvasTs{
             }
 
             if(bar_data){
-                console.log("add_editor_bar");
+                // console.log("add_editor_bar");
                 locate(bar_data)
             }else{
                 ElMessage({
