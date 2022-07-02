@@ -21,6 +21,13 @@ export namespace EditorBarTs{
         focus_add(ebid:string){
             this.focused_ebids[ebid]=1
         }
+        focus_swap(ebid:string){
+            if(ebid in this.focused_ebids){
+                this.focus_del(ebid)
+            }else{
+                this.focus_add(ebid)
+            }
+        }
         focus_del(ebid:string){
             if(ebid in this.focused_ebids){
                 delete this.focused_ebids[ebid]
@@ -239,6 +246,7 @@ export namespace EditorBarTs{
         start_in_case3=false
         mouse_move_distance=0
         mouse_down_eb:any
+        begin_focused=false;
         // _end_ms=0;
         update_moving_obj_pos(canvas:any) {
             const ebman=canvas.editor_bar_manager as EditorBarTs.EditorBarManager
@@ -286,6 +294,7 @@ export namespace EditorBarTs{
             this.start_in_case3=false
             this.mouse_move_distance=0
             this.mouse_last_pos=new _PaUtilTs.Pos2D(event.clientX,event.clientY)
+
             //情况分析
             if(!(ebid in ebman.focused_ebids)){
                 // 1.未选中，存在别的选中
@@ -296,10 +305,12 @@ export namespace EditorBarTs{
                         // ebman.focus_add(ebid)
                     }
                 }
+                this.begin_focused=false
                 // 2.未选中，不存在别的选中
                 //   当前选中，并拖拽
                 ebman.focus_add(ebid)
             }else{
+                this.begin_focused=true
                 // 3.选中. 存在别的选中
                 //   3.1.发生拖拽(update)。一起被拖拽
                 //   3.2.未发生拖拽。点击操作（取消其他选择）
@@ -379,8 +390,13 @@ export namespace EditorBarTs{
                 const ebman=canvas.editor_bar_manager as EditorBarTs.EditorBarManager
                 if(!event.shiftKey){
                     ebman.focus_clear()
+
+                    ebman.focus_add(this.mouse_down_eb.ebid)
+                }else{
+                    if(this.begin_focused){
+                        ebman.focus_del(this.mouse_down_eb.ebid)
+                    }
                 }
-                ebman.focus_add(this.mouse_down_eb.ebid)
             }
             this.mouse_down_eb=null;
         }
