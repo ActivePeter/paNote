@@ -141,12 +141,15 @@ export default {
     console.log("")
     // Storage.ReviewPart.load_all(this.review_part_man);
     bus_events.events.note_canvas_data_loaded.listen(this.note_canvas_loaded)
-    AppFuncTs.request_for_conttext(this, (ctx) => {
-      this.review_part_man.mount(ctx)
-    })
+    // AppFuncTs.request_for_conttext(this, (ctx) => {
+    //   this.review_part_man.mount(ctx)
+    // })
     // for(const key in this.mount_getrpman_cbs){
     //   this.mount_getrpman_cbs[key]
     // }
+  },
+  created() {
+    this.review_part_man.mount(AppFuncTs.appctx)
   },
   unmounted() {
     bus_events.events.note_canvas_data_loaded.cancel(this.note_canvas_loaded)
@@ -202,13 +205,17 @@ export default {
       )
     },
     start_review_cur_card_set() {
-      this.review_part_man.reviewing_state.try_start_review_flag=true;
-      const netman = electron_net.get_net_manager()
-      if (netman && netman.connected) {
-        _ipc.Tasks.tasks.send_to_anki.call(TalkPacker.pack_start_review(
-            new _ReviewPartSyncAnki._OneOperation.OpeCardSet(
-                this.review_part_man.note_id, this.review_part_man.selected_card_set))
-            .serialize())
+      if(this.review_part_man.reviewing_state.card_id===''){
+        this.review_part_man.reviewing_state.try_start_review_flag=true;
+        const netman = electron_net.get_net_manager()
+        if (netman && netman.connected) {
+          _ipc.Tasks.tasks.send_to_anki.call(TalkPacker.pack_start_review(
+              new _ReviewPartSyncAnki._OneOperation.OpeCardSet(
+                  this.review_part_man.note_id, this.review_part_man.selected_card_set))
+              .serialize())
+        }
+      }else{
+        this.review_part_man.reviewing_state.card_id=''
       }
     }
   },

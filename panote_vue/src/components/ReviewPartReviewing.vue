@@ -1,6 +1,7 @@
 <template>
   <div>
     reviewing
+    {{$props.rpman.reviewing_state.front_linked_note_ids}}
 <!--    {{}}-->
     <div v-if="$props.rpman&&$props.rpman.reviewing_state.card_id!==''">
       {{$props.rpman.reviewing_state.card_id}}

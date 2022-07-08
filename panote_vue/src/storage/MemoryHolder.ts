@@ -1,4 +1,7 @@
-import {NoteContentData} from "@/components/NoteCanvasFunc";
+// import {NoteContentData} from "@/components/NoteCanvasFunc";
+
+import {note} from "@/note";
+import NoteContentData = note.NoteContentData;
 
 export class MemoryHolder{
     _changed_notes:any={}//noteid - note datas

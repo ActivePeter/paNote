@@ -6,12 +6,14 @@ import {ElMessageBox} from "element-plus";
 import {Buffer} from "buffer";
 import {bus, bus_event_names} from "@/bus";
 import Storage from "@/storage/Storage";
-import {NoteContentData} from "@/components/NoteCanvasFunc";
+import {note} from "@/note";
+// import {NoteContentData} from "@/components/NoteCanvasFunc";
 // import {NoteStoreToFileStruct} from "@/storage/Storage";
 
 export namespace NoteListFuncTs {
     import Context = AppFuncTs.Context;
     import NoteStoreToFileStruct = Storage.NoteStoreToFileStruct;
+    import NoteContentData = note.NoteContentData;
 
     export class NoteConfigInfo {
         bind_file: string | null = null
@@ -186,7 +188,7 @@ export namespace NoteListFuncTs {
         async open_note(ctx: AppFuncTs.Context, noteid: string) {
             console.log("id compare", ctx.cur_open_note_id, noteid);
             if (ctx.cur_open_note_id !== noteid) {
-                ctx.cur_open_note_id = noteid
+                // ctx.cur_open_note_id = noteid
                 console.log("open_note", ctx, noteid);
                 const nlman = ctx.get_notelist_manager()
                 // console.log("nlman")
@@ -194,14 +196,18 @@ export namespace NoteListFuncTs {
                     const conf = get_note_config_info(nlman, noteid);
                     // console.log("conf",conf)
                     if (conf) {
-                        let note = await ctx.storage_manager.load_note_all(noteid, conf)
-                        if(!note){
-                            note=NoteContentData.get_default()
+                        let _note = await ctx.storage_manager.load_note_all(noteid, conf)
+                        if(!_note){
+                            _note=NoteContentData.get_default()
                         }
+                        const handle=note.NoteHandle.create(noteid,_note)
+                        ctx.note_loaded_and_open(handle)
+                        // ctx.cur_open_note_content=note
                         // if (note)
                         {
-                            const note_canvas = ctx.app.app_ref_getter.get_note_canvas(ctx.app)
-                            note_canvas.content_manager.first_load_set(noteid, note_canvas, note);
+                            ctx.app.app_ref_getter.get_note_canvas(ctx.app)
+                                .content_manager.first_load_set(handle);
+
                         }
                     }
                 }

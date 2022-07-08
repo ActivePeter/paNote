@@ -31,17 +31,27 @@ export default {
       return "note_is_not_loaded";
     }
   },
-  mounted() {},
+  created() {
+    this.ctx=AppFuncTs.appctx
+  },
+  mounted() {
+
+  },
   data() {
     return {
       icon:Search,
+      ctx:new AppFuncTs.Context(null)
     };
   },
   methods: {
     locate_bar(){
-      // console.log("locate_bar")
-      AppFuncTs.NoteCanvasRelate.locate_editor_bar(this.link_info)
+      this.ctx.uiopes().locate_eb_in_cur_note(this.link_info)
     }
+    // locate_bar(){
+    //   this.$emit("locate_bar",this.link_info)
+    //   // console.log("locate_bar")
+    //   // AppFuncTs.NoteCanvasRelate.locate_editor_bar(this.link_info)
+    // }
   },
   props: {
     option:Object,

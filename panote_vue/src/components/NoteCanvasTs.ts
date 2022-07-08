@@ -3,20 +3,25 @@ import {ElMessage} from "element-plus";
 import EditorBarFunc, {EditorBar, EditorBarChange} from "@/components/EditorBarFunc";
 import {Gradient} from "@/components/reuseable/Gradient";
 import {LinkCanvasBarToListView} from "@/components/LinkCanvasBarToListView";
-import {AppFuncTs} from "@/AppFunc";
+import {AppFuncTs, AppRefsGetter} from "@/AppFunc";
 import PathFunc, {PathChange} from "@/components/PathFunc";
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {ReviewPartFunc} from "@/components/ReviewPartFunc";
-import {NoteContentData} from "@/components/NoteCanvasFunc";
+import NoteCanvasFunc from "@/components/NoteCanvasFunc";
+// import {N} from "@/note";
 import {bus, bus_events} from "@/bus";
 import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
 import {search} from "@/search";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {EditorBarTs} from "@/components/EditorBarTs";
+import {NoteOutlineTs} from "@/components/NoteOutlineTs";
+import {note} from "@/note";
+import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
 
 export module NoteCanvasTs{
 
-    import MouseDownUpRecord = _PaUtilTs.MouseDownUpRecord;
+    // import MouseDownUpRecord = _PaUtilTs.MouseDownUpRecord;
+    import NoteContentData = note.NoteContentData;
     export class CanvasMouseDragEvent{
         static Types={
             down:1,
@@ -69,21 +74,21 @@ export module NoteCanvasTs{
             }
             this.down_caller=downcaller
             const cman=canvas.get_content_manager()
-            const cvpos=cman.pos_from_uipos_2_canvaspos(new _PaUtilTs.Pos2D(event.clientX,event.clientY))
+            const cvpos=cman.user_interact.pos_from_uipos_2_canvaspos(new _PaUtilTs.Pos2D(event.clientX,event.clientY))
             this.down_event=new CanvasMouseDragEvent(CanvasMouseDragEvent.Types.down,event,cvpos.x,cvpos.y)
             this._call_cb(this.down_event)
         }
         //canvas鼠标移动监听 调用
         move(canvas:NoteCanvasDataReacher,event:MouseEvent){
             const cman=canvas.get_content_manager()
-            const cvpos=cman.pos_from_uipos_2_canvaspos(new _PaUtilTs.Pos2D(event.clientX,event.clientY))
+            const cvpos=cman.user_interact.pos_from_uipos_2_canvaspos(new _PaUtilTs.Pos2D(event.clientX,event.clientY))
             const drage=new CanvasMouseDragEvent(CanvasMouseDragEvent.Types.move,event,cvpos.x,cvpos.y)
             this._call_cb(drage)
         }
         //canvas鼠标抬起调用
         up(canvas:NoteCanvasDataReacher,event:MouseEvent){
             const cman=canvas.get_content_manager()
-            const cvpos=cman.pos_from_uipos_2_canvaspos(new _PaUtilTs.Pos2D(event.clientX,event.clientY))
+            const cvpos=cman.user_interact.pos_from_uipos_2_canvaspos(new _PaUtilTs.Pos2D(event.clientX,event.clientY))
             const drage=new CanvasMouseDragEvent(CanvasMouseDragEvent.Types.up,event,cvpos.x,cvpos.y)
             this._call_cb(drage)
             this.down_caller=undefined
@@ -95,6 +100,9 @@ export module NoteCanvasTs{
         review_card_set_man=new ReviewPartFunc.CardSetManager()
         //同步到anki的变更的序列化数组
         sync_anki_serialized="[]"
+
+        //outline数据结构
+        note_outline=new NoteOutlineTs.OutlineStorageStruct()
     }
     export class UserInteract{
         mouse_drag_recorder=new CanvasMouseDragRecorder()
@@ -107,8 +115,13 @@ export module NoteCanvasTs{
         constructor(canvas:NoteCanvasDataReacher) {
             this.canvas=canvas
         }
+
         select_range_down_check_ok=(event:MouseEvent)=>{
             return event!=this._recent_eb_mouse_down;
+        }
+        event_mousedown_eb(event:MouseEvent,ebcomp:any){
+            this.canvas.get_editorbar_man().event_mousedown(
+                event,ebcomp)
         }
         event_canvas_move(){
             if (this._recent_mouse_move){
@@ -127,27 +140,28 @@ export module NoteCanvasTs{
             this._recent_mouse_move=undefined
             this.mouse_drag_recorder.up(this.canvas,event)
         }
-    }
-    export class ContentManager{//由canvas持有
-        search_in_canvas=new search.SearchInCanvas()
-        cur_note_id="-1"
-        linkBarToListView=new LinkCanvasBarToListView.LinkBarToListView()
-        part_of_storage_data:null|PartOfNoteContentData=null
-        user_interact:UserInteract
-        //在reviewpart初始化canvas时设置
-        reviewing_state?:ReviewPartFunc.ReviewingState
-        canvas:NoteCanvasDataReacher
-        // canvas:any
-        constructor(canvas:any) {
-            this.canvas=canvas.data_reacher
-            // console.log("new ContentManager",this.canvas)
-            this.user_interact=new UserInteract(this.canvas)
+        scroll_get_gradient_scroll():Gradient.Common{
+            return this.canvas.notecanvas.state_ts.gradient_scroll
         }
-        static from_canvas(canvas:any):ContentManager{
-            return canvas.content_manager
+        scroll_move(dx:number,dy:number){
+            const range_ref=this.canvas.getref_range_ref()
+            this.scroll_get_gradient_scroll().start_walk(
+                [range_ref.scrollLeft,range_ref.scrollTop],
+                [range_ref.scrollLeft+dx,range_ref.scrollTop+dy],
+                10,(nums:number[])=>{
+                    range_ref.scrollLeft=nums[0]
+                    range_ref.scrollTop=nums[1]
+                }
+            )
+
+            // canvas.$refs.range_ref.scrollLeft += dx;
+            // canvas.$refs.range_ref.scrollTop+=dy;
+        }
+        pos_get_content_origin_pos(){
+            return this.canvas.notecanvas.get_content_origin_pos();
         }
         pos_from_uipos_2_canvaspos(pos:_PaUtilTs.Pos2D):_PaUtilTs.Pos2D{
-            const canvas=this.canvas
+            const canvas=this.canvas.notecanvas
             const origin_pos = canvas.get_content_origin_pos();
             //   var bar_pos = this.get_moving_obj_pos();
 
@@ -157,8 +171,62 @@ export module NoteCanvasTs{
             const tary =
                 pos.y -
                 origin_pos.y ;
-            return new _PaUtilTs.Pos2D(tarx/canvas.get_scale(),tary/canvas.get_scale())
+            return new _PaUtilTs.Pos2D(tarx/this.canvas.get_scale(),tary/this.canvas.get_scale())
         }
+        locate_editor_bar(ebid:string){
+// console.log("locate_editor_bar",editor_bar_id)
+            const bar_data=this.canvas.get_editorbar_man().get_editor_bar_data_by_ebid(ebid)
+            const range_ref=this.canvas.getref_range_ref()
+            const locate=(bar_data:EditorBar)=>{
+
+                const range_rec = range_ref.getBoundingClientRect() ;
+
+                //区域中心 client坐标
+                const mid_y = (range_rec.top + range_rec.bottom) / 2;
+                const mid_x = (range_rec.left + range_rec.right) / 2;
+
+                const origin_pos = this.pos_get_content_origin_pos()
+                const bar_client_pos={
+                    x:origin_pos.x+(bar_data.pos_x+(bar_data.width)/2)*this.canvas.get_scale(),
+                    y:origin_pos.y+(bar_data.pos_y+(bar_data.height)/2)*this.canvas.get_scale()
+                }
+                const dx = bar_client_pos.x- mid_x;
+                const dy = bar_client_pos.y-mid_y;
+
+                this.scroll_move(dx,dy)
+                // DomOperation.scroll_move(canvas,dx,dy)
+            }
+            // console.log(bar_data,this.canvas.get_editorbar_man().get_ebid_2_data(),ebid)
+            if(bar_data){
+                // console.log("add_editor_bar");
+                locate(bar_data)
+            }else{
+                ElMessage({
+                    message: '没有在脑图中找到对应的板块',
+                    type: 'warning',
+                })
+            }
+        }
+    }
+    export class ContentManager{//由canvas持有
+        search_in_canvas=new search.SearchInCanvas()
+        cur_note_id="-1"
+        linkBarToListView=new LinkCanvasBarToListView.LinkBarToListView()
+        part_of_storage_data:null|PartOfNoteContentData=null
+        user_interact:UserInteract
+        reviewing_state?:ReviewPartFunc.ReviewingState
+        canvas:NoteCanvasDataReacher
+        // canvas:any
+        constructor(canvas:any) {
+            this.canvas=canvas.data_reacher
+            // console.log("new ContentManager",this.canvas)
+            this.user_interact=new UserInteract(this.canvas)
+            this.reviewing_state=this.canvas.get_context().rewiew_part_man.reviewing_state
+        }
+        static from_canvas(canvas:any):ContentManager{
+            return canvas.content_manager
+        }
+
         /**@param data {NoteContentData}
          *@param noteid {string}
          * */
@@ -174,11 +242,17 @@ export module NoteCanvasTs{
             canvas.connecting_path=null
         }
 
-        first_load_set(noteid:string,canvas:any,data:NoteContentData){
+        //相关组件都需要跟着变动
+        first_load_set(notehandle:note.NoteHandle){
+            const canvas=this.canvas.notecanvas
+            const data=notehandle.content_data
+            const noteid=notehandle.note_id
+
             console.log("first_load_set",data);
             canvas.next_editor_bar_id=data.next_editor_bar_id
             canvas.paths=data.paths
             canvas.editor_bars=data.editor_bars
+
             this.part_of_storage_data=data.part
             if(!this.part_of_storage_data){
                 this.part_of_storage_data=new PartOfNoteContentData()
@@ -188,14 +262,30 @@ export module NoteCanvasTs{
             this.cur_note_id=noteid
             bus_events.events.note_canvas_data_loaded.call(canvas)
             this.search_in_canvas.init_refs(canvas.editor_bars,canvas.editor_bar_manager)
-        }
-        _backend_set_curnote_newedit_flag(ctx:AppFuncTs.Context){
-            const nlman= ctx.get_notelist_manager()
-            if(nlman){
-                //设置标志，后续扫描到即进行保存
-                nlman.pub_set_note_newedited_flag(this.cur_note_id)
+
+            {//初始化大纲数据
+                const ctx = NoteCanvasTs.NoteCanvasDataReacher.create(canvas).get_context()
+                const rightpart = AppRefsGetter.create(ctx.app).get_right_part()
+                console.log("rightpart",rightpart)
+                const canvasreach=NoteCanvasTs.NoteCanvasDataReacher.create(canvas)
+                if("note_outline" in rightpart.$refs){
+                    rightpart.$refs.note_outline.note_loaded(
+                        notehandle,
+                        canvasreach.get_editor_bars(),
+                        canvasreach.get_editorbar_man().ebid_to_ebcomp
+                    )
+                }
+                // editor_bar_comps = canvasreach.get_editorbar_man().ebid_to_ebcomp
+                // rightpart.$refs.note_outline.editor_bars=canvasreach.get_editor_bars()
             }
         }
+        // _backend_set_curnote_newedit_flag(ctx:AppFuncTs.Context){
+        //     const nlman= ctx.get_notelist_manager()
+        //     if(nlman){
+        //         //设置标志，后续扫描到即进行保存
+        //         nlman.pub_set_note_newedited_flag(this.cur_note_id)
+        //     }
+        // }
         _backend_save_mode_choose(ctx:AppFuncTs.Context,ifbind:()=>void,ifnotbind:()=>void){
             const nconf=NoteListFuncTs.get_note_config_info(
                 NoteListFuncTs.get_note_list_from_ctx(ctx).notelist_manager,this.cur_note_id)
@@ -217,13 +307,18 @@ export module NoteCanvasTs{
                 ]=(bar);
             canvas.next_editor_bar_id++;
             this._backend_save_mode_choose(ctx,()=>{
-                ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
-                // ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
-                // ctx.storage_manager.buffer_save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
-                this._backend_set_curnote_newedit_flag(ctx);
+
+                ctx.storage_manager.note_data_change(this.cur_note_id)
+
+                // ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
+                // // ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
+                // // ctx.storage_manager.buffer_save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
+                // this._backend_set_curnote_newedit_flag(ctx);
             },()=>{
-                ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
-                this._backend_set_curnote_newedit_flag(ctx);
+
+                ctx.storage_manager.note_data_change(this.cur_note_id)
+                // ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
+                // this._backend_set_curnote_newedit_flag(ctx);
                 // ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
                 // ctx.storage_manager.buffer_save_note_next_editor_bar_id(this.cur_note_id,canvas.next_editor_bar_id)
             })
@@ -238,12 +333,15 @@ export module NoteCanvasTs{
             // console.log("backend_editor_bar_change_and_save");
             // if(change.type==EditorBarFunc.EditorBarChangeType.)
             this._backend_save_mode_choose(ctx,()=>{
-                ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
-                // ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
-                this._backend_set_curnote_newedit_flag(ctx);
+                ctx.storage_manager.note_data_change(this.cur_note_id)
+                // ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
+                // // ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
+                // this._backend_set_curnote_newedit_flag(ctx);
             },()=>{
-                ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
-                this._backend_set_curnote_newedit_flag(ctx);
+
+                ctx.storage_manager.note_data_change(this.cur_note_id)
+                // ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
+                // this._backend_set_curnote_newedit_flag(ctx);
                 // ctx.storage_manager.buffer_save_note_editor_bars(this.cur_note_id,canvas.editor_bars);
             })
         }
@@ -254,12 +352,15 @@ export module NoteCanvasTs{
         backend_path_change_and_save(ctx:AppFuncTs.Context,canvas:any,change:PathChange){
             // console.log("backend_path_change_and_save");
             this._backend_save_mode_choose(ctx,()=>{
-                ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
-                // ctx.storage_manager.buffer_save_note_paths(this.cur_note_id,canvas.paths);
-                this._backend_set_curnote_newedit_flag(ctx);
+                ctx.storage_manager.note_data_change(this.cur_note_id)
+                // ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
+                // // ctx.storage_manager.buffer_save_note_paths(this.cur_note_id,canvas.paths);
+                // this._backend_set_curnote_newedit_flag(ctx);
             },()=>{
-                ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
-                this._backend_set_curnote_newedit_flag(ctx);
+
+                ctx.storage_manager.note_data_change(this.cur_note_id)
+                // ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,NoteContentData.of_canvas(canvas))
+                // this._backend_set_curnote_newedit_flag(ctx);
                 // ctx.storage_manager.memory_holder.hold_note(this.cur_note_id,)
                 // ctx.storage_manager.buffer_save_note_paths(this.cur_note_id,canvas.paths);
             })
@@ -268,6 +369,7 @@ export module NoteCanvasTs{
     export class NoteCanvasStateTs{
         gradient_scroll=new Gradient.Common()
     }
+
     export class NoteCanvasDataReacher{
         notecanvas:any
         constructor(notecanvas:any) {
@@ -275,6 +377,9 @@ export module NoteCanvasTs{
         }
         static create(notecanvas:any):NoteCanvasDataReacher{
             return new NoteCanvasDataReacher(notecanvas);
+        }
+        getref_range_ref(){
+            return this.notecanvas.$refs.range_ref
         }
         get_scale(){
             return this.notecanvas.scale
@@ -297,6 +402,9 @@ export module NoteCanvasTs{
         get_content_origin_pos(){
             return this.notecanvas.get_content_origin_pos()
         }
+        get_context():AppFuncTs.Context{
+            return this.notecanvas.context
+        }
     }
     export module EditorBar{
         export const get_editor_bar_data=(canvas:object,editor_bar_id:string)=>{
@@ -312,25 +420,8 @@ export module NoteCanvasTs{
         export const scroll_range_rec=(canvas:any)=>{
             return canvas.$refs.range_ref.getBoundingClientRect()
         }
-        export const canvas_orgin_client_pos=(canvas:any)=>{
-            return canvas.get_content_origin_pos()
-        }
     }
     export module UiOperation{
-        export module DomOperation{
-            export const scroll_move=(canvas:any,dx:number,dy:number)=>{
-                canvas.state_ts.gradient_scroll.start_walk(
-                    [canvas.$refs.range_ref.scrollLeft,canvas.$refs.range_ref.scrollTop],
-                    [canvas.$refs.range_ref.scrollLeft+dx,canvas.$refs.range_ref.scrollTop+dy],
-                    10,(nums:number[])=>{
-                        canvas.$refs.range_ref.scrollLeft=nums[0]
-                        canvas.$refs.range_ref.scrollTop=nums[1]
-                    }
-                )
-                // canvas.$refs.range_ref.scrollLeft += dx;
-                // canvas.$refs.range_ref.scrollTop+=dy;
-            }
-        }
         export const final_set_scale=(canvas:any,scale:number,mouse_event:MouseEvent)=>{
             if(canvas.$refs.range_ref){
                 const range_rec = canvas.$refs.range_ref.getBoundingClientRect();
@@ -364,39 +455,6 @@ export module NoteCanvasTs{
             // this.$refs.range_ref.scrollTop +
             // this.edge_size_h +
             // this.padding_add_up * this.scale,
-        }
-        export const locate_editor_bar=(canvas:any, editor_bar_id:string)=>{
-            // console.log("locate_editor_bar",editor_bar_id)
-            const bar_data=EditorBar.get_editor_bar_data(canvas,editor_bar_id)
-
-            const locate=(bar_data:EditorBar)=>{
-
-                const range_rec = UiData.scroll_range_rec(canvas) ;
-
-                //区域中心 client坐标
-                const mid_y = (range_rec.top + range_rec.bottom) / 2;
-                const mid_x = (range_rec.left + range_rec.right) / 2;
-
-                const origin_pos = UiData.canvas_orgin_client_pos(canvas);
-                const bar_client_pos={
-                    x:origin_pos.x+(bar_data.pos_x+(bar_data.width)/2)*canvas.scale,
-                    y:origin_pos.y+(bar_data.pos_y+(bar_data.height)/2)*canvas.scale
-                }
-                const dx = bar_client_pos.x- mid_x;
-                const dy = bar_client_pos.y-mid_y;
-                DomOperation.scroll_move(canvas,dx,dy)
-
-            }
-
-            if(bar_data){
-                // console.log("add_editor_bar");
-                locate(bar_data)
-            }else{
-                ElMessage({
-                    message: '没有在脑图中找到对应的板块',
-                    type: 'warning',
-                })
-            }
         }
     }
 }

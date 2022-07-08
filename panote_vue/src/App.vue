@@ -33,12 +33,13 @@
           :on_left="false"
       >
         <template v-slot:sidebar>
-
-          <ReviewPart
-              class="review_part"
-              ref="review_part_ref"
-              @request_for_conttext="handle_request_for_conttext"
-          ></ReviewPart>
+          <RightPart ref="right_part">
+            <ReviewPart
+                class="review_part"
+                ref="review_part_ref"
+                @request_for_conttext="handle_request_for_conttext"
+            ></ReviewPart>
+          </RightPart>
         </template>
         <template v-slot:content>
           <div class="note_canvas_border content">
@@ -72,6 +73,7 @@ import ReviewPart from "@/components/ReviewPart";
 import SideBarContainer from "@/components/reuseable/SideBarContainer";
 import NoteList from "@/components/NoteList";
 import BottomLine from "@/components/BottomLine"
+import RightPart from "@/components/RightPart"
 
 import AppFunc from "@/AppFunc";
 import {AppFuncTs} from "@/AppFunc";
@@ -91,14 +93,18 @@ export default {
     NoteList,
     BottomLine,
     // eslint-disable-next-line vue/no-unused-components
-    NoteConfigDialog
+    NoteConfigDialog,
+    RightPart
+  },
+  created() {
+    this.context.app = this;
+    AppFunc.set_ctx(this.context)
   },
   mounted() {
     console.log("App Mounted")
-    this.context.app = this;
+
     this.$refs.note_list_ref.init(this.context);
 
-    AppFunc.set_ctx(this.context)
     AppFuncTs.set_up_all(this.context)
     Timer._TimerState.LifeTime.mount(this.context.timer)
     // this.net_manager=electron_net.load_net_manager();

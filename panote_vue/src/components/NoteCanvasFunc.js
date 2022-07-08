@@ -3,7 +3,8 @@ import Util from "@/components/reuseable/Util";
 import EditorBarFunc from "@/components/EditorBarFunc";
 import PathFunc from "@/components/PathFunc";
 // import {ReviewPartFunc} from "@/components/ReviewPartFunc";
-import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+// import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+// import {NoteOutlineTs} from "@/components/NoteOutlineTs";
 // import {LinkCanvasBarToListView} from "@/components/LinkCanvasBarToListView";
 
 class ChunkHelper {
@@ -280,31 +281,7 @@ class LineConnectHelper {
     }
 }
 
-//会被直接序列化到文件中的结构
-export class NoteContentData{
-    next_editor_bar_id=1000
-    editor_bars={}
-    paths={}
-    part=new NoteCanvasTs.PartOfNoteContentData()
-    static get_default(){
-        return new NoteContentData(1000,{},{})
-    }
-    static of_canvas(canvas){
-        const ret=new NoteContentData(
-            canvas.next_editor_bar_id,
-            canvas.editor_bars,
-            canvas.paths)
-        if(canvas.content_manager.part_of_storage_data){
-            ret.part=canvas.content_manager.part_of_storage_data
-        }
-        return ret
-    }
-    constructor(next_editor_bar_id,editor_bars,paths) {
-        this.next_editor_bar_id=next_editor_bar_id
-        this.editor_bars=editor_bars
-        this.paths=paths
-    }
-}
+
 
 class Storage{
     canvas
@@ -449,5 +426,5 @@ export default {
     Storage,
     // DragBarHelper,
     // ContentManager,
-    NoteContentData
+    // NoteContentData
 }

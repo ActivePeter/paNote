@@ -28,6 +28,7 @@
             v-if="helper.bars[to].bartype===1&&helper.bars[to].linking_info"
             :option="editorOption"
             :link_info="helper.bars[to].linking_info"
+            @locate_bar="locate_bar"
         />
         <quill-editor
             v-if="helper.bars[to].bartype===0"
@@ -70,6 +71,10 @@ export default {
     window.addEventListener("mouseup",this.mouse_up);
     EditorBarViewListFunc.HelperFuncs.Linking.cancel_linking_list_bar(this.helper);
   },
+  unmounted() {
+    window.removeEventListener("mousemove",this.mouse_move);
+    window.removeEventListener("mouseup",this.mouse_up);
+  },
   data() {
     return {
       editorOption: {
@@ -95,6 +100,9 @@ export default {
     start_drag(bar,event){
       this.helper.bar_start_drag(this,bar,event)
     },
+    // locate_bar(linkinfo){
+    //   this.$emit("locate_bar",linkinfo)
+    // },
     cancel_link(){
       EditorBarViewListFunc.HelperFuncs.Linking.
         cancel_linking_list_bar(this.helper)

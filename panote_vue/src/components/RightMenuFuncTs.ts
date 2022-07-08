@@ -6,6 +6,7 @@ export namespace RightMenuFuncTs{
         static with(comp:any):Ope{
             return new Ope(comp)
         }
+        ////右键菜单bus回调
         on_bus_right_menu(args:bus_events.right_menu_open.IArg){
             console.log("bus_right_menu",args.event.clientX,args.event.clientY)
             this.comp.show=true;
@@ -31,11 +32,15 @@ export namespace RightMenuFuncTs{
     }
     export class RightMenuContent{
         arr:any=[]
-        add_one_selection(text:string,callback:()=>void){
+        add_one_selection(text:string,callback:()=>void):RightMenuContent{
             this.arr.push({
                 text:text,
                 callback:callback
             })
+            return this
+        }
+        static create(){
+            return new RightMenuContent()
         }
     }
 }

@@ -9,13 +9,15 @@ import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {ElMessage} from "element-plus";
 import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
-import {NoteContentData} from "@/components/NoteCanvasFunc";
+import {note} from "@/note";
+// import {NoteContentData} from "@/components/NoteCanvasFunc";
 
 
 
 
 export namespace ReviewPartFunc{
     import Context = AppFuncTs.Context;
+    import NoteContentData = note.NoteContentData;
 
     export class Card{
         id
@@ -87,10 +89,11 @@ export namespace ReviewPartFunc{
 
             const ctx=reviewPartManager.context
             if(ctx){
-                ctx.storage_manager.
-                memory_holder.hold_note(reviewPartManager.note_id,NoteContentData.of_canvas(ctx.ui_refs().cur_canvas()))
-                // AppFunc.get_ctx()?.storage_manager.buffer_save_note_reviewinfo(reviewPartManager.note_id,reviewPartManager.card_set_man)
-                bus_events.events.note_data_change.call(reviewPartManager.note_id)
+                ctx.storage_manager.note_data_change(reviewPartManager.note_id)
+                // ctx.storage_manager.
+                // memory_holder.hold_note(reviewPartManager.note_id,NoteContentData.of_canvas(ctx.ui_refs().cur_canvas()))
+                // // AppFunc.get_ctx()?.storage_manager.buffer_save_note_reviewinfo(reviewPartManager.note_id,reviewPartManager.card_set_man)
+                // bus_events.events.note_data_change.call(reviewPartManager.note_id)
             }
         }
 
@@ -172,7 +175,12 @@ export namespace ReviewPartFunc{
             this.show_answer=false
             this.front_linked_note_ids={}
             this.try_start_review_flag=false
-            const front=CardSet.get_card(rpman.get_selected_card_set()?.cards,id)?.front
+            const selcardset=rpman.get_selected_card_set()
+            if(!selcardset){
+                console.error("new_review_card_chosen","no selected cardset")
+                return
+            }
+            const front=CardSet.get_card(selcardset,id)?.front
             if(front){
                 for(const key in front){
                     const bar_data=front[key] as EditorBarViewListFunc.BarData
@@ -213,30 +221,55 @@ export namespace ReviewPartFunc{
             _ReviewPartSyncAnki._StoreStruct.Funcs.LifeTime.mount(
                 ctx,this
             )
+            this.load_data_if_note_opened()
         }
 
         get_selected_card_set():CardSet|null{
             return CardSetManager.get_cardset(this.card_set_man,this.selected_card_set)
         }
-        note_canvas_loaded(canvas:any){
-            const part=NoteCanvasTs.ContentManager.from_canvas(canvas).part_of_storage_data
-            if(part){
-                this.selected_card_set=""
-                this.note_id=NoteCanvasTs.ContentManager.from_canvas(canvas).cur_note_id
-                this.card_set_man=part.review_card_set_man
-                this.note_store_part=part
-                NoteCanvasTs.ContentManager.from_canvas(canvas).reviewing_state=this.reviewing_state
-                //检查是否存在，
-                if(!part.sync_anki_serialized)
-                {
-                    part.sync_anki_serialized="[]"
-                }
-
-
-                this.sync_anki.operation_queue=_PaUtilTs.DataStructure.ListSerializable.from_string(
-                    this.note_store_part.sync_anki_serialized
-                )
+        load_data_if_note_opened(){
+            if(!this.context){
+                return
             }
+            if(this.context.cur_open_note_id=="-1"){
+                return;
+            }
+            const content_data=this.context.cur_open_note_content
+            this.selected_card_set=""
+            this.note_id=this.context.cur_open_note_id
+            this.card_set_man=content_data.part.review_card_set_man
+            this.note_store_part=content_data.part
+            // reviewing_state=this.reviewing_state
+            //检查是否存在，
+            if(!this.note_store_part.sync_anki_serialized)
+            {
+                this.note_store_part.sync_anki_serialized="[]"
+            }
+
+            this.sync_anki.operation_queue=_PaUtilTs.DataStructure.ListSerializable.from_string(
+                this.note_store_part.sync_anki_serialized
+            )
+        }
+        note_canvas_loaded(canvas:any){
+            this.load_data_if_note_opened()
+            // const part=NoteCanvasTs.ContentManager.from_canvas(canvas).part_of_storage_data
+            // if(part){
+            //     this.selected_card_set=""
+            //     this.note_id=NoteCanvasTs.ContentManager.from_canvas(canvas).cur_note_id
+            //     this.card_set_man=part.review_card_set_man
+            //     this.note_store_part=part
+            //     NoteCanvasTs.ContentManager.from_canvas(canvas).reviewing_state=this.reviewing_state
+            //     //检查是否存在，
+            //     if(!part.sync_anki_serialized)
+            //     {
+            //         part.sync_anki_serialized="[]"
+            //     }
+            //
+            //
+            //     this.sync_anki.operation_queue=_PaUtilTs.DataStructure.ListSerializable.from_string(
+            //         this.note_store_part.sync_anki_serialized
+            //     )
+            // }
             // console.log("note_canvas_loaded",canvas,card_set_man)
         }
 
@@ -343,10 +376,12 @@ export namespace ReviewPartFunc{
                 if (res) {
                     const ctx=rpman.context
                     if(ctx){
-                        ctx.storage_manager.
-                            memory_holder.hold_note(rpman.note_id,NoteContentData.of_canvas(ctx.ui_refs().cur_canvas()))
-                        // buffer_save_note_reviewinfo(rpman.note_id, rpman.card_set_man)
-                        bus_events.events.note_data_change.call(rpman.note_id)
+
+                        ctx.storage_manager.note_data_change(rpman.note_id)
+                        // ctx.storage_manager.
+                        //     memory_holder.hold_note(rpman.note_id,NoteContentData.of_canvas(ctx.ui_refs().cur_canvas()))
+                        // // buffer_save_note_reviewinfo(rpman.note_id, rpman.card_set_man)
+                        // bus_events.events.note_data_change.call(rpman.note_id)
                         // Storage.ReviewPart.save_all(this.review_part_man)
                         review_part.switch2review_card()
                     }
@@ -361,10 +396,11 @@ export namespace ReviewPartFunc{
                 const ctx=rpman.context
                 const res=_try_delete_card_in_select_set(rpman,cardid)
                 if(res&&ctx){
-                    ctx.storage_manager.
-                        memory_holder.hold_note(rpman.note_id,NoteContentData.of_canvas(ctx.ui_refs().cur_canvas()))
-                    // ctx.storage_manager.buffer_save_note_reviewinfo(rpman.note_id,rpman.card_set_man)
-                    ctx.get_notelist_manager()?.pub_set_note_newedited_flag(rpman.note_id)
+                    ctx.storage_manager.note_data_change(rpman.note_id)
+                    // ctx.storage_manager.
+                    //     memory_holder.hold_note(rpman.note_id,NoteContentData.of_canvas(ctx.ui_refs().cur_canvas()))
+                    // // ctx.storage_manager.buffer_save_note_reviewinfo(rpman.note_id,rpman.card_set_man)
+                    // ctx.get_notelist_manager()?.pub_set_note_newedited_flag(rpman.note_id)
                 }
             }
         }

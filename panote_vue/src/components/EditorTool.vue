@@ -26,6 +26,11 @@ export default {
     window.addEventListener("keydown", this.handle_key_down);
     window.addEventListener("mousedown",this.handle_mouse_down);
   },
+  unmounted() {
+    window.removeEventListener("keyup", this.handle_key_up);
+    window.removeEventListener("keydown", this.handle_key_down);
+    window.removeEventListener("mousedown",this.handle_mouse_down);
+  },
   data() {
     return {
       is_show: false,

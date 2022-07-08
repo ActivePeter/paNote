@@ -36,7 +36,7 @@
 <script>
 import QuillEditor from "@/components/QuillEditor";
 import EditorBarFunc from "@/components/EditorBarFunc";
-import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
+// import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 // import RightMenuFunc from "@/components/RightMenuFunc";
 
@@ -76,19 +76,25 @@ export default {
     }
   },
   mounted() {
-    const _this=this;
+    // const _this=this;
     // console.log("rigst")
-    this.mouse_up_down_rec.set_click_callback(()=>{
-      // console.log("click cb")
-      RightMenuFuncTs.if_right_click_then_emit(
-          _this.mouse_up_down_rec._up,"editor_bar",this);
-    })
+    // this.mouse_up_down_rec.set_click_callback(()=>{
+    //   // console.log("click cb")
+    //   RightMenuFuncTs.if_right_click_then_emit_bus(
+    //       _this.mouse_up_down_rec._up,this.right_menu_helper.get_right_menu_content(this)
+    //   )
+    //   // RightMenuFuncTs.if_right_click_then_emit(
+    //   //     _this.mouse_up_down_rec._up,"editor_bar",this);
+    // })
     this.$nextTick(()=>{
       this.editor_bar_manager.editor_bar_comp_mounted(this)
     })
     // this.hide_tool_bar();
     // new Quill(".editor_bar");
     // new EditorJS("editor_bar" + this.ebid);
+  },
+  unmounted() {
+    this.editor_bar_manager.editor_bar_comp_unmounted(this)
   },
   data() {
     return {
@@ -158,16 +164,16 @@ export default {
     // },
     handle_mouse_down(event) {
       // console.log("eb mouse down")
-      this.mouse_up_down_rec.down(event)
-      if (event.buttons === 1) {
+      // this.mouse_up_down_rec.down(event)
+      // if (event.buttons === 1) {
         // this.drag_on_x = event.offsetX;
         // this.drag_on_y = event.offsetY;
-        this.$emit("leftmousedown", event, this);
-      }
+        this.$emit("ebmousedown", event, this);
+      // }else
       // event.preventDefault();
     },
     handle_mouse_up(event) {
-      this.mouse_up_down_rec.up(event)
+      // this.mouse_up_down_rec.up(event)
       // console.log(this.ebid, event);
       this.$emit("drag_release", event, this);
     },

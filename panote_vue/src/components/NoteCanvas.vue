@@ -95,7 +95,6 @@
               top: -padding_add_up + 'px',
               bottom: -padding_add_down + 'px',
             }"
-              @mousedown="background_click"
           ></div>
 <!--          <EditorBar/>-->
           <EditorBarMove
@@ -122,11 +121,11 @@
               class="editor_bar_move"
 
               @content_change="editor_bar_content_change"
-              @leftmousedown="editor_bar_left_mousedown"
+              @ebmousedown="editor_bar_mousedown"
               @drag_release="editor_bar_drag_release"
               @switch_mode="editor_bar_switch_mode"
               @corner_drag_start="editor_bar_corner_drag_start"
-              @right_menu="right_menu"
+              @right_menu="editor_bar_right_menu"
               @delete="editor_bar_delete"
               @copy="editor_bar_copy_lside"
           />
@@ -163,9 +162,10 @@ import EditorBarFunc from "@/components/EditorBarFunc";
 // import RightMenuFunc from "@/components/RightMenuFunc";
 import {NoteCanvasTs} from "@/components/NoteCanvasTs";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
-import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
+// import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {EditorBarTs} from "@/components/EditorBarTs";
 import NoteCanvasSelectRange from "@/components/NoteCanvasSelectRange";
+import {AppFuncTs} from "@/AppFunc";
 
 
 
@@ -199,6 +199,7 @@ export default {
     }
   },
   created() {
+    this.context=AppFuncTs.appctx
     this.data_reacher=new NoteCanvasTs.NoteCanvasDataReacher(this)
     this.content_manager=new NoteCanvasTs.ContentManager(this)
   },
@@ -211,7 +212,7 @@ export default {
     window.removeEventListener("mousemove", this.handle_mouse_move);
   },
   mounted() {
-    this.$emit("get_context",this);
+    // this.$emit("get_context",this);
 
     this.chunk_helper = NoteCanvasFunc.new_chunk_helper();
     this.storage=new NoteCanvasFunc.Storage(this)
@@ -266,7 +267,7 @@ export default {
     return {
       //context ref
       data_reacher:null,
-      context:null,
+      context:AppFuncTs.Context.getfakeone(),
 
       //界面效果相关
       scroll_enabled: false,
@@ -317,15 +318,16 @@ export default {
     };
   },
   methods: {
-    set_context(ctx){
+    // set_context(ctx){
+    //
+    //   // console.log(this,this.note)
+    //   this.context=ctx;
+    //   // this..pub_note_list_mounted(ctx,this);
+    // },
 
-      // console.log(this,this.note)
-      this.context=ctx;
-      // this..pub_note_list_mounted(ctx,this);
-    },
-
-    right_menu(event,tag,obj){
-      RightMenuFuncTs.continue_emit(event,tag,obj,this);
+    editor_bar_right_menu(event,tag,obj){
+      this.content_manager.user_interact.open_right_menu_eb(event,tag,obj)
+      // RightMenuFuncTs.continue_emit(event,tag,obj,this);
     },
     editor_tool_change_is_show(is_show) {
       this.editor_tool_helper.switch_tool_bar(this, is_show)
@@ -451,12 +453,6 @@ export default {
       }
       this.editor_bar_manager.on_mouse_up();
     },
-    background_click(event){
-      console.log("background_click",event)
-      if(event.buttons===1){
-        this.editor_bar_manager.focus_clear()
-      }
-    },
     get_canvas_client_pos() {
       let r = this.$refs.range_ref.getBoundingClientRect();
       return {
@@ -570,24 +566,8 @@ export default {
       }
       this.editor_bar_manager.content_change(ebid,content);
     },
-    editor_bar_left_mousedown(event, eb) {
-      this.content_manager.user_interact.recent_eb_mouse_down=event;
-      //连接到复习卡片的listview
-      if(this.content_manager.linkBarToListView.is_linking){
-        this.content_manager.linkBarToListView.link_canvas_bar(this,eb)
-        return;
-      }
-      //   console.log(eb);
-      //   let cp = this.get_canvas_client_pos();
-
-      //检查是否未拖拽模式
-      this.drag_bar_helper.start_drag(NoteCanvasFunc,this,
-        event,eb
-      )
-
-      //检查是否为选择模式
-      this.editor_bar_manager.select_click_check(event,eb)
-      //   this.record_content_rect = this.$refs.content_ref.getBoundingClientRect();
+    editor_bar_mousedown(event, eb) {
+      this.content_manager.user_interact.event_mousedown_eb(event,eb);
     },
   },
   props: {

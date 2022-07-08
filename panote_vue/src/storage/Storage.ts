@@ -11,6 +11,8 @@ import {app, ipcRenderer} from "electron";
 import {_ipc} from "@/ipc";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {MemoryHolder} from "@/storage/MemoryHolder";
+import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+import {note} from "@/note";
 // import AppFunc from "@/AppFunc";
 
 const asyncLocalStorage = {
@@ -176,10 +178,15 @@ namespace Storage {
     export class StorageManager {
         memory_holder = new MemoryHolder()
 
-        constructor(ctx: AppFuncTs.Context) {
+        constructor(public ctx: AppFuncTs.Context) {
 
         }
 
+        note_data_change(noteid:string){
+            // this.memory_holder.hold_note(noteid,this.ctx.)
+            this.memory_holder.hold_note(noteid,this.ctx.noteid_2_note_content[noteid])
+            this.ctx.get_notelist_manager()?.pub_set_note_newedited_flag(noteid)
+        }
         load_notelist(notelist: any) {
             if (localStorage.notelist_store) {
                 if (typeof localStorage.notelist_store === "string") {
@@ -337,6 +344,7 @@ namespace Storage {
                     const loadres = await this._load_note_from_file(config.bind_file)
                     if (loadres) {
                         console.log("note load from file")
+                        note.NoteContentData.fix_old_version(loadres.note_content_data)
                         return loadres.note_content_data
                     }
                     ElMessage.error('从绑定的文件中解析数据失败，将从缓存读取')

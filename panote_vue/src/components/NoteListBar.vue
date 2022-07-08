@@ -69,6 +69,9 @@ export default {
   mounted() {
     window.addEventListener("keydown", this.handle_key_down);
   },
+  unmounted() {
+    window.removeEventListener("keydown", this.handle_key_down);
+  },
   data() {
     return {
       editing: false,

@@ -31,6 +31,7 @@ export default {
     bus_events.events.right_menu_open.listen(this.bus_right_menu)
   },
   unmounted() {
+    window.removeEventListener("mousedown", this.handle_mouse_down)
     bus_events.events.right_menu_open.cancel(this.bus_right_menu)
   },
   data() {
@@ -42,6 +43,7 @@ export default {
     };
   },
   methods: {
+    //右键菜单bus回调
     bus_right_menu(args){
       RightMenuFuncTs.Ope.with(this)
         .on_bus_right_menu(args)
