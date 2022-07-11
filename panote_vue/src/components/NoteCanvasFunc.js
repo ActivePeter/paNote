@@ -2,97 +2,13 @@
 import Util from "@/components/reuseable/Util";
 import EditorBarFunc from "@/components/EditorBarFunc";
 import PathFunc from "@/components/PathFunc";
+// import {NoteCanvasTs} from "@/components/NoteCanvasTs";
 // import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 // import {NoteCanvasTs} from "@/components/NoteCanvasTs";
 // import {NoteOutlineTs} from "@/components/NoteOutlineTs";
 // import {LinkCanvasBarToListView} from "@/components/LinkCanvasBarToListView";
 
-class ChunkHelper {
-    chunk_max_x = 0;
-    chunk_max_y = 0;
-    chunk_min_x = 0;
-    chunk_min_y = 0;
-    add_new_2chunks(non_empty_chunks, ck) {
-        // console.log("add_new_2chunks")
-        if (!(ck in non_empty_chunks)) {
-            non_empty_chunks[ck] = 1
-        } else {
-            non_empty_chunks[ck]++;
-        }
-        this.recalc_chunk_range(non_empty_chunks)
-    }
-    calc_chunk_pos(x, y) {
-        let cx = 0, cy = 0;
-        cx = Math.floor(x / 300);
-        cy = Math.floor(y / 400);
-        return cx + "," + cy
-    }
-    move_chunk(non_empty_chunks, oldck, newck) {
-        if (!(oldck in non_empty_chunks)) {
-            console.log("no ck, not ok")
-            return;
-        }
-        non_empty_chunks[oldck]--;
-        if (non_empty_chunks[oldck] <= 0) {
-            delete non_empty_chunks[oldck];
-        }
-        if (!(newck in non_empty_chunks)) {
-            non_empty_chunks[newck] = 1;
-        } else {
 
-            non_empty_chunks[newck]++;
-        }
-        this.recalc_chunk_range(non_empty_chunks)
-        console.log(this)
-    }
-    recalc_chunk_range(non_empty_chunks) {
-        this.chunk_max_x = 0;
-        this.chunk_max_y = 0;
-        this.chunk_min_x = 0;
-        this.chunk_min_y = 0;
-        for (var key in non_empty_chunks) {
-            let x_y = key.split(",")
-            let x = parseInt(x_y[0]);
-            let y = parseInt(x_y[1])
-            if (x < this.chunk_min_x) {
-                this.chunk_min_x = x;
-            } else if (x > this.chunk_max_x) {
-                this.chunk_max_x = x;
-            }
-            if (y < this.chunk_min_y) {
-                this.chunk_min_y = y;
-            } else if (y > this.chunk_max_y) {
-                this.chunk_max_y = y;
-            }
-        }
-    }
-    first_calc_chunks(canvas){
-        console.log("first_calc_chunks")
-        // eslint-disable-next-line no-unused-vars
-        if(Object.values(canvas.editor_bars).length===0){
-            canvas.chunk_helper.recalc_chunk_range(canvas.non_empty_chunks)
-            canvas.change_padding(
-                canvas.chunk_helper.chunk_min_y * -400,
-                canvas.chunk_helper.chunk_max_y * 400,
-                canvas.chunk_helper.chunk_max_x * 300,
-                canvas.chunk_helper.chunk_min_x * -300
-            );
-            return;
-        }
-        for(var value of Object.values(canvas.editor_bars)){
-            let bar=value;
-            let ck = canvas.chunk_helper.calc_chunk_pos(bar.pos_x, bar.pos_y);
-            canvas.chunk_helper.add_new_2chunks(canvas.non_empty_chunks, ck);
-
-            canvas.change_padding(
-                canvas.chunk_helper.chunk_min_y * -400,
-                canvas.chunk_helper.chunk_max_y * 400,
-                canvas.chunk_helper.chunk_max_x * 300,
-                canvas.chunk_helper.chunk_min_x * -300
-            );
-        }
-    }
-}
 
 //记录并处理canvas的鼠标拖拽
 class CanvasMouseDragHelper {
@@ -128,11 +44,11 @@ class CanvasMouseDragHelper {
         // event = 1
     }
 }
-class PathStruct {
+export class PathStruct {
     ox = 0;//path块原点
     oy = 0;
-    b_bar = -1;
-    e_bar = -1;
+    b_bar = "-1";
+    e_bar = "-1";
     w = 10;//path块size
     h = 10;
     bx = 0;
@@ -283,6 +199,7 @@ class LineConnectHelper {
 
 
 
+//废弃
 class Storage{
     canvas
     constructor(canvas) {
@@ -366,6 +283,7 @@ class Storage{
             {type: "text/plain;charset=utf-8"});
         FileSaver.saveAs(blob, "hello world.txt");
     }
+    //废弃
     import_f(obj){
         if('paths' in obj && 'editor_bars' in obj && 'next_editor_bar_id' in obj){
             localStorage.editor_bars=JSON.stringify(obj.editor_bars);
@@ -407,9 +325,9 @@ export default {
             }
         });
     },
-    new_chunk_helper: function () {
-        return new ChunkHelper();
-    },
+    // new_chunk_helper: function () {
+    //     return new ChunkHelper();
+    // },
     CanvasMouseDragHelper,
     PathStruct,
     client_pos_2_canvas_item_pos(canvas, x, y) {

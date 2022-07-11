@@ -83,6 +83,7 @@ export module AppFuncTs{
         noteid_2_note_content:any={}
         //管理复习组件的状态
         rewiew_part_man=new ReviewPartFunc.ReviewPartManager()
+        logctx=new NoteLog.LogContext()
         note_loaded_and_open(handle:note.NoteHandle){
             this.note_unload_data(this.cur_open_note_id)
             this.noteid_2_note_content[handle.note_id]=handle.content_data
@@ -165,6 +166,7 @@ import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 import BottomLine from "@/components/BottomLine.vue";
 import RightPart from "@/components/RightPart.vue";
 import {note} from "@/note";
+import {NoteLog} from "@/log";
 
 // import {NoteContentData} from "@/components/NoteCanvasFunc";
 export default {

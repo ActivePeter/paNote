@@ -52,7 +52,7 @@ export namespace _PaUtilTs {
                 push(element: T) {
                     const node = new DoublyNode(element);
 
-                    if (this.head == null) {
+                    if (this.count==0) {
                         //头和尾一起赋值
                         this.head = node;
                         this.tail = node; //   新增
@@ -66,6 +66,18 @@ export namespace _PaUtilTs {
                         this.tail = node;
                     }
                     this.count++;
+                }
+                pop_tail():T|undefined{
+                    if(this.tail){
+                        const t=this.tail
+                        this.tail=this.tail.prev
+                        if(this.tail){
+                            this.tail.next=this.tail
+                        }
+                        this.count--
+                        return t.element
+                    }
+                    return undefined
                 }
                 pop():T|undefined{
                     if(this.head){

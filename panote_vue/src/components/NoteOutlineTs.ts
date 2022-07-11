@@ -86,22 +86,23 @@ export namespace NoteOutlineTs {
         find_node(ebid:string):OutlineStorageStructOneTreeNode|null{
             return this.find_node_walk(ebid,this.tree.root_node)
         }
-        join(ebid:string,ebars:any):boolean{
+        //返回插入的父节点
+        join(ebid:string,ebars:any):null|OutlineStorageStructOneTreeNode{
 
             const [able,ebid1]=this.joinable(ebid,ebars)
             if(!able) {
-                return false;
+                return null;
             }
             const insnode=this.find_node(ebid1)
             if(!insnode){
                 console.log("OutlineStorageStructOneTreeHelper","join node err")
-                return false
+                return null
             }
             insnode.child_nodes.push(
                 new OutlineStorageStructOneTreeNode(ebid)
             );
             this.tree.all_ebs[ebid]=1
-            return true;
+            return insnode;
         }
     }
 
@@ -134,7 +135,7 @@ export namespace NoteOutlineTs {
         try_ins2tree(index:number,ebid:string,ebman:EditorBarTs.EditorBarManager):boolean{
             const tree=this.outline.trees[index]
             const treeproxy=OutlineStorageStructOneTreeHelper.create(tree)
-            return treeproxy.join(ebid,ebman.get_ebid_2_data())
+            return treeproxy.join(ebid,ebman.get_ebid_2_data())!=null
         }
         //return tree indexs
         try_ins2trees(ebid:string,ebman:EditorBarTs.EditorBarManager):number[]{

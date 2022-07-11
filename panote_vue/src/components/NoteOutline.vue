@@ -92,6 +92,9 @@ export default class NoteOutline extends Vue {
 
 t<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.note_outline{
+  padding: 10px;
+}
 /*.cmd_name {*/
 /*  display: inline-block;*/
 /*  !*height: 32px;*!*/

@@ -7,7 +7,7 @@ import {AppFuncTs, AppRefsGetter} from "@/AppFunc";
 import PathFunc, {PathChange} from "@/components/PathFunc";
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {ReviewPartFunc} from "@/components/ReviewPartFunc";
-import NoteCanvasFunc from "@/components/NoteCanvasFunc";
+// import {ChunkHelper} from "@/components/NoteCanvasFunc";
 // import {N} from "@/note";
 import {bus, bus_events} from "@/bus";
 import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
@@ -19,9 +19,153 @@ import {note} from "@/note";
 import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
 
 export module NoteCanvasTs{
+    export class ChunkHelper {
+        chunk_max_x = 0;
+        chunk_max_y = 0;
+        chunk_min_x = 0;
+        chunk_min_y = 0;
+        // chunk_ts_mod
+        non_empty_chunks:any={
+            //ckkey->cnt
+        }
+        chunkchange=false
+        constructor(public canvasp:NoteCanvasDataReacher) {
+            // this.chunk_ts_mod=new NoteCanvasTs.CanvasChunkTs(this)
+        }
+        add_new_2chunks(ck:string) {
+            const non_empty_chunks=this.non_empty_chunks
+            console.log("add_new_2chunks",ck)
+            if (!(ck in non_empty_chunks)) {
+                non_empty_chunks[ck] = 1
+            } else {
+                non_empty_chunks[ck]++;
+            }
+            this.recalc_chunk_range()
+        }
+        calc_chunk_pos(x:number, y:number) {
+            let cx = 0, cy = 0;
+            cx = Math.floor(x / 300);
+            cy = Math.floor(y / 400);
+            return cx + "," + cy
+        }
+        check_eb_chunk_change(ox:number,oy:number,x:number,y:number){
+            const ock=this.calc_chunk_pos(ox,oy)
+            const ck=this.calc_chunk_pos(x,y)
+            if(ock!=ck){
+                // console.log("eb chunk change",ock,ck)
+                this.chunkchange=true
+                this.move_chunk(ock,ck)
+            }
+        }
+        if_chunkchange_then_recalc_range(){
+            if(this.chunkchange){
+                this.chunkchange=false
+                this.recalc_chunk_range()
+                this.update_canvas_chunkpadding()
+            }
+        }
+        move_chunk(oldck:string, newck:string) {
+            const non_empty_chunks=this.non_empty_chunks
+            if (!(oldck in non_empty_chunks)) {
+                console.log("no ck, not ok")
+                return;
+            }
+            non_empty_chunks[oldck]--;
+            if (non_empty_chunks[oldck] <= 0) {
+                delete non_empty_chunks[oldck];
+            }
+            if (!(newck in non_empty_chunks)) {
+                non_empty_chunks[newck] = 1;
+            } else {
 
+                non_empty_chunks[newck]++;
+            }
+            // this.recalc_chunk_range()
+            // console.log(this)
+        }
+        recalc_chunk_range() {
+            const non_empty_chunks=this.non_empty_chunks
+            this.chunk_max_x = 0;
+            this.chunk_max_y = 0;
+            this.chunk_min_x = 0;
+            this.chunk_min_y = 0;
+            for (const key in non_empty_chunks) {
+                const x_y = key.split(",")
+                const x = parseInt(x_y[0]);
+                const y = parseInt(x_y[1])
+                if (x < this.chunk_min_x) {
+                    this.chunk_min_x = x;
+                } else if (x > this.chunk_max_x) {
+                    this.chunk_max_x = x;
+                }
+                if (y < this.chunk_min_y) {
+                    this.chunk_min_y = y;
+                } else if (y > this.chunk_max_y) {
+                    this.chunk_max_y = y;
+                }
+            }
+        }
+        first_calc_chunks(){
+            const cm=this.canvasp.get_content_manager()
+            console.log("first_calc_chunks")
+            // eslint-disable-next-line no-unused-vars
+            if(Object.values(cm.notehandle.content_data.editor_bars).length===0){
+                this.recalc_chunk_range()
+                this.update_canvas_chunkpadding()
+                return;
+            }
+            for(const bar_ of Object.values(cm.notehandle.content_data.editor_bars)){
+                const bar=bar_ as EditorBar
+                // let bar=value;
+                const ck = this.calc_chunk_pos(bar.pos_x, bar.pos_y);
+                this.add_new_2chunks(ck);
+            }
+            this.update_canvas_chunkpadding()
+        }
+        update_canvas_chunkpadding(){
+            this.canvasp.notecanvas.change_padding(
+                this.chunk_min_y * -400,
+                this.chunk_max_y * 400,
+                this.chunk_max_x * 300,
+                this.chunk_min_x * -300
+            );
+        }
+    }
+    // export class CanvasChunkTs{
+    //     jschunkmod
+    //     need_recalc_gui=false;
+    //     constructor(jschunkmod:ChunkHelper) {
+    //         this.jschunkmod=jschunkmod
+    //     }
+    //     calc_chunk_pos(x:number, y:number) :[number,number]{
+    //         let cx = 0, cy = 0;
+    //         cx = Math.floor(x / 300);
+    //         cy = Math.floor(y / 400);
+    //         return [cx ,cy]
+    //     }
+    //     same_2ckpos(pos1:[number,number],pos2:[number,number]):boolean{
+    //         return pos1[0]==pos2[0]&&pos1[1]==pos2[1]
+    //     }
+    //     eb_change_pos(ox:number,oy:number,x:number,y:number){
+    //         const ock=this.calc_chunk_pos(ox,oy)
+    //         const ck=this.calc_chunk_pos(x,y)
+    //         if(!this.same_2ckpos(ck,ock)){
+    //             //扩大，则直接扩大
+    //             //缩小，则不知道缩到哪，所以重新算
+    //             this.need_recalc_gui=true
+    //
+    //         }
+    //     }
+    //     recalc_chunk_gui_if_need(){
+    //         if(this.need_recalc_gui){
+    //             this.need_recalc_gui=false
+    //
+    //         }
+    //     }
+    // }
     // import MouseDownUpRecord = _PaUtilTs.MouseDownUpRecord;
     import NoteContentData = note.NoteContentData;
+    import NoteHandle = note.NoteHandle;
     export class CanvasMouseDragEvent{
         static Types={
             down:1,
@@ -115,7 +259,9 @@ export module NoteCanvasTs{
         constructor(canvas:NoteCanvasDataReacher) {
             this.canvas=canvas
         }
-
+        range_ref_getBoundingClientRect():ClientRect{
+            return this.canvas.getref_range_ref().getBoundingClientRect()
+        }
         select_range_down_check_ok=(event:MouseEvent)=>{
             return event!=this._recent_eb_mouse_down;
         }
@@ -216,17 +362,31 @@ export module NoteCanvasTs{
         user_interact:UserInteract
         reviewing_state?:ReviewPartFunc.ReviewingState
         canvas:NoteCanvasDataReacher
+        notehandle=new note.NoteHandle("",note.NoteContentData.get_default())
+        chunkhelper
         // canvas:any
         constructor(canvas:any) {
             this.canvas=canvas.data_reacher
             // console.log("new ContentManager",this.canvas)
             this.user_interact=new UserInteract(this.canvas)
             this.reviewing_state=this.canvas.get_context().rewiew_part_man.reviewing_state
+            this.chunkhelper=new ChunkHelper(this.canvas)
         }
         static from_canvas(canvas:any):ContentManager{
             return canvas.content_manager
         }
-
+        cur_note_undo(){
+            if(this.cur_note_id!=""){
+                const log=AppFuncTs.appctx.logctx.get_log_by_noteid(this.cur_note_id)
+                log.undo_ope(this.notehandle)
+            }
+        }
+        cur_note_redo(){
+            if(this.cur_note_id!=""){
+                const log=AppFuncTs.appctx.logctx.get_log_by_noteid(this.cur_note_id)
+                log.redo_ope(this.notehandle)
+            }
+        }
         /**@param data {NoteContentData}
          *@param noteid {string}
          * */
@@ -247,18 +407,20 @@ export module NoteCanvasTs{
             const canvas=this.canvas.notecanvas
             const data=notehandle.content_data
             const noteid=notehandle.note_id
-
+            this.notehandle=notehandle
             console.log("first_load_set",data);
             canvas.next_editor_bar_id=data.next_editor_bar_id
             canvas.paths=data.paths
             canvas.editor_bars=data.editor_bars
+            // notehandle.setup_values(this.canvas.get_editorbar_man())
 
             this.part_of_storage_data=data.part
             if(!this.part_of_storage_data){
                 this.part_of_storage_data=new PartOfNoteContentData()
             }
             this.reset(canvas)
-            canvas.chunk_helper.first_calc_chunks(canvas)
+            this.chunkhelper.first_calc_chunks()
+            // canvas.chunk_helper.first_calc_chunks(canvas)
             this.cur_note_id=noteid
             bus_events.events.note_canvas_data_loaded.call(canvas)
             this.search_in_canvas.init_refs(canvas.editor_bars,canvas.editor_bar_manager)

@@ -214,7 +214,7 @@ export default {
   mounted() {
     // this.$emit("get_context",this);
 
-    this.chunk_helper = NoteCanvasFunc.new_chunk_helper();
+    // this.chunk_helper ;
     this.storage=new NoteCanvasFunc.Storage(this)
     // this.editor_bar_manager=new EditorBarTs.EditorBarManager(this)
     this.mouse_recorder = NoteCanvasFunc.new_mouse_recorder();
@@ -293,9 +293,9 @@ export default {
 
       //区块管理
       chunk_helper: null,
-      non_empty_chunks: {
-        "0,0": 0,
-      },
+      // non_empty_chunks: {
+      //   "0,0": 0,
+      // },
 
       //交互相关
       canvas_mouse_drag_helper: null,
@@ -344,9 +344,9 @@ export default {
         );
       }
     },
-    add_editor_bar() {
-      this.editor_bar_manager.add_editor_bar_in_center(this);
-    },
+    // add_editor_bar() {
+    //   this.editor_bar_manager.add_editor_bar_in_center(this);
+    // },
     update_moving_obj_pos() {
       this.drag_bar_helper.update_moving_obj_pos(this);
     },
@@ -561,10 +561,13 @@ export default {
     //   //超出原有范围需要重新设置背景面板的size
     // },
     editor_bar_content_change(ebid,content){
-      if(this.content_manager.linkBarToListView.is_linking){
-        return;
-      }
-      this.editor_bar_manager.content_change(ebid,content);
+      NoteCanvasTs.NoteCanvasDataReacher.create(this).get_content_manager()
+          .notehandle.ebman().withlog_eb_edit(ebid,content)
+      // this.content_manager.
+      // if(this.content_manager.linkBarToListView.is_linking){
+      //   return;
+      // }
+      // this.editor_bar_manager.content_change(ebid,content);
     },
     editor_bar_mousedown(event, eb) {
       this.content_manager.user_interact.event_mousedown_eb(event,eb);

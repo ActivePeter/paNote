@@ -14,6 +14,13 @@
     <template v-slot:content>
       <div>
         <el-row class="tool_line">
+          <el-button-group>
+            <el-button @click="maincanvas_undo"><el-icon><ArrowLeft /></el-icon>撤回</el-button>
+            <el-button  @click="maincanvas_redo">
+              取消撤回 <el-icon><ArrowRight /></el-icon>
+            </el-button>
+          </el-button-group>
+          <div style="width: 10px"></div>
           <el-button @click="add_editor_bar">add note bar</el-button>
           <div style="width: 10px"></div>
           <el-radio-group v-model="cursor_mode_select" >
@@ -81,6 +88,7 @@ import Storage from "@/storage/Storage";
 import NoteConfigDialog from "@/components/NoteConfigDialog";
 import {Timer} from "@/timer/Timer";
 import {_ipc} from "@/ipc";
+import {ArrowLeft,ArrowRight} from "@element-plus/icons-vue";
 // import electron_net from "@/electron_net";
 export default {
   name: "App",
@@ -94,7 +102,9 @@ export default {
     BottomLine,
     // eslint-disable-next-line vue/no-unused-components
     NoteConfigDialog,
-    RightPart
+    RightPart,
+    ArrowLeft,
+    ArrowRight
   },
   created() {
     this.context.app = this;
@@ -114,6 +124,14 @@ export default {
     _ipc.MainCallRender.unregist()
   },
   methods: {
+    maincanvas_undo(){
+      AppFuncTs.appctx.ui_refs().main_canvasproxy().get_content_manager()
+        .cur_note_undo()
+    },
+    maincanvas_redo(){
+      AppFuncTs.appctx.ui_refs().main_canvasproxy().get_content_manager()
+          .cur_note_redo()
+    },
     handle_request_for_conttext(cb){
       cb(this.context)
     },
@@ -122,8 +140,9 @@ export default {
       // obj.context=this.context;
     },
     add_editor_bar() {
-
-      this.$refs.note_canvas_ref.add_editor_bar();
+      AppFuncTs.appctx.ui_refs().main_canvasproxy().get_editorbar_man().add_editor_bar_in_center()
+      // AppFuncTs.appctx.
+      // this.$refs.note_canvas_ref.add_editor_bar();
     },
     export_f() {
       Storage.Port.export_all_as_file(this.context)
