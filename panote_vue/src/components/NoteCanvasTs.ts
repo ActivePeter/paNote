@@ -17,6 +17,10 @@ import {EditorBarTs} from "@/components/EditorBarTs";
 import {NoteOutlineTs} from "@/components/NoteOutlineTs";
 import {note} from "@/note";
 import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
+import NoteCanvasFunc, {PathStruct} from "@/components/NoteCanvasFunc";
+import Util from "@/components/reuseable/Util";
+import {User} from "@element-plus/icons-vue";
+import {NoteLog} from "@/log";
 
 export module NoteCanvasTs{
     export class ChunkHelper {
@@ -248,10 +252,165 @@ export module NoteCanvasTs{
         //outline数据结构
         note_outline=new NoteOutlineTs.OutlineStorageStruct()
     }
+    class LineConnectHelper {
+        connecting_path:null|PathStruct=null
+        path_set_pos(path:PathStruct,bx:number, by:number, ex:number, ey:number) {
+            path.w = Math.abs(bx - ex)
+            path.h = Math.abs(by - ey)
+            path.ox = Math.min(ex, bx)
+            path.oy = Math.min(ey, by)
+
+            path.ex = ex - path.ox;
+            path.ey = ey - path.oy;
+            path.bx = bx - path.ox;
+            path.by = by - path.oy;
+            return path
+        }
+        path_change_end_pos(path:PathStruct,ex:number, ey:number) {
+            this.path_set_pos(path,path.ox + path.bx, path.oy + path.by, ex, ey)
+        }
+        path_change_begin_pos(path:PathStruct,bx:number, by:number) {
+            this.path_set_pos(path,bx, by, path.ox + path.ex, path.oy + path.ey)
+        }
+        remove_bar_paths(canvas:any,ebid:string){
+            const bar_data = canvas.editor_bars[ebid]
+
+            // 遍历所有连线
+            for (const i in bar_data.conns) {
+                const path_key = bar_data.conns[i]
+                const p = canvas.paths[path_key]
+                let other_bar_id=p.b_bar;
+                if(p.b_bar===ebid){
+                    other_bar_id=p.e_bar;
+                }
+                //移除对方方块对连线的存储
+                Util.remove_one_in_arr(
+                    canvas.editor_bars[other_bar_id].conns,path_key);
+                //移除连线
+                delete canvas.paths[path_key];
+            }
+            bar_data.conns=[]
+        }
+        bar_move(canvas:any, ebid:string) {
+            const bar_data = canvas.editor_bars[ebid]
+            // console
+            for (const i in bar_data.conns) {
+                // console.log(path)
+                const path_key = bar_data.conns[i]
+                const p = canvas.paths[path_key]
+                if (p.e_bar == ebid) {
+                    this.path_change_end_pos(p,bar_data.pos_x, bar_data.pos_y)
+                } else if (p.b_bar == ebid) {
+                    this.path_change_begin_pos(p,bar_data.pos_x, bar_data.pos_y)
+                }
+            }
+        }
+        stop_connect_if_not(){
+            this.connecting_path=null
+        }
+        end_connect(ui:UserInteract, canvas_x:number, canvas_y:number, ebid:string) {
+            if(!this.connecting_path){
+                return
+            }
+            const notehandle=ui.canvas.get_content_manager().notehandle
+            const paths=notehandle.content_data.paths
+            this.path_change_end_pos(this.connecting_path,
+                canvas_x, canvas_y,
+            )
+
+            this.connecting_path.e_bar = ebid;
+            const bbar = this.connecting_path.b_bar
+            const key1 = bbar + ',' + ebid
+            if ((key1) in paths || (ebid + ',' + bbar) in paths || ebid == bbar) {
+                this.connecting_path = null;
+            } else {
+                const log=AppFuncTs.appctx.logctx.get_log_by_noteid(notehandle.note_id)
+                const rec=new NoteLog.Rec()
+                rec.add_trans(new NoteLog.SubTrans.EbConn([[bbar,ebid]]))
+                log.try_do_ope(rec,notehandle)
+                log.set_store_flag_after_do()
+                // paths[key1] = this.connecting_path;
+                // console.log(
+                //     "valid one", key1
+                // )
+                //
+                // notehandle.content_data.editor_bars[bbar].conns.push(key1)
+                // notehandle.content_data.editor_bars[ebid].conns.push(key1)
+
+                // .content_manager.backend_path_change_and_save(
+                //     canvas.context,canvas,
+                //     new PathFunc.PathChange(
+                //         PathFunc.PathChangeType.Add,
+                //         null,
+                //         null
+                //     )
+                // )
+                // canvas.content_manager.backend_editor_bar_change_and_save(
+                //     canvas.context,canvas,
+                //     new EditorBarFunc.EditorBarChange(
+                //         EditorBarFunc.EditorBarChangeType.LineConnect,
+                //         null,
+                //     ),
+                // )
+                // canvas.storage.save_all();
+                // canvas.storage.save_paths();
+            }
+            this.connecting_path = null;
+        }
+        move_connect_if_connecting(NoteCanvasFunc:any, canvas:any, bclient_x:number, bclient_y:number) {
+            if(this.connecting_path){
+                const startp = NoteCanvasFunc.client_pos_2_canvas_item_pos(
+                    canvas,
+                    bclient_x,
+                    bclient_y
+                );
+                this.path_change_end_pos(
+                    this.connecting_path,
+                    startp.x,
+                    startp.y,
+                );
+            }
+        }
+        // begin_connect_from_clientpos(NoteCanvasFunc, canvas, bclient_x, bclient_y) {
+        //     let startp = NoteCanvasFunc.client_pos_2_canvas_item_pos(
+        //         canvas,
+        //         bclient_x,
+        //         bclient_y
+        //     );
+        //     canvas.connecting_path = new NoteCanvasFunc.PathStruct().set_pos(
+        //         startp.x,
+        //         startp.y,
+        //         startp.x,
+        //         startp.y
+        //     );
+        //     canvas.paths.push(canvas.connecting_path);
+        // }
+        begin_connect_from_canvaspos(NoteCanvasFunc:any, canvas:any, cx:number, cy:number, ebid:string) {
+            // let startp = NoteCanvasFunc.client_pos_2_canvas_item_pos(
+            //     canvas,
+            //     bclient_x,
+            //     bclient_y
+            // );
+            this.connecting_path =
+                this.path_set_pos(new NoteCanvasFunc.PathStruct(),
+                    cx, cy, cx, cy
+                )
+
+
+            this.connecting_path.b_bar = ebid
+            // canvas.paths.push(canvas.connecting_path);
+        }
+    }
     export class UserInteract{
+        //来自canvas的交互事件
+        //界面相关的坐标换算
+        //无数据操作，仅界面的一些操作
         mouse_drag_recorder=new CanvasMouseDragRecorder()
         _recent_eb_mouse_down:undefined|MouseEvent
         _recent_mouse_move:undefined|MouseEvent
+        drag_bar_helper=new EditorBarTs.DragBarHelper()
+        line_connect_helper=new LineConnectHelper()
+
         canvas:NoteCanvasDataReacher
         set recent_eb_mouse_down(v:MouseEvent){
             this._recent_eb_mouse_down=v;
@@ -265,14 +424,27 @@ export module NoteCanvasTs{
         select_range_down_check_ok=(event:MouseEvent)=>{
             return event!=this._recent_eb_mouse_down;
         }
-        event_mousedown_eb(event:MouseEvent,ebcomp:any){
-            this.canvas.get_editorbar_man().event_mousedown(
-                event,ebcomp)
-        }
+
         event_canvas_move(){
             if (this._recent_mouse_move){
                 this.mouse_drag_recorder.move(this.canvas,this._recent_mouse_move)
             }
+        }
+        event_mousedown_range(event:MouseEvent){
+            const canvas=this.canvas.notecanvas
+            //   let cp = this.get_canvas_client_pos();
+            canvas.mouse_recorder.call_before_move(
+                event.clientX, // + cp.x,
+                event.clientY //+ cp.y
+                //   event.screenX, event.screenY
+            );
+            // console.log("note canvase mouse down");
+            //   this.dragging = true;
+            canvas.canvas_mouse_drag_helper.start_drag_canvas();
+        }
+        event_mousedown_eb(event:MouseEvent,ebcomp:any){
+            this.canvas.get_editorbar_man().event_mousedown(
+                event,ebcomp)
         }
         event_mousedown_bg(event:MouseEvent){
             // console.log(this)
@@ -281,10 +453,80 @@ export module NoteCanvasTs{
         event_mouse_move(event:MouseEvent){
             this.mouse_drag_recorder.move(this.canvas,event)
             this._recent_mouse_move=event
+
+            {
+                const canvas=this.canvas.notecanvas
+                //有按键按下
+                // let cp = this.get_canvas_client_pos();
+                canvas.mouse_recorder.update_pos_on_move(
+                    event.clientX, //+ cp.x,
+                    event.clientY //+ cp.y
+                    //   event.screenX, event.screenY
+                );
+                // let delta = this.mouse_recorder.get_delta();
+
+                //拖拽画布
+                canvas.canvas_mouse_drag_helper.on_drag(canvas, event);
+
+
+
+                //拖拽文本块
+                if (canvas.moving_obj != null) {
+                    this.drag_bar_helper.update_moving_obj_pos(canvas);
+                    //   let bar_data = this.editor_bars[this.moving_obj.ebid];
+
+                    //   this.editor_bar_set_new_pos(
+                    //     bar_data,
+                    //     bar_data.pos_x + delta.dx / this.scale,
+                    //     bar_data.pos_y + delta.dy / this.scale
+                    //   );
+                    //   console.log("bar_data", bar_data);
+                }else{
+                    //编辑器拖拽相关
+                    canvas.editor_bar_manager.on_mouse_move(event,
+                        canvas.mouse_recorder,canvas.scale)
+                }
+                // if (canvas.connecting_path != null) {
+                this.line_connect_helper.move_connect_if_connecting(
+                    NoteCanvasFunc,
+                    canvas,
+                    event.clientX,
+                    event.clientY
+                );
+                // }
+            }
+        }
+        event_mouse_up_on_eb(event:MouseEvent,ebcomp:any){
+            // const canvas=this.canvas.notecanvas
+            //
+            if (this.line_connect_helper.connecting_path) {
+                const eb = this.canvas.get_content_manager().notehandle.ebman()
+                    .get_ebdata_by_ebid(ebcomp.ebid);
+                this.line_connect_helper.end_connect(
+                    this,
+                    eb.pos_x,
+                    eb.pos_y,
+                    ebcomp.ebid
+                );
+            }
         }
         event_mouse_up(event:MouseEvent){
             this._recent_mouse_move=undefined
             this.mouse_drag_recorder.up(this.canvas,event)
+
+            {
+                const canvas=this.canvas.notecanvas
+                //   this.dragging = false;
+                console.log("handle_mouse_up")
+                this.drag_bar_helper.end_drag(event,canvas)
+                // canvas.drag_bar_helper.end_drag(event,canvas);
+                canvas.canvas_mouse_drag_helper.end_drag_canvas(event);
+
+                //没有在eb上置空
+                this.line_connect_helper.stop_connect_if_not()
+
+                canvas.editor_bar_manager.on_mouse_up();
+            }
         }
         scroll_get_gradient_scroll():Gradient.Common{
             return this.canvas.notecanvas.state_ts.gradient_scroll
@@ -378,13 +620,17 @@ export module NoteCanvasTs{
         cur_note_undo(){
             if(this.cur_note_id!=""){
                 const log=AppFuncTs.appctx.logctx.get_log_by_noteid(this.cur_note_id)
-                log.undo_ope(this.notehandle)
+                if(log.undo_ope(this.notehandle)){
+                    log.set_store_flag_after_do()
+                }
             }
         }
         cur_note_redo(){
             if(this.cur_note_id!=""){
                 const log=AppFuncTs.appctx.logctx.get_log_by_noteid(this.cur_note_id)
-                log.redo_ope(this.notehandle)
+                if(log.redo_ope(this.notehandle)){
+                    log.set_store_flag_after_do()
+                }
             }
         }
         /**@param data {NoteContentData}

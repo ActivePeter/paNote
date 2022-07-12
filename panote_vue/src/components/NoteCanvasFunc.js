@@ -1,7 +1,4 @@
 //移动组件时用于重新计算区块范围
-import Util from "@/components/reuseable/Util";
-import EditorBarFunc from "@/components/EditorBarFunc";
-import PathFunc from "@/components/PathFunc";
 // import {NoteCanvasTs} from "@/components/NoteCanvasTs";
 // import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 // import {NoteCanvasTs} from "@/components/NoteCanvasTs";
@@ -63,139 +60,7 @@ export class PathStruct {
     }
 
 }
-class LineConnectHelper {
-    path_set_pos(path,bx, by, ex, ey) {
-        path.w = Math.abs(bx - ex)
-        path.h = Math.abs(by - ey)
-        path.ox = Math.min(ex, bx)
-        path.oy = Math.min(ey, by)
 
-        path.ex = ex - path.ox;
-        path.ey = ey - path.oy;
-        path.bx = bx - path.ox;
-        path.by = by - path.oy;
-        return path
-    }
-    path_change_end_pos(path,ex, ey) {
-        this.path_set_pos(path,path.ox + path.bx, path.oy + path.by, ex, ey)
-    }
-    path_change_begin_pos(path,bx, by) {
-        this.path_set_pos(path,bx, by, path.ox + path.ex, path.oy + path.ey)
-    }
-    remove_bar_paths(canvas,ebid){
-        let bar_data = canvas.editor_bars[ebid]
-
-        // 遍历所有连线
-        for (let i in bar_data.conns) {
-            let path_key = bar_data.conns[i]
-            let p = canvas.paths[path_key]
-            let other_bar_id=p.b_bar;
-            if(p.b_bar===ebid){
-                other_bar_id=p.e_bar;
-            }
-            //移除对方方块对连线的存储
-            Util.remove_one_in_arr(
-                canvas.editor_bars[other_bar_id].conns,path_key);
-            //移除连线
-            delete canvas.paths[path_key];
-        }
-        bar_data.conns=[]
-    }
-    bar_move(canvas, ebid) {
-        let bar_data = canvas.editor_bars[ebid]
-        // console
-        for (let i in bar_data.conns) {
-            // console.log(path)
-            let path_key = bar_data.conns[i]
-            let p = canvas.paths[path_key]
-            if (p.e_bar == ebid) {
-                this.path_change_end_pos(p,bar_data.pos_x, bar_data.pos_y)
-            } else if (p.b_bar == ebid) {
-                this.path_change_begin_pos(p,bar_data.pos_x, bar_data.pos_y)
-            }
-        }
-    }
-    end_connect(canvas, canvas_x, canvas_y, ebid) {
-        this.path_change_end_pos(canvas.connecting_path,
-            canvas_x, canvas_y,
-            )
-
-        canvas.connecting_path.e_bar = ebid;
-        let bbar = canvas.connecting_path.b_bar
-        let key1 = bbar + ',' + ebid
-        if ((key1) in canvas.paths || (ebid + ',' + bbar) in canvas.paths || ebid == bbar) {
-            canvas.connecting_path = null;
-        } else {
-            canvas.paths[key1] = canvas.connecting_path;
-            console.log(
-                "valid one", key1
-            )
-
-            canvas.editor_bars[bbar].conns.push(key1)
-            canvas.editor_bars[ebid].conns.push(key1)
-
-            canvas.content_manager.backend_path_change_and_save(
-                canvas.context,canvas,
-                new PathFunc.PathChange(
-                    PathFunc.PathChangeType.Add,
-                    null,
-                    null
-                )
-            )
-            canvas.content_manager.backend_editor_bar_change_and_save(
-                canvas.context,canvas,
-                new EditorBarFunc.EditorBarChange(
-                    EditorBarFunc.EditorBarChangeType.LineConnect,
-                    null,
-                ),
-            )
-            // canvas.storage.save_all();
-            // canvas.storage.save_paths();
-        }
-        canvas.connecting_path = null;
-    }
-    move_connect(NoteCanvasFunc, canvas, bclient_x, bclient_y) {
-        let startp = NoteCanvasFunc.client_pos_2_canvas_item_pos(
-            canvas,
-            bclient_x,
-            bclient_y
-        );
-        this.path_change_end_pos(
-            canvas.connecting_path,
-            startp.x,
-            startp.y,
-        );
-    }
-    // begin_connect_from_clientpos(NoteCanvasFunc, canvas, bclient_x, bclient_y) {
-    //     let startp = NoteCanvasFunc.client_pos_2_canvas_item_pos(
-    //         canvas,
-    //         bclient_x,
-    //         bclient_y
-    //     );
-    //     canvas.connecting_path = new NoteCanvasFunc.PathStruct().set_pos(
-    //         startp.x,
-    //         startp.y,
-    //         startp.x,
-    //         startp.y
-    //     );
-    //     canvas.paths.push(canvas.connecting_path);
-    // }
-    begin_connect_from_canvaspos(NoteCanvasFunc, canvas, cx, cy, ebid) {
-        // let startp = NoteCanvasFunc.client_pos_2_canvas_item_pos(
-        //     canvas,
-        //     bclient_x,
-        //     bclient_y
-        // );
-        canvas.connecting_path =
-            this.path_set_pos(new NoteCanvasFunc.PathStruct(),
-                cx, cy, cx, cy
-            )
-
-
-        canvas.connecting_path.b_bar = ebid
-        // canvas.paths.push(canvas.connecting_path);
-    }
-}
 
 
 
@@ -340,7 +205,6 @@ export default {
                 / canvas.scale
         }
     },
-    LineConnectHelper,
     Storage,
     // DragBarHelper,
     // ContentManager,

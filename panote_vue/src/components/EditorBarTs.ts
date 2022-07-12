@@ -75,9 +75,11 @@ export namespace EditorBarTs {
         constructor(canvas: any) {
             this.canvas = canvas;
         }
-        canvasproxy():NoteCanvasTs.NoteCanvasDataReacher{
+
+        canvasproxy(): NoteCanvasTs.NoteCanvasDataReacher {
             return NoteCanvasTs.NoteCanvasDataReacher.create(this.canvas)
         }
+
         //选择功能-->
         focused_ebids: any = {}//选中的editor bar id
         focus_add(ebid: string) {
@@ -137,13 +139,13 @@ export namespace EditorBarTs {
         }
 
         del_selected() {
-            const rec=new NoteLog.Rec()
-            for(const ebid in this.focused_ebids){
+            const rec = new NoteLog.Rec()
+            for (const ebid in this.focused_ebids) {
                 rec.add_trans(new NoteLog.SubTrans.EbDel(ebid))
             }
-            const handle=this.canvasproxy().get_content_manager().notehandle
-            const log=AppFuncTs.appctx.logctx.get_log_by_noteid(handle.note_id)
-            if(log.try_do_ope(rec,handle)){
+            const handle = this.canvasproxy().get_content_manager().notehandle
+            const log = AppFuncTs.appctx.logctx.get_log_by_noteid(handle.note_id)
+            if (log.try_do_ope(rec, handle)) {
                 this.focus_clear()
                 log.set_store_flag_after_do()
             }
@@ -173,32 +175,34 @@ export namespace EditorBarTs {
             // }
             // AppFuncTs.appctx.storage_manager.note_data_change(noteid)
         }
-        path_removeall_to_eb(ebid:string){
-                const bar_data = this.get_editor_bar_data_by_ebid(ebid)
 
-                // 遍历所有连线
-                for (const i in bar_data.conns) {
-                    const path_key = bar_data.conns[i]
-                    const p = this.canvas.paths[path_key]
-                    let other_bar_id=p.b_bar;
-                    if(p.b_bar===ebid){
-                        other_bar_id=p.e_bar;
-                    }
-                    //移除对方方块对连线的存储
-                    Util.remove_one_in_arr(
-                        this.get_editor_bar_data_by_ebid(other_bar_id).conns,path_key);
-                    //移除连线
-                    delete this.canvas.paths[path_key];
+        path_removeall_to_eb(ebid: string) {
+            const bar_data = this.get_editor_bar_data_by_ebid(ebid)
+
+            // 遍历所有连线
+            for (const i in bar_data.conns) {
+                const path_key = bar_data.conns[i]
+                const p = this.canvas.paths[path_key]
+                let other_bar_id = p.b_bar;
+                if (p.b_bar === ebid) {
+                    other_bar_id = p.e_bar;
                 }
-                bar_data.conns=[]
-                //
+                //移除对方方块对连线的存储
+                Util.remove_one_in_arr(
+                    this.get_editor_bar_data_by_ebid(other_bar_id).conns, path_key);
+                //移除连线
+                delete this.canvas.paths[path_key];
+            }
+            bar_data.conns = []
+            //
         }
+
         open_right_menu_if_rightclick(e: MouseEvent, ebcomp: any) {
-            if(e.buttons==2){
+            if (e.buttons == 2) {
                 const comproxy = EditorBarCompProxy.create(ebcomp)
                 const content = new RightMenuFuncTs.RightMenuContent()
-                const canvasproxy=NoteCanvasTs.NoteCanvasDataReacher.create(this.canvas)
-                const ctx=canvasproxy.get_context()
+                const canvasproxy = NoteCanvasTs.NoteCanvasDataReacher.create(this.canvas)
+                const ctx = canvasproxy.get_context()
                 content
                     .add_one_selection("复制", () => {
                         this.copy_selected()
@@ -207,35 +211,35 @@ export namespace EditorBarTs {
                         this.del_selected()
                     })
 
-                if (comproxy.ebid in this.focused_ebids){
+                if (!(comproxy.ebid in this.focused_ebids)) {
                     //未focus,先focus，然后操作单个
                     this.focus_clear()
                     this.focus_add(comproxy.ebid)
-                }else if(Object.keys(this.focused_ebids).length==0){
+                } else if (Object.keys(this.focused_ebids).length == 0) {
                     this.focus_add(comproxy.ebid)
                 }
 
-                if(Object.keys(this.focused_ebids).length==1){
+                if (Object.keys(this.focused_ebids).length == 1) {
                     //单个选中
                     content
                         .add_one_selection("作为根节点加入大纲", () => {
                             console.log("作为根节点加入大纲")
-                            const outline =ctx.cur_open_note_content.part.note_outline
-                            const olproxy=NoteOutlineTs.OutlineStorageStruct.proxy(outline,canvasproxy.get_content_manager().cur_note_id)
-                            if(olproxy.create_tree_rooteb(comproxy.ebid)){
+                            const outline = ctx.cur_open_note_content.part.note_outline
+                            const olproxy = NoteOutlineTs.OutlineStorageStruct.proxy(outline, canvasproxy.get_content_manager().cur_note_id)
+                            if (olproxy.create_tree_rooteb(comproxy.ebid)) {
                                 olproxy.data_changed(ctx)
                             }
                         })
                         .add_one_selection("加入到大纲", () => {
-                            const outline =ctx.cur_open_note_content.part.note_outline
-                            const olproxy=NoteOutlineTs.OutlineStorageStruct.proxy(outline,canvasproxy.get_content_manager().cur_note_id)
-                            const res=olproxy.try_ins2trees(comproxy.ebid,canvasproxy.get_editorbar_man())
-                            if(res.length==0){
+                            const outline = ctx.cur_open_note_content.part.note_outline
+                            const olproxy = NoteOutlineTs.OutlineStorageStruct.proxy(outline, canvasproxy.get_content_manager().cur_note_id)
+                            const res = olproxy.try_ins2trees(comproxy.ebid, canvasproxy.get_editorbar_man())
+                            if (res.length == 0) {
                                 ElMessage({
                                     message: '已存在于大纲中 或\n大纲中不存在与当前节点相连的文本块，无法连入',
                                     type: 'warning',
                                 })
-                            }else {
+                            } else {
                                 olproxy.data_changed(ctx)
                             }
                             // const ctx = NoteCanvasTs.NoteCanvasDataReacher.create(this.canvas).get_context()
@@ -256,7 +260,7 @@ export namespace EditorBarTs {
 
         event_mousedown(event: MouseEvent, ebcomp: any) {
             // console.log("editor bar event_mousedown")
-            const canvasproxy=NoteCanvasTs.NoteCanvasDataReacher.create(this.canvas)
+            const canvasproxy = NoteCanvasTs.NoteCanvasDataReacher.create(this.canvas)
             const contentman = canvasproxy.get_content_manager()
             const ebman = canvasproxy.get_editorbar_man()
             if (event.buttons == 1) {
@@ -269,56 +273,29 @@ export namespace EditorBarTs {
                 //   console.log(eb);
                 //   let cp = this.get_canvas_client_pos();
 
-                //检查是否未拖拽模式
-                canvasproxy.notecanvas.drag_bar_helper.start_drag(NoteCanvasFunc, this.canvas,
+                //连线或拖拽或点击
+                contentman.user_interact.drag_bar_helper.start_drag(NoteCanvasFunc, this.canvas,
                     event, ebcomp
                 )
-
-                //检查是否为选择模式
-                ebman.select_click_check(event, ebcomp)
-                //   this.record_content_rect = this.$refs.content_ref.getBoundingClientRect();
             }
             //右键
             this.open_right_menu_if_rightclick(event, ebcomp)
 
         }
 
-        select_click_check(event: MouseEvent, ebcomp: any) {
-            // if(this.canvas.cursor_mode==CursorMode.choose
-            //     ||this.canvas.cursor_mode==CursorMode.drag
-            // ){
-            //     if(!event.shiftKey){
-            //         this.focus_clear()
-            //     }
-            //     this.focused_ebids[ebcomp.ebid]=1
-            //
-            //     console.log("select_click_check",this.focused_ebids)
-            // }
-        }
-
         editor_bar_comp_mounted(ebcomp: any) {
             this.ebid_to_ebcomp[ebcomp.ebid] = ebcomp
         }
-        editor_bar_comp_unmounted(ebcomp:any){
+
+        editor_bar_comp_unmounted(ebcomp: any) {
             delete this.ebid_to_ebcomp[ebcomp.ebid]
-        }
-        delete_one(editor_bar: any) {
-            this.canvas.line_connect_helper.remove_bar_paths(
-                this.canvas, editor_bar.ebid
-            )
-            delete this.canvas.editor_bars[editor_bar.ebid]
-            this.canvas.context.storage_manager
-                .buffer_save_note_editor_bars(this.canvas.content_manager.cur_note_id, this.canvas.editor_bars)
-            this.canvas.context.storage_manager
-                .buffer_save_note_paths(this.canvas.content_manager.cur_note_id, this.canvas.paths);
-            // console.log("delete one",editor_bar)
         }
 
         add_if_no() {
             if (this.canvas.editor_bars.length === 0) {
-                this.add_editor_bar(
-                    this.new_editor_bar(0, 0)
-                );
+                // this.add_editor_bar(
+                //     this.new_editor_bar(0, 0)
+                // );
             }
         }
 
@@ -330,9 +307,11 @@ export namespace EditorBarTs {
                 y: op.y + eb_data.pos_y * this.canvas.scale,
             }
         }
-        get_ebid_2_data(){
+
+        get_ebid_2_data() {
             return this.canvas.editor_bars
         }
+
         get_editor_bar_data_by_ebid(ebid: string): EditorBar {
             return this.canvas.editor_bars[ebid]
         }
@@ -354,30 +333,30 @@ export namespace EditorBarTs {
             // }
         }
 
-        /**@param bar {EditorBar}
-         **/
-        add_editor_bar(bar: any) {
-            const canvas = this.canvas
-            canvas.content_manager.backend_add_editor_bar_and_save(canvas.context,
-                canvas, bar);
-
-
-            const ck = canvas.chunk_helper.calc_chunk_pos(bar.pos_x, bar.pos_y);
-            canvas.chunk_helper.add_new_2chunks(canvas.non_empty_chunks, ck);
-            canvas.change_padding(
-                canvas.chunk_helper.chunk_min_y * -400,
-                canvas.chunk_helper.chunk_max_y * 400,
-                canvas.chunk_helper.chunk_max_x * 300,
-                canvas.chunk_helper.chunk_min_x * -300
-            );
-            // this.canvas.storage.save_bar();
-        }
+        // /**@param bar {EditorBar}
+        //  **/
+        // add_editor_bar(bar: any) {
+        //     const canvas = this.canvas
+        //     canvas.content_manager.backend_add_editor_bar_and_save(canvas.context,
+        //         canvas, bar);
+        //
+        //
+        //     const ck = canvas.chunk_helper.calc_chunk_pos(bar.pos_x, bar.pos_y);
+        //     canvas.chunk_helper.add_new_2chunks(canvas.non_empty_chunks, ck);
+        //     canvas.change_padding(
+        //         canvas.chunk_helper.chunk_min_y * -400,
+        //         canvas.chunk_helper.chunk_max_y * 400,
+        //         canvas.chunk_helper.chunk_max_x * 300,
+        //         canvas.chunk_helper.chunk_min_x * -300
+        //     );
+        //     // this.canvas.storage.save_bar();
+        // }
 
         add_editor_bar_in_center() {
-            const canvasp=this.canvasproxy()
+            const canvasp = this.canvasproxy()
             // canvasp.get_content_manager().user_interact.
             // console.log("add_editor_bar");
-            const ui=canvasp.get_content_manager().user_interact
+            const ui = canvasp.get_content_manager().user_interact
 
             const range_rec = ui.range_ref_getBoundingClientRect()
 
@@ -389,17 +368,17 @@ export namespace EditorBarTs {
             const px = mid_x - origin_pos.x;
             const py = mid_y - origin_pos.y;
 
-            const log=AppFuncTs.appctx.logctx.get_log_by_noteid(
+            const log = AppFuncTs.appctx.logctx.get_log_by_noteid(
                 canvasp.get_content_manager().notehandle.note_id)
 
             const new_bar =
                 canvasp.get_editorbar_man().new_editor_bar(
                     px / canvasp.get_scale(),
                     py / canvasp.get_scale())
-            const rec=new NoteLog.Rec()
+            const rec = new NoteLog.Rec()
                 .add_trans(new NoteLog.SubTrans.EbAdd(new_bar))
 
-            if(log.try_do_ope(rec,canvasp.get_content_manager().notehandle)){
+            if (log.try_do_ope(rec, canvasp.get_content_manager().notehandle)) {
                 log.set_store_flag_after_do()
             }
             // this.add_editor_bar(new_bar);
@@ -422,40 +401,40 @@ export namespace EditorBarTs {
                     ebdata.pos_y)
             this.copy_editor_bar_data__except_conn(ebdata, new_bar)
             new_bar.pos_x -= new_bar.width + 10;
-            this.add_editor_bar(new_bar);
+            // this.add_editor_bar(new_bar);
         }
 
-        //return with change
-        set_new_pos(ebid: string, eb: any, x: number, y: number): _PaUtilTs.Vec2D {
-            const old_ck = this.canvas.chunk_helper.calc_chunk_pos(eb.pos_x, eb.pos_y);
-            const delta = new _PaUtilTs.Pos2D(
-                x - eb.pos_x,
-                y - eb.pos_y
-            )
-            eb.pos_x = x;
-            eb.pos_y = y;
-            this.canvas.line_connect_helper.bar_move(this.canvas, ebid);
-            const ck = this.canvas.chunk_helper.calc_chunk_pos(x, y);
-            if (old_ck !== ck) {
-                // console.log("ck", ck);
-
-                this.canvas.chunk_helper.move_chunk(this.canvas.non_empty_chunks, old_ck, ck);
-                // console.log(this.canvas.non_empty_chunks);
-                this.canvas.change_padding(
-                    this.canvas.chunk_helper.chunk_min_y * -400,
-                    this.canvas.chunk_helper.chunk_max_y * 400,
-                    this.canvas.chunk_helper.chunk_max_x * 300,
-                    this.canvas.chunk_helper.chunk_min_x * -300
-                );
-                // console.log(
-                //     this.canvas.padding_add_up,
-                //     this.canvas.padding_add_down,
-                //     this.canvas.padding_add_left,
-                //     this.canvas.padding_add_right
-                // );
-            }
-            return delta
-        }
+        // //return with change
+        // set_new_pos(ebid: string, eb: any, x: number, y: number): _PaUtilTs.Vec2D {
+        //     const old_ck = this.canvas.chunk_helper.calc_chunk_pos(eb.pos_x, eb.pos_y);
+        //     const delta = new _PaUtilTs.Pos2D(
+        //         x - eb.pos_x,
+        //         y - eb.pos_y
+        //     )
+        //     eb.pos_x = x;
+        //     eb.pos_y = y;
+        //     this.canvas.line_connect_helper.bar_move(this.canvas, ebid);
+        //     const ck = this.canvas.chunk_helper.calc_chunk_pos(x, y);
+        //     if (old_ck !== ck) {
+        //         // console.log("ck", ck);
+        //
+        //         this.canvas.chunk_helper.move_chunk(this.canvas.non_empty_chunks, old_ck, ck);
+        //         // console.log(this.canvas.non_empty_chunks);
+        //         this.canvas.change_padding(
+        //             this.canvas.chunk_helper.chunk_min_y * -400,
+        //             this.canvas.chunk_helper.chunk_max_y * 400,
+        //             this.canvas.chunk_helper.chunk_max_x * 300,
+        //             this.canvas.chunk_helper.chunk_min_x * -300
+        //         );
+        //         // console.log(
+        //         //     this.canvas.padding_add_up,
+        //         //     this.canvas.padding_add_down,
+        //         //     this.canvas.padding_add_left,
+        //         //     this.canvas.padding_add_right
+        //         // );
+        //     }
+        //     return delta
+        // }
 
         corner_drag_start(drag_helper: any) {
             // eslint-disable-next-line no-empty
@@ -494,6 +473,7 @@ export namespace EditorBarTs {
 
     }
 
+    //
     export class DragBarHelper {
         update_cnt = 0;
         dragging = false;
@@ -505,9 +485,9 @@ export namespace EditorBarTs {
         mouse_down_eb: any
         begin_focused = false;
         last_update_time = 0;
-        eb_transs:null|NoteLog.SubTrans.EbTrans[]=null
+        eb_transs: null | NoteLog.SubTrans.EbTrans[] = null
 
-        calc_eb_tar_pos(canvas:any):_PaUtilTs.Pos2D{
+        calc_eb_tar_pos(canvas: any): _PaUtilTs.Pos2D {
             const origin_pos = canvas.get_content_origin_pos();
             //   var bar_pos = this.get_moving_obj_pos();
 
@@ -520,25 +500,25 @@ export namespace EditorBarTs {
                 origin_pos.y -
                 canvas.moving_obj.drag_on_y;// / canvas.scale;
 
-            return new _PaUtilTs.Pos2D(tarx/canvas.scale,tary/canvas.scale)
+            return new _PaUtilTs.Pos2D(tarx / canvas.scale, tary / canvas.scale)
         }
 
         // _end_ms=0;
         update_moving_obj_pos(canvas: any) {
             const ms = _PaUtilTs.time_stamp_number()
             const ebman = canvas.editor_bar_manager as EditorBarTs.EditorBarManager
-            const canvasdr=NoteCanvasTs.NoteCanvasDataReacher.create(canvas)
+            const canvasdr = NoteCanvasTs.NoteCanvasDataReacher.create(canvas)
 
-            const tarpos=this.calc_eb_tar_pos(canvas)
-            if(this.update_cnt==0){
-                const nh=canvasdr.get_content_manager().notehandle
-                this.eb_transs=[]
+            const tarpos = this.calc_eb_tar_pos(canvas)
+            if (this.update_cnt == 0) {
+                const nh = canvasdr.get_content_manager().notehandle
+                this.eb_transs = []
 
-                Object.keys(canvasdr.get_editorbar_man().focused_ebids).forEach((v)=>{
-                    const eb=canvasdr.get_content_manager().notehandle.ebman().get_ebdata_by_ebid(v)
-                    const trans=new NoteLog.SubTrans.EbTrans(v,0,0,0,0)
-                    trans.old_state=new NoteLog.SubTrans.EbTransState(
-                        eb.pos_x,eb.pos_y,eb.width,eb.height
+                Object.keys(canvasdr.get_editorbar_man().focused_ebids).forEach((v) => {
+                    const eb = canvasdr.get_content_manager().notehandle.ebman().get_ebdata_by_ebid(v)
+                    const trans = new NoteLog.SubTrans.EbTrans(v, 0, 0, 0, 0)
+                    trans.old_state = new NoteLog.SubTrans.EbTransState(
+                        eb.pos_x, eb.pos_y, eb.width, eb.height
                     )
                     this.eb_transs?.push(trans)
                 })
@@ -559,27 +539,27 @@ export namespace EditorBarTs {
             this.mouse_move_distance += _PaUtilTs.Algrithms.distance_2p(newp, this.mouse_last_pos)
             this.mouse_last_pos = newp
 
-            const mainebid=canvas.moving_obj.ebid
-            if(mainebid in canvasdr.get_editorbar_man().focused_ebids) {
-                const ebid_2_op:any={}
-                const getop=(ebid:string):_PaUtilTs.Pos2D=>{
+            const mainebid = canvas.moving_obj.ebid
+            if (mainebid in canvasdr.get_editorbar_man().focused_ebids) {
+                const ebid_2_op: any = {}
+                const getop = (ebid: string): _PaUtilTs.Pos2D => {
                     return ebid_2_op[ebid]
                 }
-                Object.keys(canvasdr.get_editorbar_man().focused_ebids).forEach((k)=>{
-                    const eb=canvasdr.get_content_manager().notehandle.ebman().get_ebdata_by_ebid(k)
-                    ebid_2_op[k]=new _PaUtilTs.Pos2D(eb.pos_x,eb.pos_y)
+                Object.keys(canvasdr.get_editorbar_man().focused_ebids).forEach((k) => {
+                    const eb = canvasdr.get_content_manager().notehandle.ebman().get_ebdata_by_ebid(k)
+                    ebid_2_op[k] = new _PaUtilTs.Pos2D(eb.pos_x, eb.pos_y)
                 })
                 canvasdr.get_content_manager().notehandle.ebman()
                     .onlydata_ebs_move_with_first(canvas.moving_obj.ebid,
                         Object.keys(canvasdr.get_editorbar_man().focused_ebids),
-                        tarpos.x,tarpos.y,true
+                        tarpos.x, tarpos.y, true
                         // tarx / canvas.scale,
                         // tary / canvas.scale
                     )
-                Object.keys(canvasdr.get_editorbar_man().focused_ebids).forEach((k)=>{
-                    const eb=canvasdr.get_content_manager().notehandle.ebman().get_ebdata_by_ebid(k)
-                    const op=getop(k)
-                    canvasdr.get_content_manager().chunkhelper.check_eb_chunk_change(op.x,op.y,eb.pos_x,eb.pos_y)
+                Object.keys(canvasdr.get_editorbar_man().focused_ebids).forEach((k) => {
+                    const eb = canvasdr.get_content_manager().notehandle.ebman().get_ebdata_by_ebid(k)
+                    const op = getop(k)
+                    canvasdr.get_content_manager().chunkhelper.check_eb_chunk_change(op.x, op.y, eb.pos_x, eb.pos_y)
                 })
                 canvasdr.get_content_manager().chunkhelper.if_chunkchange_then_recalc_range()
             }
@@ -600,6 +580,33 @@ export namespace EditorBarTs {
         start_drag(NoteCanvasFunc: any, canvas: any, event: MouseEvent, eb: any) {
             const ebman = canvas.editor_bar_manager as EditorBarTs.EditorBarManager
             const ebid = eb.ebid as string
+            const canvasdr = NoteCanvasTs.NoteCanvasDataReacher.create(canvas)
+            canvas.mouse_recorder.call_before_move(
+                event.clientX,
+                event.clientY
+                //   event.screenX, event.screenY
+            );
+            // event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
+            if (canvas.cursor_mode === "连线") {
+                const bar_data = canvas.editor_bars[eb.ebid];
+                canvasdr.get_content_manager().user_interact.line_connect_helper
+                    .begin_connect_from_canvaspos(
+                    NoteCanvasFunc,
+                    canvas,
+                    bar_data.pos_x,
+                    bar_data.pos_y,
+                    eb.ebid
+                )
+                return
+            }
+            if (canvas.cursor_mode === "拖拽") {
+                // console.log("开始拖拽")
+                if (canvas.editor_bar_manager.corner_drag_helper == null) {
+                    canvas.moving_obj = eb;
+
+                }
+            }
+
             this.mouse_down_eb = eb
             this.start_in_case3 = false
             this.mouse_move_distance = 0
@@ -643,38 +650,17 @@ export namespace EditorBarTs {
             eb.drag_on_y = event.clientY - ebcpos.y
 
             this.update_cnt = 0;
-            canvas.mouse_recorder.call_before_move(
-                event.clientX,
-                event.clientY
-                //   event.screenX, event.screenY
-            );
-            // event.stopPropagation(); //阻止传递到上层，即handle_mouse_down
-            if (canvas.cursor_mode === "拖拽") {
-                // console.log("开始拖拽")
-                if (canvas.editor_bar_manager.corner_drag_helper == null) {
-                    canvas.moving_obj = eb;
 
-                }
-            } else if (canvas.cursor_mode === "连线") {
-                const bar_data = canvas.editor_bars[eb.ebid];
-                canvas.line_connect_helper.begin_connect_from_canvaspos(
-                    NoteCanvasFunc,
-                    canvas,
-                    bar_data.pos_x,
-                    bar_data.pos_y,
-                    eb.ebid
-                );
-            }
         }
 
         end_drag(event: MouseEvent, canvas: any) {
             // console.log("end_drag",canvas.moving_obj)
             const end_ms = _PaUtilTs.time_stamp_number()
-            const canvasdr=NoteCanvasTs.NoteCanvasDataReacher.create(canvas)
+            const canvasdr = NoteCanvasTs.NoteCanvasDataReacher.create(canvas)
 
             if (this.mouse_down_eb && this.mouse_move_distance < 2) {
                 //有其他选中无拖拽，相当于点击
-                const ebman = canvas.editor_bar_manager as EditorBarTs.EditorBarManager
+                const ebman = canvasdr.get_editorbar_man()
                 if (!event.shiftKey) {
                     ebman.focus_clear()
 
@@ -684,18 +670,17 @@ export namespace EditorBarTs {
                         ebman.focus_del(this.mouse_down_eb.ebid)
                     }
                 }
-            }else if (canvas.moving_obj != null&&this.eb_transs) {
-                this.eb_transs?.forEach((v)=>
-                {
-                    const eb=canvasdr.get_content_manager().notehandle.ebman().get_ebdata_by_ebid(v.ebid)
+            } else if (canvas.moving_obj != null && this.eb_transs) {
+                this.eb_transs?.forEach((v) => {
+                    const eb = canvasdr.get_content_manager().notehandle.ebman().get_ebdata_by_ebid(v.ebid)
                     v.state.copyfromdata(eb)
                 })
-                const notehandle=canvasdr.get_content_manager().notehandle
-                const logger=canvasdr.get_context().logctx.get_log_by_noteid(notehandle.note_id)
-                const rec=new NoteLog.Rec()
-                rec.transs=this.eb_transs
-                this.eb_transs=null
-                logger.try_do_ope(rec,notehandle)
+                const notehandle = canvasdr.get_content_manager().notehandle
+                const logger = canvasdr.get_context().logctx.get_log_by_noteid(notehandle.note_id)
+                const rec = new NoteLog.Rec()
+                rec.transs = this.eb_transs
+                this.eb_transs = null
+                logger.try_do_ope(rec, notehandle)
                 // console.log(" end_drag", canvas.moving_obj )
                 // if (this.update_cnt > 0) {
                 //     // canvas.content_manager.backend_editor_bar_change_and_save(

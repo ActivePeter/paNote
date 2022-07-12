@@ -120,9 +120,6 @@ export default {
     };
   },
   methods: {
-    emit_delete(){
-      this.$emit("delete",this)
-    },
     emit_copy(){
       this.$emit("copy",this)
     },

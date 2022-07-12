@@ -60,6 +60,9 @@ export namespace note{
     export class NoteHandlePathMan{
         constructor(public handle:NoteHandle) {
         }
+        setpath(pathkey:string,path:PathStruct){
+            this.handle.content_data.paths[pathkey]=path
+        }
         getpathproxy(pathkey:string):NoteHandlePathProxy|null{
             const p=this.getpath(pathkey)
             if(p){

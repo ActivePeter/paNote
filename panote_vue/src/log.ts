@@ -94,6 +94,7 @@ export namespace NoteLog {
             undo(handle: note.NoteHandle,log:NoteLogger, ctx: AppFuncTs.Context): void
         }
 
+        //ok
         export class EbAdd implements ITrans {
             ebid = ""
 
@@ -197,7 +198,7 @@ export namespace NoteLog {
             }
 
         }
-        //关联存在路径操作
+        //关联存在路径操作 (还有ol
         export class EbDel implements ITrans {
             ebdata: EditorBar | null = null
             rec_conn: EbDisConn | null = null
@@ -232,6 +233,7 @@ export namespace NoteLog {
             }
         }
 
+        //ok
         export class EbConn implements ITrans {
             constructor(
                 public conn_pairs: [string, string][]
@@ -239,18 +241,37 @@ export namespace NoteLog {
             }
 
             redo(handle: note.NoteHandle,log:NoteLogger,  ctx: AppFuncTs.Context): void {
-
+                this.conn_pairs.forEach(([ebid1,ebid2])=>{
+                    const pathkey=ebid1+","+ebid2
+                    const ebp1=handle.ebman().get_ebproxy_by_ebid(ebid1)
+                    const ebp2=handle.ebman().get_ebproxy_by_ebid(ebid2)
+                    const pathp=note.NoteHandlePathProxy.create(new PathStruct())
+                    pathp.path.e_bar=ebid2
+                    pathp.path.b_bar=ebid1
+                    pathp.change_begin_pos(ebp1.eb.pos_x,ebp1.eb.pos_y)
+                    pathp.change_end_pos(ebp2.eb.pos_x,ebp2.eb.pos_y)
+                    ebp1.add_conn(pathkey)
+                    ebp2.add_conn(pathkey)
+                    handle.pathman().setpath(pathkey,pathp.path)
+                })
             }
 
             undo(handle: note.NoteHandle,log:NoteLogger, ctx: AppFuncTs.Context): void {
-
+                this.conn_pairs.forEach(([ebid1,ebid2])=>{
+                    const pathkey=ebid1+","+ebid2
+                    const ebp1=handle.ebman().get_ebproxy_by_ebid(ebid1)
+                    const ebp2=handle.ebman().get_ebproxy_by_ebid(ebid2)
+                    ebp1.remove_conn(pathkey)
+                    ebp2.remove_conn(pathkey)
+                    handle.pathman().onlydata_remove(pathkey)
+                })
             }
 
             doable(handle: note.NoteHandle,log:NoteLogger, ctx: AppFuncTs.Context): boolean {
                 return true;
             }
         }
-
+        //ok
         export class EbDisConn implements ITrans {
             removed_paths: PathStruct[] = []
 

@@ -126,7 +126,6 @@
               @switch_mode="editor_bar_switch_mode"
               @corner_drag_start="editor_bar_corner_drag_start"
               @right_menu="editor_bar_right_menu"
-              @delete="editor_bar_delete"
               @copy="editor_bar_copy_lside"
           />
           <NoteCanvasSelectRange class="select_range" ref="select_range"/>
@@ -196,6 +195,9 @@ export default {
       }else{
         return "100%"
       }
+    },
+    connecting_path(){
+      return this.content_manager.user_interact.line_connect_helper.connecting_path
     }
   },
   created() {
@@ -300,10 +302,7 @@ export default {
       //交互相关
       canvas_mouse_drag_helper: null,
       mouse_recorder: null,
-      drag_bar_helper:new EditorBarTs.DragBarHelper(),
       moving_obj: null,
-      connecting_path: null,
-      line_connect_helper:new NoteCanvasFunc.LineConnectHelper(),
 
       //文本块编辑
       editing_editor_bar: null,
@@ -347,16 +346,17 @@ export default {
     // add_editor_bar() {
     //   this.editor_bar_manager.add_editor_bar_in_center(this);
     // },
-    update_moving_obj_pos() {
-      this.drag_bar_helper.update_moving_obj_pos(this);
-    },
+    // update_moving_obj_pos() {
+    //   this.drag_bar_helper.update_moving_obj_pos(this);
+    // },
     handle_scroll_bar(event) {
       if (
           this.moving_obj
           //   && this.record_content_rect != null
       ) {
         console.log("handle_scroll_bar",this.moving_obj,event);
-        this.update_moving_obj_pos();
+        this.content_manager.user_interact.drag_bar_helper.update_moving_obj_pos(this)
+        // this.update_moving_obj_pos();
       }
       this.content_manager.user_interact.event_canvas_move()
     },
@@ -388,70 +388,17 @@ export default {
       }
     },
     handle_mouse_down_on_range(event) {
-      //   let cp = this.get_canvas_client_pos();
-      this.mouse_recorder.call_before_move(
-          event.clientX, // + cp.x,
-          event.clientY //+ cp.y
-          //   event.screenX, event.screenY
-      );
-      console.log("note canvase mouse down");
-      //   this.dragging = true;
-      this.canvas_mouse_drag_helper.start_drag_canvas();
+      this.content_manager.user_interact.event_mousedown_range(event)
+
     },
     handle_mouse_move(val) {
       if (val.buttons != 0) {
         this.content_manager.user_interact.event_mouse_move(val)
-        //有按键按下
-        // let cp = this.get_canvas_client_pos();
-        this.mouse_recorder.update_pos_on_move(
-            val.clientX, //+ cp.x,
-            val.clientY //+ cp.y
-            //   event.screenX, event.screenY
-        );
-        // let delta = this.mouse_recorder.get_delta();
 
-        //拖拽画布
-        this.canvas_mouse_drag_helper.on_drag(this, val);
-
-
-
-        //拖拽文本块
-        if (this.moving_obj != null) {
-          this.update_moving_obj_pos();
-          //   let bar_data = this.editor_bars[this.moving_obj.ebid];
-
-          //   this.editor_bar_set_new_pos(
-          //     bar_data,
-          //     bar_data.pos_x + delta.dx / this.scale,
-          //     bar_data.pos_y + delta.dy / this.scale
-          //   );
-          //   console.log("bar_data", bar_data);
-        }else{
-          //编辑器拖拽相关
-          this.editor_bar_manager.on_mouse_move(event,
-              this.mouse_recorder,this.scale)
-        }
-        if (this.connecting_path != null) {
-          this.line_connect_helper.move_connect(
-              NoteCanvasFunc,
-              this,
-              val.clientX,
-              val.clientY
-          );
-        }
       }
     },
     handle_mouse_up(event) {
       this.content_manager.user_interact.event_mouse_up(event)
-      //   this.dragging = false;
-      console.log("handle_mouse_up")
-
-      this.drag_bar_helper.end_drag(event,this);
-      this.canvas_mouse_drag_helper.end_drag_canvas(event);
-      if (this.connecting_path) {
-        this.connecting_path = null;
-      }
-      this.editor_bar_manager.on_mouse_up();
     },
     get_canvas_client_pos() {
       let r = this.$refs.range_ref.getBoundingClientRect();
@@ -472,7 +419,8 @@ export default {
         // this.final_set_scale(scale_bak);
       }
       if (this.moving_obj) {
-        this.update_moving_obj_pos();
+        this.content_manager.user_interact.drag_bar_helper.update_moving_obj_pos(this)
+        // this.update_moving_obj_pos();
       }
     },
     // final_set_scale(scale) {
@@ -525,12 +473,6 @@ export default {
     editor_bar_copy_lside(editorbar){
       this.editor_bar_manager.copy_editor_bar_left_side(this,editorbar.ebid)
     },
-    editor_bar_delete(editor_bar){
-      if(this.content_manager.linkBarToListView.is_linking){
-        return;
-      }
-      this.editor_bar_manager.delete_one(editor_bar)
-    },
     editor_bar_corner_drag_start(a){
       if(this.content_manager.linkBarToListView.is_linking){
         return;
@@ -544,22 +486,8 @@ export default {
       EditorBarFunc.editor_bar_switch_mode(this, eb);
     },
     editor_bar_drag_release(event, bar) {
-      if (event && this.connecting_path) {
-        let bar_data = this.editor_bars[bar.ebid];
-        this.line_connect_helper.end_connect(
-            this,
-            bar_data.pos_x,
-            bar_data.pos_y,
-            bar.ebid
-        );
-      }
+      this.content_manager.user_interact.event_mouse_up_on_eb(event,bar)
     },
-    // editor_bar_set_new_pos(ebid, x, y) {
-    //
-    //   //   let ebw = 100;
-    //   //   let ebh = 100;
-    //   //超出原有范围需要重新设置背景面板的size
-    // },
     editor_bar_content_change(ebid,content){
       NoteCanvasTs.NoteCanvasDataReacher.create(this).get_content_manager()
           .notehandle.ebman().withlog_eb_edit(ebid,content)
