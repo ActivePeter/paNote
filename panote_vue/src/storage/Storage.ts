@@ -184,7 +184,12 @@ namespace Storage {
 
         note_data_change(noteid:string){
             // this.memory_holder.hold_note(noteid,this.ctx.)
-            this.memory_holder.hold_note(noteid,this.ctx.noteid_2_note_content[noteid])
+            const handle=this.ctx.get_notehandle(noteid)
+            if(!handle){
+                console.error("fail to get handle")
+                return
+            }
+            this.memory_holder.hold_note(noteid,handle.content_data)
             this.ctx.get_notelist_manager()?.pub_set_note_newedited_flag(noteid)
         }
         load_notelist(notelist: any) {

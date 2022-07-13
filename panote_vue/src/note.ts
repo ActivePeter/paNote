@@ -263,8 +263,8 @@ export namespace note{
         }
         onlydata_del_cardset(name:string){
             const rvcardsetman=this.handle.content_data.part.review_card_set_man
-            if(name !in rvcardsetman.cardsets){
-                console.error("onlydata_add_cardset","cardset not exist")
+            if(!(name in rvcardsetman.cardsets)){
+                console.error("onlydata_del_cardset","cardset not exist")
                 return;
             }
             delete rvcardsetman.cardsets[name]
@@ -274,7 +274,22 @@ export namespace note{
 
         constructor(public handle:NoteHandle) {
         }
-
+        onlydata_removeebtag(ebid:string){
+            this.handle.content_data.part.note_outline.trees.forEach((t)=>{
+                if(ebid in t.all_ebs){
+                    delete t.all_ebs[ebid]
+                }
+            })
+        }
+        withlog_ins2alltree(ebid:string):NoteLog.NoteLogger|null{
+            const log=AppFuncTs.appctx.logctx.get_log_by_noteid(this.handle.note_id)
+            const rec=new NoteLog.Rec()
+                .add_trans(new NoteLog.SubTrans.OlAddNode(ebid))
+            if(log.try_do_ope(rec,this.handle)){
+                return log
+            }
+            return null
+        }
         onlydata_ins2alltree(ebid:string):NoteOutlineTs.OutlineStorageStructOneTreeNode[]{
             const insnodes:NoteOutlineTs.OutlineStorageStructOneTreeNode[]=[]
             const ol=this.handle.content_data.part.note_outline
@@ -309,6 +324,15 @@ export namespace note{
                 }
             })
             return has
+        }
+        withlog_add_root(ebid:string):NoteLog.NoteLogger|null {
+            const log=AppFuncTs.appctx.logctx.get_log_by_noteid(this.handle.note_id)
+            const rec=new NoteLog.Rec()
+            rec.add_trans(new NoteLog.SubTrans.OlAddRootNode(ebid))
+            if (log.try_do_ope(rec,this.handle)){
+                return log
+            }
+            return null
         }
         onlydata_add_root(ebid:string):null|OutlineStorageStructOneTreeHelper{
             const ol=this.handle.content_data.part.note_outline
@@ -352,6 +376,7 @@ export namespace note{
             public content_data:NoteContentData
         ) {
         }
+
         pathman():NoteHandlePathMan{
             return new NoteHandlePathMan(this)
         }
@@ -373,6 +398,8 @@ export namespace note{
     //会被直接序列化到文件中的结构
     export class NoteContentData{
         static fix_old_version(data:NoteContentData){
+            console.log("fix_old_version")
+
             if(!data.part.note_outline){
                 data.part.note_outline=new NoteOutlineTs.OutlineStorageStruct()
             }
@@ -383,6 +410,30 @@ export namespace note{
             if(data.next_editor_bar_id<2000){
                 data.next_editor_bar_id=2000
             }
+
+            const delk=[]
+            //path
+            for(const k in data.paths){
+                const ks=k.split(",")
+
+                if(!(ks[0] in data.editor_bars)||
+                    !(ks[1] in data.editor_bars)
+                ){
+                    console.error("invalid path",k)
+                    delk.push(k)
+                }else{
+                    // const notehandle=new NoteHandle("",data)
+                    // const pp=notehandle.pathman().getpathproxy(k)
+                    // const e1=notehandle.ebman().get_ebproxy_by_ebid(ks[0])
+                    // const e2=notehandle.ebman().get_ebproxy_by_ebid(ks[1])
+                    // pp?.onlydata_update_with_eb(ks[0],e1.eb)
+                    // pp?.onlydata_update_with_eb(ks[1],e2.eb)
+                }
+            }
+
+            delk.forEach((k)=>{
+                delete data.paths[k]
+            })
         }
 
         next_editor_bar_id=1000

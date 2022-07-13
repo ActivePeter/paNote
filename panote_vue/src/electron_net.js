@@ -2,6 +2,7 @@ import {TcpPackConstructor} from "@/electron_net_ts";
 import {Buffer} from "buffer";
 import {SendState} from "@/electron_net_ts";
 import {NetPackRecv} from "@/net_pack_recv";
+import {_ipc} from "@/ipc";
 
 const net = require("net")
 
@@ -57,6 +58,7 @@ export class NetManager {
                 console.log('服务器端下线了');
                 _this.client.destroy();
                 setTimeout(conn, 10000);//重连
+                _ipc.MainCallRender.tasks.net_state_change.call(false)
             });
             this.client.on('data', (data) => {
                 this.tcp_pack_constructor.handle_one_slice(data, data.length)
@@ -70,6 +72,7 @@ export class NetManager {
             new_client()
                 .connect(PORT, HOST, () => {
                     _this.connected=true
+                    _ipc.MainCallRender.tasks.net_state_change.call(true)
                     console.log("连接成功: " + HOST + ":" + PORT);
                     _this.try_send_str("helloworld")
                     // 建立连接后立即向服务器发送数据，服务器将收到这些数据

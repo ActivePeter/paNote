@@ -48,9 +48,13 @@ export default class NoteOutline extends Vue {
   ctx:AppFuncTs.Context=AppFuncTs.Context.getfakeone()
   created(){
     this.ctx=AppFuncTs.appctx
-    this.data_stored=this.ctx.cur_open_note_content.part.note_outline
-    if(this.ctx.cur_open_note_id!='-1'){
-      this.editor_bars=this.ctx.cur_open_note_content.editor_bars
+    // this.data_stored=this.ctx.cur_open_note_content.part.note_outline
+    if(this.ctx.cur_canvasproxy){
+      this.notehandle=this.ctx.cur_canvasproxy.get_content_manager().notehandle
+      // this.notehandle.note_id=this.ctx.cur_open_note_id
+      // this.notehandle.content_data=this.ctx.noteid_2_note_content[this.ctx.cur_open_note_id]
+      this.data_stored=this.notehandle.content_data.part.note_outline
+      // this.editor_bars=this.ctx.cur_open_note_content.editor_bars
       this.editor_bar_comps=this.ctx.ui_refs().main_canvasproxy()
           .get_editorbar_man().ebid_to_ebcomp
     }

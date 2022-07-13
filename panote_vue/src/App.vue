@@ -6,7 +6,6 @@
   >
     <template v-slot:sidebar>
       <NoteList ref="note_list_ref"
-                :open_id="context.cur_open_note_id"
                 @right_menu="right_menu"
                 @get_context="get_context"
       ></NoteList>
@@ -114,8 +113,8 @@ export default {
     console.log("App Mounted")
 
     this.$refs.note_list_ref.init(this.context);
-
-    AppFuncTs.set_up_all(this.context)
+    this.context.app_mount()
+    // AppFuncTs.set_up_all(this.context)
     Timer._TimerState.LifeTime.mount(this.context.timer)
     // this.net_manager=electron_net.load_net_manager();
   },

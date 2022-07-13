@@ -617,6 +617,9 @@ export module NoteCanvasTs{
         static from_canvas(canvas:any):ContentManager{
             return canvas.content_manager
         }
+        is_holding_note():boolean{
+            return this.notehandle.note_id!=""
+        }
         cur_note_undo(){
             if(this.cur_note_id!=""){
                 const log=AppFuncTs.appctx.logctx.get_log_by_noteid(this.cur_note_id)
@@ -647,14 +650,24 @@ export module NoteCanvasTs{
 
             canvas.connecting_path=null
         }
-
+        canvas_unmount(){
+            if(this.canvas.get_content_manager().is_holding_note()){
+                AppFuncTs.appctx.unhold_notehandle(
+                    this.canvas.get_content_manager().notehandle)
+            }
+        }
         //相关组件都需要跟着变动
         first_load_set(notehandle:note.NoteHandle){
             const canvas=this.canvas.notecanvas
             const data=notehandle.content_data
             const noteid=notehandle.note_id
+            if(this.is_holding_note()){
+                AppFuncTs.appctx.unhold_notehandle(this.notehandle)
+            }
+            AppFuncTs.appctx.hold_notehandle(notehandle)
             this.notehandle=notehandle
             console.log("first_load_set",data);
+            AppFuncTs.appctx.cur_canvasproxy = this.canvas
             canvas.next_editor_bar_id=data.next_editor_bar_id
             canvas.paths=data.paths
             canvas.editor_bars=data.editor_bars
@@ -668,7 +681,7 @@ export module NoteCanvasTs{
             this.chunkhelper.first_calc_chunks()
             // canvas.chunk_helper.first_calc_chunks(canvas)
             this.cur_note_id=noteid
-            bus_events.events.note_canvas_data_loaded.call(canvas)
+            // bus_events.events.note_canvas_data_loaded.call(canvas)
             this.search_in_canvas.init_refs(canvas.editor_bars,canvas.editor_bar_manager)
 
             {//初始化大纲数据
@@ -685,6 +698,9 @@ export module NoteCanvasTs{
                 }
                 // editor_bar_comps = canvasreach.get_editorbar_man().ebid_to_ebcomp
                 // rightpart.$refs.note_outline.editor_bars=canvasreach.get_editor_bars()
+            }
+            {//复习界面
+                AppFuncTs.appctx.get_reviewpart_man()?.sync_from_canvas(this.canvas)
             }
         }
         // _backend_set_curnote_newedit_flag(ctx:AppFuncTs.Context){

@@ -78,25 +78,47 @@ export module AppFuncTs{
     }
     export class Context{
         app:any
-        cur_open_note_id="-1"
-        cur_open_note_content=new note.NoteContentData(1000,{},{})
-        noteid_2_note_content:any={}
+        // cur_open_note_id="-1"
+        cur_canvasproxy:null|NoteCanvasTs.NoteCanvasDataReacher=null
+        // cur_open_note_content=new note.NoteContentData(1000,{},{})
+        _noteid_2_notehandle:any={}
+        get_notehandle(noteid:string):null|note.NoteHandle{
+            if(noteid in this._noteid_2_notehandle){
+                return this._noteid_2_notehandle[noteid][1]
+            }
+            return null
+        }
+        hold_notehandle(handle:note.NoteHandle){
+            if(!(handle.note_id in this._noteid_2_notehandle)){
+                this._noteid_2_notehandle[handle.note_id]=[1,handle]
+            }else{
+                this._noteid_2_notehandle[handle.note_id][0]++
+            }
+        }
+        unhold_notehandle(handle:note.NoteHandle){
+            if((handle.note_id in this._noteid_2_notehandle)){
+                this._noteid_2_notehandle[handle.note_id][0]--
+            }
+            handle.note_id=""
+        }
         //管理复习组件的状态
         rewiew_part_man=new ReviewPartFunc.ReviewPartManager()
         logctx=new NoteLog.LogContext()
-        note_loaded_and_open(handle:note.NoteHandle){
-            this.note_unload_data(this.cur_open_note_id)
-            this.noteid_2_note_content[handle.note_id]=handle.content_data
-            this.cur_open_note_content=handle.content_data
-            this.cur_open_note_id=handle.note_id
-        }
-        //没有canvas打开
-        note_unload_data(noteid:string){
-            if(noteid in this.noteid_2_note_content){
+        anki_connected=false
+        app_mount(){
+            // bus_events.cancel_listen_all()
+            set_up_detail.notelist_rela(this);
+            set_up_detail.storage_rela(this);
 
-                delete this.noteid_2_note_content[noteid]
+            _ipc.MainCallRender.regist(this)
+            {
+                _ipc.Tasks.tasks.get_net_state.call().then((res)=>{
+                    this.anki_connected=res
+                })
             }
         }
+
+
         storage_manager=new Storage.StorageManager(this)
         timer=new Timer.TimerState()
         ui_refs(){
@@ -110,6 +132,9 @@ export module AppFuncTs{
         }
         getter(){//新的get相关函数
             return new ContextGetter(this)
+        }
+        get_reviewpart_man():undefined|ReviewPartFunc.ReviewPartManager{
+            return this.app.$refs.review_part_ref.review_part_man
         }
         constructor(app:any) {
             this.app=app
@@ -147,13 +172,6 @@ export module AppFuncTs{
         export const storage_rela=(ctx:Context)=>{
             NoteListScanFileBind.start(ctx)
         }
-    }
-    export const set_up_all=(ctx:Context)=>{
-        // bus_events.cancel_listen_all()
-        set_up_detail.notelist_rela(ctx);
-        set_up_detail.storage_rela(ctx);
-
-        _ipc.MainCallRender.regist(ctx)
     }
 }
 

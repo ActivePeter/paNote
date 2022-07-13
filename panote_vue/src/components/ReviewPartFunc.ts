@@ -10,6 +10,7 @@ import {ElMessage} from "element-plus";
 import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {note} from "@/note";
+import {NoteLog} from "@/log";
 // import {NoteContentData} from "@/components/NoteCanvasFunc";
 
 
@@ -72,7 +73,7 @@ export namespace ReviewPartFunc{
         }
     }
     export class CardSetManager{//cards data 2 store in one note
-        cardsets:any={}
+        cardsets:any={} //key->CardSet
 
         static get_cardset(_this:CardSetManager,cardset_key:string):CardSet|null{
 
@@ -198,6 +199,8 @@ export namespace ReviewPartFunc{
         note_id_valid():boolean{
             return this.note_id!=""
         }
+        note_handle:null|note.NoteHandle=null
+
         selected_card_set=""
         add_new_card__editing_mode=false
         add_new_card__editing_mode_card:null|Card=null
@@ -221,37 +224,125 @@ export namespace ReviewPartFunc{
             _ReviewPartSyncAnki._StoreStruct.Funcs.LifeTime.mount(
                 ctx,this
             )
-            this.load_data_if_note_opened()
+            if(ctx.cur_canvasproxy){
+                this.sync_from_canvas(ctx.cur_canvasproxy)
+            }
         }
 
         get_selected_card_set():CardSet|null{
             return CardSetManager.get_cardset(this.card_set_man,this.selected_card_set)
         }
-        load_data_if_note_opened(){
-            if(!this.context){
-                return
+        add_cardset(name:string){
+            console.log("add_cardset",this.note_handle)
+            if(this.note_handle){
+                const log=AppFuncTs.appctx.logctx.get_log_by_noteid(
+                    this.note_handle.note_id
+                )
+                const rec=new NoteLog.Rec()
+                    .add_trans(new NoteLog.SubTrans.RvAddCardSet(
+                    name
+                ))
+                log.try_do_ope(rec,this.note_handle)
+                log.set_store_flag_after_do()
             }
-            if(this.context.cur_open_note_id=="-1"){
-                return;
+            // / ReviewPartFunc.CardSetManager.add_card_set(
+            //     this.review_part_man.card_set_man,
+            //     this.review_part_man, this.input_card_set_name
+            // )
+            // Storage.ReviewPart.save_all(this.review_part_man)
+            // if(this.note_id_valid()){
+            //     const log=AppFuncTs.appctx.logctx.get_log_by_noteid(this.note_id)
+            //     log.try_do_ope()
+            // }
+        }
+        del_card_curset(cardkey:string):boolean{
+            if(!this.note_handle){
+                return false
             }
-            const content_data=this.context.cur_open_note_content
-            this.selected_card_set=""
-            this.note_id=this.context.cur_open_note_id
-            this.card_set_man=content_data.part.review_card_set_man
-            this.note_store_part=content_data.part
-            // reviewing_state=this.reviewing_state
-            //检查是否存在，
-            if(!this.note_store_part.sync_anki_serialized)
-            {
-                this.note_store_part.sync_anki_serialized="[]"
-            }
-
-            this.sync_anki.operation_queue=_PaUtilTs.DataStructure.ListSerializable.from_string(
-                this.note_store_part.sync_anki_serialized
+            const log=AppFuncTs.appctx.logctx.get_log_by_noteid(this.note_handle.note_id)
+            const rec=new NoteLog.Rec().add_trans(
+                new NoteLog.SubTrans.RvDelCard(this.selected_card_set,cardkey)
             )
+            const res= log.try_do_ope(rec,this.note_handle)
+            if(res){
+                log.set_store_flag_after_do()
+            }
+            return res
+        }
+        add_card_curset(rp:any,front:any[],back:any[]):boolean{
+            if(!this.note_handle){
+                return false
+            }
+            const log=AppFuncTs.appctx.logctx.get_log_by_noteid(this.note_handle.note_id)
+            const rec=new NoteLog.Rec().add_trans(
+                new NoteLog.SubTrans.RvAddCard(this.selected_card_set,front,back)
+            )
+            const res= log.try_do_ope(rec,this.note_handle)
+            log.set_store_flag_after_do()
+            return res
+            // const res= ReviewPartFunc.CardSetManager.add_card_to_set(
+            //     this.card_set_man,
+            //     this.selected_card_set,front,back
+            // )
+            // if(res){
+            //     _ReviewPartSyncAnki._StoreStruct.Funcs.DataSet.push_new_ope(
+            //         reviewPartManager,
+            //         new _ReviewPartSyncAnki._OneOperation.OneOperation(
+            //             _ReviewPartSyncAnki._OneOperation.OpeType.Add,
+            //             _PaUtilTs.get_time_stamp(),
+            //             new _ReviewPartSyncAnki._OneOperation.OpeCard(
+            //                 reviewPartManager.note_id,reviewPartManager.selected_card_set,res
+            //             )
+            //         )
+            //     )
+            // }
+        }
+        add_or_edit_card_curset(rp:any,front:any[],back:any[]){
+            const rpman=this
+            let res=false
+            if(rpman.add_new_card__editing_mode){
+                res=ReviewPartFunc.Funcs.try_change_card_in_select_set(
+                    rpman, front, back
+                )
+            }else{
+                res=this.add_card_curset(rp,front,back)
+                // res = ReviewPartFunc.Funcs.final_add_new_card_2_selected_set(
+                //     rpman, front, back
+                // )
+            }
+            if (res) {
+                rp.switch2review_card()
+            } else {
+                ElMessage({
+                    message: '无法创建卡片,请检查正反面是否填写完整',
+                    type: 'warning',
+                })
+            }
+        }
+        sync_from_canvas(canvasp:NoteCanvasTs.NoteCanvasDataReacher){
+            if(canvasp.get_content_manager().is_holding_note()){
+                this.note_handle=canvasp.get_content_manager().notehandle
+                // const content_data=this.context.noteid_2_note_content[this.context.cur_open_note_id] as note.NoteContentData
+                this.selected_card_set=""
+                this.note_id=this.note_handle.note_id
+                // this.note_handle=note.NoteHandle.create(this.note_id,content_data)
+                this.card_set_man=this.note_handle.content_data.part.review_card_set_man
+                this.note_store_part=this.note_handle.content_data.part
+                // reviewing_state=this.reviewing_state
+                //检查是否存在，
+                if(!this.note_store_part.sync_anki_serialized)
+                {
+                    this.note_store_part.sync_anki_serialized="[]"
+                }
+
+                this.sync_anki.operation_queue=_PaUtilTs.DataStructure.ListSerializable.from_string(
+                    this.note_store_part.sync_anki_serialized
+                )
+            }
         }
         note_canvas_loaded(canvas:any){
-            this.load_data_if_note_opened()
+            this.sync_from_canvas(NoteCanvasTs.NoteCanvasDataReacher
+                .create(canvas))
             // const part=NoteCanvasTs.ContentManager.from_canvas(canvas).part_of_storage_data
             // if(part){
             //     this.selected_card_set=""

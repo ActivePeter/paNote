@@ -186,8 +186,9 @@ export namespace NoteListFuncTs {
         }
 
         async open_note(ctx: AppFuncTs.Context, noteid: string) {
-            console.log("id compare", ctx.cur_open_note_id, noteid);
-            if (ctx.cur_open_note_id !== noteid) {
+            // console.log("id compare", ctx.cur_open_note_id, noteid);
+            if (!ctx.cur_canvasproxy||
+                ctx.cur_canvasproxy.get_content_manager().cur_note_id !== noteid) {
                 // ctx.cur_open_note_id = noteid
                 console.log("open_note", ctx, noteid);
                 const nlman = ctx.get_notelist_manager()
@@ -201,7 +202,7 @@ export namespace NoteListFuncTs {
                             _note=NoteContentData.get_default()
                         }
                         const handle=note.NoteHandle.create(noteid,_note)
-                        ctx.note_loaded_and_open(handle)
+                        // ctx.note_loaded_and_open(handle)
                         // ctx.cur_open_note_content=note
                         // if (note)
                         {

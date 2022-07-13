@@ -164,6 +164,7 @@ export namespace NoteOutlineTs {
             }
             return res
         }
+
         constructor(public outline:OutlineStorageStruct,public noteid:string) {
             super(noteid);
 

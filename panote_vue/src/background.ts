@@ -33,21 +33,23 @@ async function createWindow() {
 
   })
   _ipc.win_ref=win
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
-    // Load the url of the dev server if in development mode
-    await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-    if (!process.env.IS_TEST) win.webContents.openDevTools()
-  } else {
-    createProtocol('app')
-    // Load the index.html when not in development
-    win.loadURL('app://./index.html')
-
-  }
 
   electron_net.get_net_manager();
   _ipc.regist();
   auto_update.regist()
   auto_update.start_check_for_once()
+
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    // Load the url of the dev server if in development mode
+    await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+    if (!process.env.IS_TEST) win.webContents.openDevTools()
+  } else {
+
+    createProtocol('app')
+    // Load the index.html when not in development
+    win.loadURL('app://./index.html')
+
+  }
 
 }
 

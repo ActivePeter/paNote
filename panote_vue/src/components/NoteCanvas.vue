@@ -212,6 +212,8 @@ export default {
     window.removeEventListener("mousewheel", this.handle_scroll);
     window.removeEventListener("mouseup", this.handle_mouse_up);
     window.removeEventListener("mousemove", this.handle_mouse_move);
+
+    this.content_manager.canvas_unmount()
   },
   mounted() {
     // this.$emit("get_context",this);

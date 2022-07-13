@@ -9,80 +9,6 @@ import {PathStruct} from "@/components/NoteCanvasFunc";
 
 export namespace NoteLog {
 
-    import NoteHandle = note.NoteHandle;
-    // export namespace SubStates {
-    //     export enum StateType{
-    //         EbTrans,
-    //         EbContent
-    //     }
-    //     //记录state的优点是，在连续的有state的log下，每个节点只需要存储一份数据
-    //     export interface IState {
-    //         apply(handle: note.NoteHandle, ctx: AppFuncTs.Context): void
-    //         rec_cur(handle: note.NoteHandle, ctx: AppFuncTs.Context):void
-    //         get_type():StateType
-    //         get_clone():IState
-    //     }
-    //
-    //     //同种类型的state是可重复的,因为有不同的ebid
-    //     export class EbTrans implements IState {
-    //         constructor(
-    //             public ebid: string,
-    //             public x: number,
-    //             public y: number,
-    //             public w: number,
-    //             public h: number) {
-    //         }
-    //
-    //         apply(handle: note.NoteHandle, ctx: AppFuncTs.Context): void {
-    //             const ebdata = handle.ebman().get_ebdata_by_ebid(this.ebid)
-    //             ebdata.pos_x = this.x
-    //             ebdata.pos_y = this.y
-    //             ebdata.width = this.w
-    //             ebdata.height = this.h
-    //         }
-    //
-    //         rec_cur(handle: note.NoteHandle, ctx: AppFuncTs.Context): void {
-    //             const ebdata = handle.ebman().get_ebdata_by_ebid(this.ebid)
-    //             this.x=ebdata.pos_x
-    //             this.y=ebdata.pos_y
-    //             this.w=ebdata.width
-    //              this.h=ebdata.height
-    //         }
-    //
-    //         get_type(): NoteLog.SubStates.StateType {
-    //             return StateType.EbTrans;
-    //         }
-    //
-    //         get_clone(): NoteLog.SubStates.IState {
-    //             return new EbTrans(this.ebid,this.x,this.y,this.w,this.h);
-    //         }
-    //     }
-    //
-    //     export class EbContent implements IState {
-    //         constructor(
-    //             public ebid: string,
-    //             public content: string) {
-    //         }
-    //
-    //         apply(handle: note.NoteHandle, ctx: AppFuncTs.Context): void {
-    //             const ebdata = handle.ebman().get_ebdata_by_ebid(this.ebid)
-    //             ebdata.content = this.content
-    //         }
-    //
-    //         rec_cur(handle: note.NoteHandle, ctx: AppFuncTs.Context): void {
-    //             const ebdata = handle.ebman().get_ebdata_by_ebid(this.ebid)
-    //             this.content=ebdata.content
-    //         }
-    //
-    //         get_type(): NoteLog.SubStates.StateType {
-    //             return StateType.EbContent;
-    //         }
-    //
-    //         get_clone(): NoteLog.SubStates.IState {
-    //             return undefined;
-    //         }
-    //     }
-    // }
     export namespace SubTrans {
         // import NoteHandlePathProxy = note.NoteHandlePathProxy;
 
@@ -105,7 +31,11 @@ export namespace NoteLog {
 
             redo(handle: note.NoteHandle,log:NoteLogger,  ctx: AppFuncTs.Context): void {
                 console.log("EbAdd","redo")
-                this.ebid = handle.ebman().onlydata_add_eb(this.eb)
+                if(this.ebid==""){
+                    this.ebid = handle.ebman().onlydata_add_eb(this.eb)
+                }else{
+                    handle.ebman().onlydata_add_eb_with_id(this.eb,this.ebid)
+                }
             }
 
             undo(handle: note.NoteHandle,log:NoteLogger, ctx: AppFuncTs.Context): void {
@@ -119,6 +49,7 @@ export namespace NoteLog {
                 return true;
             }
         }
+
         export class EbTransState{
             constructor(public x:number,
                         public y:number,
@@ -178,26 +109,40 @@ export namespace NoteLog {
                 }
             }
         }
+
         //文本块编辑 ok
         export class EbEdit implements ITrans{
 
             constructor(public ebid:string,public from:string,public to:string) {
             }
             doable(handle: note.NoteHandle, log: NoteLog.NoteLogger, ctx: AppFuncTs.Context): boolean {
+                if(log.eb_edit_back==this.ebid){
+                    log.eb_edit_back=null
+                    return false;
+                }
                 return true;
             }
 
             redo(handle: note.NoteHandle, log: NoteLog.NoteLogger, ctx: AppFuncTs.Context): void {
+                console.log("EbEdit","redo")
                 const eb=handle.ebman().get_ebdata_by_ebid(this.ebid)
                 eb.content=this.to
+                if(!log.fisrt_redo){
+                    log.eb_edit_back=this.ebid
+                }
             }
 
             undo(handle: note.NoteHandle, log: NoteLog.NoteLogger, ctx: AppFuncTs.Context): void {
+                console.log("EbEdit","undo")
                 const eb=handle.ebman().get_ebdata_by_ebid(this.ebid)
-                eb.content=this.from
+                // if(eb.content!=this.from){
+                    eb.content=this.from
+                    log.eb_edit_back=this.ebid
+                // }
             }
 
         }
+
         //关联存在路径操作 (还有ol
         export class EbDel implements ITrans {
             ebdata: EditorBar | null = null
@@ -233,7 +178,7 @@ export namespace NoteLog {
             }
         }
 
-        //ok
+        //文本块连线 ok
         export class EbConn implements ITrans {
             constructor(
                 public conn_pairs: [string, string][]
@@ -271,7 +216,8 @@ export namespace NoteLog {
                 return true;
             }
         }
-        //ok
+
+        //文本块断连 ok
         export class EbDisConn implements ITrans {
             removed_paths: PathStruct[] = []
 
@@ -320,6 +266,7 @@ export namespace NoteLog {
             }
         }
 
+        //添加复习卡组 ok
         export class RvAddCardSet implements ITrans {
             constructor(
                 public name: string
@@ -327,10 +274,12 @@ export namespace NoteLog {
             }
 
             redo(handle: note.NoteHandle,log:NoteLogger,ctx: AppFuncTs.Context): void {
+                console.log("RvAddCardSet","redo")
                 handle.rvman().onlydata_add_cardset(this.name)
             }
 
             undo(handle: note.NoteHandle,log:NoteLogger,  ctx: AppFuncTs.Context): void {
+                console.log("RvAddCardSet","undo")
                 handle.rvman().onlydata_del_cardset(this.name)
             }
 
@@ -339,6 +288,7 @@ export namespace NoteLog {
             }
         }
 
+        //添加复习卡片 ok
         export class RvAddCard implements ITrans {
             cardid = ""
 
@@ -373,6 +323,7 @@ export namespace NoteLog {
             }
         }
 
+        //删除复习卡片 ok
         export class RvDelCard implements ITrans {
             card: ReviewPartFunc.Card | undefined
 
@@ -403,12 +354,15 @@ export namespace NoteLog {
             doable(handle: note.NoteHandle,log:NoteLogger, ctx: AppFuncTs.Context): boolean {
                 const setp = handle.rvman().get_cardsetproxy(this.cardset_name)
                 if (!setp) {
+                    console.log("cardset not found",this.cardset_name)
                     return false
                 }
+                console.log("card in cardset",this.cardid,setp.set.cards)
                 return this.cardid in setp.set.cards
             }
         }
 
+        //大纲添加节点 ok
         export class OlAddNode implements ITrans {
             insnodes: NoteOutlineTs.OutlineStorageStructOneTreeNode[] = []
 
@@ -422,11 +376,14 @@ export namespace NoteLog {
             }
 
             undo(handle: note.NoteHandle,log:NoteLogger, ctx: AppFuncTs.Context): void {
+                // this.insnodes.pop()
+
                 if (this.insnodes.length > 0) {
                     this.insnodes.forEach((v) => {
                         v.child_nodes.pop();
                     })
                 }
+                handle.olman().onlydata_removeebtag(this.ebid)
             }
 
             doable(handle: note.NoteHandle, log:NoteLogger,ctx: AppFuncTs.Context): boolean {
@@ -435,6 +392,7 @@ export namespace NoteLog {
 
         }
 
+        //大纲添加根节点
         export class OlAddRootNode implements ITrans {
             constructor(
                 public ebid: string
@@ -522,7 +480,7 @@ export namespace NoteLog {
         // trans_oladdnode: undefined | SubTrans.OlAddNode
         // trans_oladdroot: undefined | SubTrans.OlAddRootNode
         // trans_oldelnode: undefined | SubTrans.OlDelNode
-        doable(handle: NoteHandle,log:NoteLogger): boolean {
+        doable(handle: note.NoteHandle,log:NoteLogger): boolean {
             // if (this.states.length > 0) {
             //     return true
             // }
@@ -569,7 +527,8 @@ export namespace NoteLog {
 
     //一个笔记一个log，持久存在,所以不能持有notehandle，只能持有noteid
     export class NoteLogger {
-
+        fisrt_redo=false
+        eb_edit_back:null|string=null
         //用链表存储最开始状态以及每一次操作后的状态
         //  尾部为新操作，最短为1，用来确保下一次记录可以记录状态
         rec_list = new _PaUtilTs.DataStructure.ListSerializable.Class<Rec>()
@@ -590,6 +549,7 @@ export namespace NoteLog {
         //操作后清除后续操作链
         // 首次执行，判断是否有效
         try_do_ope(rec: Rec, handle: note.NoteHandle): boolean {
+            this.fisrt_redo=true
             const ctx=AppFuncTs.appctx
             if (rec.doable(handle,this)) {
                 this.undo_list.clear()
@@ -619,6 +579,7 @@ export namespace NoteLog {
         }
 
         redo_ope(handle: note.NoteHandle) :boolean{
+            this.fisrt_redo=false
             if(this.undo_list.count>0){
                 const redo=this.undo_list.pop_tail()
                 if(redo){
@@ -659,6 +620,9 @@ export namespace NoteLog {
         _noteid_2_logger: any = {}
 
         get_log_by_noteid(noteid: string): NoteLogger {
+            if(noteid==""){
+                console.error("invalid noteid")
+            }
             if (!(noteid in this._noteid_2_logger)) {
                 this._noteid_2_logger[noteid]=new NoteLogger(noteid)
             }

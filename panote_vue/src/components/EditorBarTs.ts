@@ -203,6 +203,7 @@ export namespace EditorBarTs {
                 const content = new RightMenuFuncTs.RightMenuContent()
                 const canvasproxy = NoteCanvasTs.NoteCanvasDataReacher.create(this.canvas)
                 const ctx = canvasproxy.get_context()
+                const notehandle=canvasproxy.get_content_manager().notehandle
                 content
                     .add_one_selection("复制", () => {
                         this.copy_selected()
@@ -223,24 +224,29 @@ export namespace EditorBarTs {
                     //单个选中
                     content
                         .add_one_selection("作为根节点加入大纲", () => {
-                            console.log("作为根节点加入大纲")
-                            const outline = ctx.cur_open_note_content.part.note_outline
-                            const olproxy = NoteOutlineTs.OutlineStorageStruct.proxy(outline, canvasproxy.get_content_manager().cur_note_id)
-                            if (olproxy.create_tree_rooteb(comproxy.ebid)) {
-                                olproxy.data_changed(ctx)
-                            }
+                            // const log=AppFuncTs.appctx.logctx.get_log_by_noteid()
+                            this.canvasproxy().get_content_manager()
+                                .notehandle.olman()
+                                .withlog_add_root(
+                                    comproxy.ebid
+                                )?.set_store_flag_after_do()
                         })
                         .add_one_selection("加入到大纲", () => {
-                            const outline = ctx.cur_open_note_content.part.note_outline
-                            const olproxy = NoteOutlineTs.OutlineStorageStruct.proxy(outline, canvasproxy.get_content_manager().cur_note_id)
-                            const res = olproxy.try_ins2trees(comproxy.ebid, canvasproxy.get_editorbar_man())
-                            if (res.length == 0) {
+                            const res=canvasproxy.get_content_manager().notehandle.olman()
+                                .withlog_ins2alltree(
+                                    comproxy.ebid
+                                )
+                            // const outline = notehandle.content_data.part.note_outline
+                            // const olproxy = NoteOutlineTs.OutlineStorageStruct.proxy(outline, notehandle.note_id)
+                            // const res = olproxy.try_ins2trees(comproxy.ebid, canvasproxy.get_editorbar_man())
+                            if (!res) {
                                 ElMessage({
                                     message: '已存在于大纲中 或\n大纲中不存在与当前节点相连的文本块，无法连入',
                                     type: 'warning',
                                 })
                             } else {
-                                olproxy.data_changed(ctx)
+                                res.set_store_flag_after_do()
+                                // olproxy.data_changed(ctx)
                             }
                             // const ctx = NoteCanvasTs.NoteCanvasDataReacher.create(this.canvas).get_context()
                             // const rightpart = AppRefsGetter.create(ctx.app).get_right_part()

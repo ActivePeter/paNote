@@ -13,6 +13,7 @@ import {anki_state_not_match} from "@/ipc_tasks/main_call_render/anki_state_not_
 import {auto_update} from "@/ipc_tasks/main_call_render/auto_update";
 import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 import {auto_update as _auto_update} from "@/auto_update"
+import {net_state_change} from "@/ipc_tasks/main_call_render/net_state_change";
 // import {electron_bg} from "@/background";
 
 export namespace _ipc {
@@ -34,7 +35,8 @@ export namespace _ipc {
             answer_showned:new answer_showned.Class(),
             no_card_2_review:new no_card_2_review.Class(),
             anki_state_not_match:new anki_state_not_match.Class(),
-            auto_update:new auto_update.Class()
+            auto_update:new auto_update.Class(),
+            net_state_change:new net_state_change.Class()
         }
         export const regist=(ctx:AppFuncTs.Context)=>{
             for(const key in tasks){
@@ -53,6 +55,19 @@ export namespace _ipc {
         export interface ITask{
             channel:string
             regist():void
+        }
+        namespace get_net_state{
+            export class Class implements ITask{
+                channel="get_net_state"
+                call():Promise<boolean>{
+                    return ipcRenderer.invoke(this.channel)
+                }
+                regist(){
+                    ipcMain.handle(this.channel, async () => {
+                        return electron_net.get_net_manager().connected
+                    })
+                }
+            }
         }
         namespace start_choose_pa_note_file{
             interface Return{
@@ -140,11 +155,15 @@ export namespace _ipc {
         export const tasks={
             start_choose_pa_note_file:new start_choose_pa_note_file.Class(),
             send_to_anki:new send_to_anki.Class(),//发送前先判断是否连接
-            auto_update_render_call_main:new auto_update_render_call_main.Class()
+            auto_update_render_call_main:new auto_update_render_call_main.Class(),
+            get_net_state:new get_net_state.Class()
         }
 
     }
+
+    //创建窗口时调用，监听来自界面的事件
     export const regist = () => {
+        // "render_call_main_registed"
         ipcMain.handle(_channels.start_choose_file_bind, async () => {
             const res = await dialog.showOpenDialog(
                 {
