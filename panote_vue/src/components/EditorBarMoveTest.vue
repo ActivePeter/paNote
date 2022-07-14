@@ -38,6 +38,7 @@ import QuillEditor from "@/components/QuillEditor";
 import EditorBarFunc from "@/components/EditorBarFunc";
 // import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
+import {EditorBarTs} from "@/components/EditorBarTs";
 // import RightMenuFunc from "@/components/RightMenuFunc";
 
 // import $ from "jquery"
@@ -55,6 +56,9 @@ export default {
       }else{
         this.$refs.quill_editor_ref.set_input_able(true);
       }
+    },
+    notehandle(){
+
     }
   },
   computed:{
@@ -98,6 +102,8 @@ export default {
   },
   data() {
     return {
+      noteid:"",
+
       corner_drag_helper:new EditorBarFunc.CornerDragHelper(this),
 
       input_able:false,
@@ -117,6 +123,8 @@ export default {
 
       right_menu_helper:new EditorBarFunc.EditorBarRightMenuHelper(),
       mouse_up_down_rec:new _PaUtilTs.MouseDownUpRecord()
+
+      // lastnoteid
     };
   },
   methods: {
@@ -124,8 +132,9 @@ export default {
       this.$emit("copy",this)
     },
     content_change(content){
+      EditorBarTs.EditorBarCompProxy.create(this)
+        .event_contentchange(content)
       // this.content=content;
-      this.$emit("content_change",this.ebid,content)
     },
     choose_tool(args){
       if(args[0]=='indent'){
@@ -194,6 +203,7 @@ export default {
     selected:Boolean(false),
 
     editor_bar_manager:Object,//vmodel
+    notehandle:Object
   },
 };
 </script>

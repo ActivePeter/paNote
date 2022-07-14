@@ -59,6 +59,17 @@ export namespace EditorBarTs {
             return this.comp.ebid;
         }
 
+        event_contentchange(content:string){
+            // console.log("event_contentchange",this.comp,this.comp.noteid,this.comp.notehandle.noteid)
+            if((!this.comp.noteid)||
+                this.comp.noteid!==this.comp.notehandle.note_id){
+                this.comp.noteid=this.comp.notehandle.note_id
+                console.log("event_contentchange first",this.comp)
+                return
+            }
+            this.comp.$emit("content_change",this.ebid,content)
+        }
+
         get_ref_quill() {
             return this.comp.$refs.quill_editor_ref
         }

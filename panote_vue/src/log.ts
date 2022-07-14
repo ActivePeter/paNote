@@ -571,6 +571,11 @@ export namespace NoteLog {
                 // rec.states.forEach()
                 this.rec_list.push(rec)
                 ctx.storage_manager.note_data_change(handle.note_id)
+
+                if(this.rec_list.count==201){
+                    // 超量
+                    this.rec_list.pop()
+                }
                 return true
             }
             console.error("rec not doable")

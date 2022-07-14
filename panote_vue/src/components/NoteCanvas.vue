@@ -40,26 +40,46 @@
             transform: 'scale(' + scale + ')',
           }"
         >
-          <svg
+
+          <div
+              class="content_chunk_range"
+              :style="{
+              right: -padding_add_right + 'px',
+              left: -padding_add_left + 'px',
+              top: -padding_add_up + 'px',
+              bottom: -padding_add_down + 'px',
+            }"
+          ></div>
+          <Path
               v-for="(item, i) in paths"
               :key="i"
+
+              :path_opacity="path_opacity"
+              :path="item"
+
+              @pathmouse="handle_pathmouse"
               class="path"
-              version="1.1"
-              :height="item.h"
-              :width="item.w"
-              :style="{ top: item.oy + 'px', left: item.ox + 'px' ,
-                opacity:path_opacity
-              }"
-          >
-            <path
-                :d="
-                'M ' + item.bx + ' ' + item.by + ' L ' + item.ex + ' ' + item.ey
-              "
-                stroke="black"
-                stroke-width="2"
-                fill="none"
-            ></path>
-          </svg>
+          ></Path>
+          <!--          <svg-->
+          <!--              v-for="(item, i) in paths"-->
+          <!--              :key="i"-->
+          <!--              class="path"-->
+          <!--              version="1.1"-->
+          <!--              :height="item.h"-->
+          <!--              :width="item.w"-->
+          <!--              :style="{ top: item.oy+(item.by+item.ey)/2 + 'px', left: item.ox+(item.bx+item.ex)/2 + 'px' ,-->
+          <!--                opacity:path_opacity-->
+          <!--              }"-->
+          <!--          >-->
+          <!--            <path-->
+          <!--                :d="-->
+          <!--                'M ' + item.bx + ' ' + item.by + ' L ' + item.ex + ' ' + item.ey-->
+          <!--              "-->
+          <!--                stroke="black"-->
+          <!--                stroke-width="2"-->
+          <!--                fill="none"-->
+          <!--            ></path>-->
+          <!--          </svg>-->
           <svg
               v-if="connecting_path"
               class="path"
@@ -87,15 +107,6 @@
                 fill="none"
             ></path>
           </svg>
-          <div
-              class="content_chunk_range"
-              :style="{
-              right: -padding_add_right + 'px',
-              left: -padding_add_left + 'px',
-              top: -padding_add_up + 'px',
-              bottom: -padding_add_down + 'px',
-            }"
-          ></div>
 <!--          <EditorBar/>-->
           <EditorBarMove
               v-for="(item, i) in editor_bars"
@@ -106,6 +117,7 @@
               :search_ing="content_manager.search_in_canvas.searching"
               :search_tar="i in content_manager.search_in_canvas.searched_bars"
               :selected="i in editor_bar_manager.focused_ebids"
+              :notehandle="content_manager.notehandle"
               v-model:editor_bar_manager="editor_bar_manager"
 
               v-show="content_manager.reviewing_state.card_id===''||
@@ -128,6 +140,14 @@
               @right_menu="editor_bar_right_menu"
               @copy="editor_bar_copy_lside"
           />
+
+          <PathJumpBtn v-if="content_manager.user_interact.pathjumpbtn_state"
+                       :state="content_manager.user_interact.pathjumpbtn_state"
+                       :notehandle="content_manager.notehandle"
+                       @jump="path_jump"
+                       @hide="content_manager.user_interact.hide_pathjumpbtn()"
+          >
+          </PathJumpBtn>
           <NoteCanvasSelectRange class="select_range" ref="select_range"/>
         </div>
       </div>
@@ -165,12 +185,16 @@ import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {EditorBarTs} from "@/components/EditorBarTs";
 import NoteCanvasSelectRange from "@/components/NoteCanvasSelectRange";
 import {AppFuncTs} from "@/AppFunc";
+import Path from "@/components/Path";
+import PathJumpBtn from "@/components/PathJumpBtn";
 
 
 
 export default {
   name: "NoteCanvas",
   components: {
+    PathJumpBtn,
+    Path,
     NoteCanvasSelectRange,
     // EditorBar,
     // eslint-disable-next-line vue/no-unused-components
@@ -319,6 +343,9 @@ export default {
     };
   },
   methods: {
+    path_jump(a,b){
+      this.content_manager.user_interact.pathjump(a,b)
+    },
     // set_context(ctx){
     //
     //   // console.log(this,this.note)
@@ -401,6 +428,9 @@ export default {
     },
     handle_mouse_up(event) {
       this.content_manager.user_interact.event_mouse_up(event)
+    },
+    handle_pathmouse(event,path){
+      this.content_manager.user_interact.event_pathmouse(event,path)
     },
     get_canvas_client_pos() {
       let r = this.$refs.range_ref.getBoundingClientRect();
@@ -491,6 +521,7 @@ export default {
       this.content_manager.user_interact.event_mouse_up_on_eb(event,bar)
     },
     editor_bar_content_change(ebid,content){
+      //判断是否刚刚加载笔记
       NoteCanvasTs.NoteCanvasDataReacher.create(this).get_content_manager()
           .notehandle.ebman().withlog_eb_edit(ebid,content)
       // this.content_manager.

@@ -93,12 +93,19 @@ export module AppFuncTs{
                 this._noteid_2_notehandle[handle.note_id]=[1,handle]
             }else{
                 this._noteid_2_notehandle[handle.note_id][0]++
+                console.log("notehandle multi hold",this._noteid_2_notehandle[handle.note_id][0]++)
             }
+            this._noteid_2_notehandle[handle.note_id][1]=handle
         }
         unhold_notehandle(handle:note.NoteHandle){
+            console.log("unhold")
             if((handle.note_id in this._noteid_2_notehandle)){
                 this._noteid_2_notehandle[handle.note_id][0]--
+                if(this._noteid_2_notehandle[handle.note_id][0]==0){
+                    delete this._noteid_2_notehandle[handle.note_id]
+                }
             }
+            //将handle设置为无效handle
             handle.note_id=""
         }
         //管理复习组件的状态

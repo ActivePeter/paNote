@@ -21,6 +21,7 @@ import NoteCanvasFunc, {PathStruct} from "@/components/NoteCanvasFunc";
 import Util from "@/components/reuseable/Util";
 import {User} from "@element-plus/icons-vue";
 import {NoteLog} from "@/log";
+import Path from "@/components/Path.vue";
 
 export module NoteCanvasTs{
     export class ChunkHelper {
@@ -35,6 +36,9 @@ export module NoteCanvasTs{
         chunkchange=false
         constructor(public canvasp:NoteCanvasDataReacher) {
             // this.chunk_ts_mod=new NoteCanvasTs.CanvasChunkTs(this)
+        }
+        reset(){
+            this.non_empty_chunks={}
         }
         add_new_2chunks(ck:string) {
             const non_empty_chunks=this.non_empty_chunks
@@ -401,6 +405,35 @@ export module NoteCanvasTs{
             // canvas.paths.push(canvas.connecting_path);
         }
     }
+    export class PathJumpBtnState{
+        pos
+        constructor(
+            public event:MouseEvent,
+            public pathcomp:Path,
+            ui:UserInteract) {
+            this.pos=ui.pos_from_uipos_2_canvaspos(
+                new _PaUtilTs.Pos2D(event.clientX,event.clientY)
+            )
+            const path=pathcomp.$props.path
+            const bx=path.ox+path.bx
+            const by=path.oy+path.by
+            const ex=path.ox+path.ex
+            const ey=path.oy+path.ey
+            // this.pos.x=(bx+ex)/2
+            // this.pos.y=(by+ey)/2
+            const dx=ex-bx
+            const dy=ey-by
+            if(dx==0){
+                this.pos.x=ex
+            }else{
+                const k=dy/dx
+                const nx=(k*k*bx-k*(by-this.pos.y)+this.pos.x)/(k*k+1)
+                const ny=k*(nx-bx)+by
+                this.pos.x=nx
+                this.pos.y=ny
+            }
+        }
+    }
     export class UserInteract{
         //来自canvas的交互事件
         //界面相关的坐标换算
@@ -410,6 +443,8 @@ export module NoteCanvasTs{
         _recent_mouse_move:undefined|MouseEvent
         drag_bar_helper=new EditorBarTs.DragBarHelper()
         line_connect_helper=new LineConnectHelper()
+        pathjumpbtn_state:null|PathJumpBtnState=null
+
 
         canvas:NoteCanvasDataReacher
         set recent_eb_mouse_down(v:MouseEvent){
@@ -417,6 +452,25 @@ export module NoteCanvasTs{
         }
         constructor(canvas:NoteCanvasDataReacher) {
             this.canvas=canvas
+        }
+        hide_pathjumpbtn(){
+            this.pathjumpbtn_state=null
+        }
+        event_pathmouse(event:MouseEvent,pathcomp:Path){
+            // if(!this.pathjumpbtn_state)
+            {
+                this.pathjumpbtn_state=new PathJumpBtnState(
+                    event,pathcomp,this
+                )
+            }
+        }
+        pathjump(to_begin:boolean,state:PathJumpBtnState){
+            console.log("pathjump")
+            if(to_begin){
+                this.locate_editor_bar(state.pathcomp.$props.path.b_bar)
+            }else{
+                this.locate_editor_bar(state.pathcomp.$props.path.e_bar)
+            }
         }
         range_ref_getBoundingClientRect():ClientRect{
             return this.canvas.getref_range_ref().getBoundingClientRect()
@@ -636,20 +690,22 @@ export module NoteCanvasTs{
                 }
             }
         }
+
         /**@param data {NoteContentData}
          *@param noteid {string}
          * */
         reset(canvas:any){
-            canvas.non_empty_chunks= {
-                "0,0": 0,
-            }
+            // canvas.non_empty_chunks= {
+            //     "0,0": 0,
+            // }
             canvas.moving_obj= null
-
             canvas.editing_editor_bar= null
             canvas.editing_editor_bar_id= -1
-
             canvas.connecting_path=null
+
+            this.chunkhelper.reset()
         }
+
         canvas_unmount(){
             if(this.canvas.get_content_manager().is_holding_note()){
                 AppFuncTs.appctx.unhold_notehandle(
