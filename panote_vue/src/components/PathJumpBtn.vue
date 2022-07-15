@@ -21,7 +21,9 @@
          @mouseout="mouseleave1"
       @mousedown="mouseup1"
     ><ArrowLeft style="width: 1.2em; height: 1.2em;margin: 5px;"></ArrowLeft></div>
-    <div class="child"><MoreFilled style="width: 1.2em; height: 1.2em;margin: 5px;"></MoreFilled></div>
+    <div class="child"
+      @mousedown="rightmenu"
+    ><MoreFilled style="width: 1.2em; height: 1.2em;margin: 5px;"></MoreFilled></div>
     <div class="child child2"
          @mouseover="mouseenter2"
          @mouseout="mouseleave2"
@@ -37,6 +39,7 @@ import {ArrowLeft, ArrowRight, MoreFilled} from "@element-plus/icons-vue";
 import EditorBarReflect from "@/components/EditorBarReflect.vue";
 import { note } from '@/note';
 import {EditorBar} from "@/components/EditorBarFunc";
+import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 // import {_PaUtilTs} from "@/3rd/pa_util_ts";
 
 
@@ -45,13 +48,15 @@ import {EditorBar} from "@/components/EditorBarFunc";
   props: {
     state:Object,
     notehandle:Object
-  }
+  },
+  emits: ['jump', 'hide']
 })
 export default class Path extends Vue {
   $props!: {
     state:NoteCanvasTs.PathJumpBtnState,
     notehandle:note.NoteHandle
   }
+
   get eb1style(){
     return {
       width:this.eb1.width+'px',
@@ -84,6 +89,21 @@ export default class Path extends Vue {
     }
   }
   timer:null|number=null
+
+  rightmenu(e:MouseEvent){
+    const handle=this.$props.notehandle
+    const c=
+        RightMenuFuncTs.RightMenuContent.create()
+            .add_one_selection("删除连接",()=>{
+              handle.pathman().withlog_del_path(
+                  note.NoteHandlePathProxy.create(
+                      this.$props.state.pathcomp.$props.path)
+                      .get_pathkey())
+                  ?.set_store_flag_after_do()
+            })
+    RightMenuFuncTs.emitbus(e,c)
+  }
+
   upcb:null|Function=null
 
   show_eb2=false

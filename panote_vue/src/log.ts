@@ -258,7 +258,7 @@ export namespace NoteLog {
             doable(handle: note.NoteHandle,log:NoteLogger,  ctx: AppFuncTs.Context): boolean {
                 let ok = true
                 this.pathkeys.forEach((v) => {
-                    if (v ! in handle.content_data.paths) {
+                    if (!(v in handle.content_data.paths)) {
                         ok = false
                     }
                 })
@@ -464,6 +464,9 @@ export namespace NoteLog {
     }
 
     export class Rec {//记录最新一次操作后的状态以及发生的变更
+        static create(){
+            return new Rec()
+        }
         //
         // states: SubStates.IState[] = []
         transs: SubTrans.ITrans[] = []

@@ -15,6 +15,9 @@ export namespace RightMenuFuncTs{
             this.comp.content=args.content.arr
         }
     }
+    export const emitbus=(event:MouseEvent,right_menu_content:RightMenuContent)=>{
+        bus_events.events.right_menu_open.call({content: right_menu_content, event})
+    }
     export const if_right_click_then_emit_bus=(event:MouseEvent,right_menu_content:RightMenuContent)=>{
         if(event.button===2){
             console.log("if_right_click_then_emit_bus")

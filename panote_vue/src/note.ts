@@ -76,6 +76,15 @@ export namespace note{
             }
             return this.handle.content_data.paths[pathkey]
         }
+        withlog_del_path(pathkey:string):null|NoteLog.NoteLogger{
+            const log=AppFuncTs.appctx.logctx.get_log_by_noteid(this.handle.note_id)
+            const rec=NoteLog.Rec.create()
+                .add_trans(new NoteLog.SubTrans.EbDisConn([pathkey]))
+            if(log.try_do_ope(rec,this.handle)){
+                return log
+            }
+            return null
+        }
         onlydata_remove(pathkey:string):PathStruct{
             const p=this.handle.content_data.paths[pathkey]
             delete this.handle.content_data.paths[pathkey]

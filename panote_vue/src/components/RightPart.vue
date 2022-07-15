@@ -5,6 +5,7 @@
     <NoteOutline v-if="selected==='NoteOutline'"
       ref="note_outline"
     ></NoteOutline>
+    <div v-if="selected===selections.CompPropSetting"></div>
   </div>
 </template>
 
@@ -13,6 +14,7 @@ import {Options, Vue} from 'vue-class-component';
 import SideBarSwitch from "@/components/SideBarSwitch.vue";
 import NoteOutline from "@/components/NoteOutline.vue";
 import {AppFuncTs} from "@/AppFunc";
+import {SideBarSwitchTs} from "@/components/SideBarSwitchTs";
 
 // import {SideBarSwitchTs} from "@/components/SideBarSwitchTs";
 
@@ -28,6 +30,7 @@ export default class RightPart extends Vue {
   $refs!:{
     note_outline:NoteOutline
   }
+  selections=SideBarSwitchTs.selections
   selected="ReviewPart"
   ctx:AppFuncTs.Context=new AppFuncTs.Context(null)
   created(){
