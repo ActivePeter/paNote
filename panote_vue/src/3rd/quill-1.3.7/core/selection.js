@@ -24,7 +24,7 @@ class Selection {
     this.root = this.scroll.domNode;
     this.cursor = Parchment.create('cursor', this);
     // savedRange is last non-null range
-    this.lastRange = this.savedRange = new Range(0, 0);
+    this.oldrange=this.lastRange = this.savedRange = new Range(0, 0);
     this.handleComposition();
     this.handleDragging();
     this.emitter.listenDOM('selectionchange', document, () => {
@@ -314,8 +314,11 @@ class Selection {
     }
     this.update(source);
   }
-
+  backIfHasOld(){
+    this.setRange(this.oldrange)
+  }
   update(source = Emitter.sources.USER) {
+    this.oldrange=this.lastRange
     let oldRange = this.lastRange;
     let [lastRange, nativeRange] = this.getRange();
     this.lastRange = lastRange;

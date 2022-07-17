@@ -1,4 +1,5 @@
 <template>
+
   <div
     :class="'editor_bar'+select_class"
     @mousedown="handle_mouse_down"
@@ -8,16 +9,32 @@
     :style="{height: height+'px',width:width+'px',opacity:opacity_str}"
     :id="'editor_'+ebid"
   >
+<!--    <div style="position: relative">-->
+<!--    </div>-->
+    <div class="fake_select"
+      v-show="fake_select_show"
+         :style="fake_select_style"
+    >
+<!--      {{fake_select_style}}-->
+    </div>
+    <EditorBarFloatSet
+        v-if="ebid===editing_ebid&&this.floatset!==floatsettypes.no"
+        :ebcomp="proxy"
+        :type="floatset"
+    />
     <quill-editor
       :value="content"
       :options="editorOption"
-      :disabled="ebid!==editing_ebid"
+      :disabled="ebid!==editing_ebid||
+        floatset!==floatsettypes.no||
+        toolbar_on"
       @update:value="content_change"
+      @eb_enable="quill_enable"
       ref="quill_editor_ref"
     />
-    <div class="tool_line">
+    <div class="tool_line" v-show="mouse_over">
       <div class="editor_drag rb tool_line_bar"
-           v-show="mouse_over"
+
            @mousedown="corner_drag_helper.handle_mouse_drag_down"
       >
       </div>
@@ -35,10 +52,12 @@
 
 <script>
 import QuillEditor from "@/components/QuillEditor";
-import EditorBarFunc from "@/components/EditorBarFunc";
+import EditorBarFunc from "@/components/editor_bar/EditorBarFunc";
 // import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
-import {EditorBarTs} from "@/components/EditorBarTs";
+import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
+import {EditorBarFloatSetTs} from "@/components/editor_bar/EditorBarFloatSetTs";
+import EditorBarFloatSet from "@/components/editor_bar/EditorBarFloatSet";
 // import RightMenuFunc from "@/components/RightMenuFunc";
 
 // import $ from "jquery"
@@ -47,21 +66,47 @@ import {EditorBarTs} from "@/components/EditorBarTs";
 export default {
   name: "EditorBarMove",
   components:{
+    EditorBarFloatSet,
     QuillEditor
   },
   watch:{
     toolbar_on(v){
       if(v){
         this.$refs.quill_editor_ref.set_input_able(false);
-      }else{
+      }else
+      {
         this.$refs.quill_editor_ref.set_input_able(true);
+        console.log("toolbar off, eb focus")
       }
     },
+    // editing_ebid(v,old){
+    //   // if(old===this.ebid&&v!==''){
+    //   //   console.log("editing ebid change")
+    //   //   this.proxy.ebman.editmode_set(
+    //   //       this.proxy,false
+    //   //   )
+    //   // }
+    // },
     notehandle(){
 
     }
   },
   computed:{
+    fake_select_show(){
+      return this.fakeselect_show&&(this.toolbar_on||this.floatset!==this.floatsettypes.no)
+        && this.proxy.ebman.canvasproxy().get_content_manager().user_interact.
+              editortool_state.editor_sel.length===0
+    },
+    fake_select_style(){
+      // return "left:"+ 10+"px;" +
+      //     "top:"+ 10 +"px;"
+      if(this.selection_bound){
+        return "left:"+ this.selection_bound.left+"px;" +
+            "top:"+ this.selection_bound.top +"px;"+
+            "height:"+(this.selection_bound.bottom-this.selection_bound.top)+"px;"
+      }
+      return ""
+    },
     select_class(){
       if(this.selected){
         return ' selected'
@@ -78,6 +123,9 @@ export default {
       }
       return "20%"
     }
+  },
+  created() {
+    this.proxy=EditorBarTs.EditorBarCompProxy.create(this)
   },
   mounted() {
     // const _this=this;
@@ -122,35 +170,47 @@ export default {
       mouse_over:false,
 
       right_menu_helper:new EditorBarFunc.EditorBarRightMenuHelper(),
-      mouse_up_down_rec:new _PaUtilTs.MouseDownUpRecord()
+      mouse_up_down_rec:new _PaUtilTs.MouseDownUpRecord(),
 
+      floatset:EditorBarFloatSetTs.EditorBarFloatSetType.no,
+      floatsettypes:EditorBarFloatSetTs.EditorBarFloatSetType,
+
+      fakeselect_timer:0,
+      fakeselect_show:false,
+      fakeselection_seled:false,
+      contentchange_pass_flag:false,
+      selection_bound:null,
       // lastnoteid
+      proxy:new EditorBarTs.EditorBarCompProxy(this)
     };
   },
   methods: {
+    quill_enable(){
+      this.proxy.event_eb_enable()
+    },
     emit_copy(){
       this.$emit("copy",this)
     },
     content_change(content){
-      EditorBarTs.EditorBarCompProxy.create(this)
-        .event_contentchange(content)
+      // EditorBarTs.EditorBarCompProxy.create(this)
+      this.proxy.event_contentchange(content)
       // this.content=content;
     },
-    choose_tool(args){
-      if(args[0]=='indent'){
-        if(args[1]=='foward'){
-          this.$refs.quill_editor_ref.do_operation(args[0],1);
-        }else{
-          this.$refs.quill_editor_ref.do_operation(args[0],-1);
-        }
-      }else if(args[0]=='head'){
-        this.$refs.quill_editor_ref.quill_format("header",args[1]);
-        // eslint-disable-next-line no-empty
-      }else if(args[0]=='code'){
-        this.$refs.quill_editor_ref.do_operation('code',true);
-      }
-    },
-    switch_mode() {
+    // choose_tool(args){
+    //   if(args[0]=='indent'){
+    //     if(args[1]=='foward'){
+    //       this.$refs.quill_editor_ref.do_operation(args[0],1);
+    //     }else{
+    //       this.$refs.quill_editor_ref.do_operation(args[0],-1);
+    //     }
+    //   }else if(args[0]=='head'){
+    //     this.$refs.quill_editor_ref.quill_format("header",args[1]);
+    //     // eslint-disable-next-line no-empty
+    //   }else if(args[0]=='code'){
+    //     this.$refs.quill_editor_ref.do_operation('code',true);
+    //   }
+    // },
+    switch_mode() {//---->ebman.editmode_set
       this.$emit("switch_mode", this);
 
       // this.editing = !this.editing;
@@ -258,5 +318,11 @@ border-left: 1px solid #ccc;
   margin-left: 5px;
   background: #a6a6a6;
   cursor:pointer
+}
+.fake_select{
+  position: absolute;
+  width: 1px;
+  /*height: 20px;*/
+  background: #000000;
 }
 </style>

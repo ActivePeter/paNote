@@ -36,10 +36,11 @@
 import {Options, Vue} from 'vue-class-component';
 import {NoteCanvasTs} from "@/components/NoteCanvasTs";
 import {ArrowLeft, ArrowRight, MoreFilled} from "@element-plus/icons-vue";
-import EditorBarReflect from "@/components/EditorBarReflect.vue";
+import EditorBarReflect from "@/components/editor_bar/EditorBarReflect.vue";
 import { note } from '@/note';
-import {EditorBar} from "@/components/EditorBarFunc";
+import {EditorBar} from "@/components/editor_bar/EditorBarFunc";
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
+import {_path} from "@/note/path";
 // import {_PaUtilTs} from "@/3rd/pa_util_ts";
 
 
@@ -92,14 +93,25 @@ export default class Path extends Vue {
 
   rightmenu(e:MouseEvent){
     const handle=this.$props.notehandle
+    const p=note.NoteHandlePathProxy.create(this.$props.state.pathcomp.$props.path)
+    const pk=p.get_pathkey()
     const c=
         RightMenuFuncTs.RightMenuContent.create()
             .add_one_selection("删除连接",()=>{
               handle.pathman().withlog_del_path(
-                  note.NoteHandlePathProxy.create(
-                      this.$props.state.pathcomp.$props.path)
-                      .get_pathkey())
+                  pk)
                   ?.set_store_flag_after_do()
+            })
+            .add_one_selection("切换类型",()=>{
+              const prop=p.get_pathprop()
+              prop.type++;
+              if(prop.type==_path.PathType.end){
+                prop.type=_path.PathType.solid
+              }
+
+              handle.pathman().withlog_changeprop(
+                  p,prop
+              )?.set_store_flag_after_do()
             })
     RightMenuFuncTs.emitbus(e,c)
   }
@@ -150,7 +162,7 @@ export default class Path extends Vue {
     }
   }
   mouseout(){
-    console.log("mouseout")
+    // console.log("mouseout")
     // const _this=this
 
     this.$emit("hide")

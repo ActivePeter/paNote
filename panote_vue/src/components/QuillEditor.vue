@@ -49,21 +49,27 @@ export default {
     },
     numid:Number,
     strid:String,
+    inputable: {
+      type: Boolean,
+      default: false
+    },
   },
-  emits: ['ready', 'change', 'input', 'blur', 'focus', 'update:value','update:value_numid'],
+  emits: ['ready', 'change', 'input', 'blur', 'focus', 'update:value','update:value_numid',
+    'eb_enable'
+  ],
   setup(props, context) {
     const state = {
       editorOption: {},
-      quill: null
+      quill: null,
     }
 
     let _content = ''
-    watch(
-        ()=>props.input_able,
-        val=>{
-          state.quill.inputAble=val;
-        }
-    )
+    // watch(
+    //     ()=>props.input_able,
+    //     val=>{
+    //       state.quill.inputAble=val;
+    //     }
+    // )
     watch(
         () => props.value,
         val => {
@@ -96,6 +102,10 @@ export default {
           if (state.quill) {
             state.quill.inputAble=true;
             state.quill.enable(!val)
+          }
+          if(!val){
+            context.emit("eb_enable")
+            // this("eb_enable")
           }
         }
     )
@@ -132,11 +142,36 @@ export default {
           }
         })
         // Update model if text changes
-        state.quill.on('text-change', () => {
+        // eslint-disable-next-line no-unused-vars
+        state.quill.on('text-change', (delta, oldDelta,source) => {
+          console.log('text-change')
           // diabled editor after content initialized
           if (props.disabled) {
             state.quill.enable(false)
           }
+          // if(!state.quill.inputAble){
+          //   // state.quill.
+          //   // console.log("!inputAble")
+          //
+          //   // const sel = state.quill.getSelection()
+          //   const length = state.quill.getLength();
+          //   setTimeout(()=>{
+          //     {
+          //       // const sel=state.quill.getSelection()
+          //       // console.log(sel)
+          //       state.quill.editor.deleteText(0, length);
+          //       // console.log(sel)
+          //       // // let applied = this.editor.applyDelta(delta);
+          //       state.quill.editor.applyDelta(oldDelta)
+          //
+          //       // console.log(sel)
+          //       // state.quill.focus()
+          //       state.quill.selection.backIfHasOld()
+          //     }
+          //   },1)
+          //   // state.quill.history.undoLatest=true
+          //   return
+          // }
           let html = editor.value.children[0].innerHTML
           const quill = state.quill
           const text = state.quill.getText()
@@ -166,7 +201,9 @@ export default {
     return {
       editor,
       set_input_able(v){
+        // v=true
         if(state.quill){
+          // state.quill.paInputAble=v
           state.quill.inputAble=v;
         }
       },
@@ -176,6 +213,11 @@ export default {
       get_raw_quill(){
         return state.quill
       },
+      // disabled_editimode(will_dis){
+      //   if(will_dis){
+      //     state
+      //   }
+      // },
       do_operation(op_type,op_arg){
         switch (op_type){
           case 'indent':

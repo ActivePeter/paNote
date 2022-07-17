@@ -1,6 +1,6 @@
 import {note} from "@/note";
 import {NetPackRecv} from "@/net_pack_recv";
-import {EditorBar} from "@/components/EditorBarFunc";
+import {EditorBar} from "@/components/editor_bar/EditorBarFunc";
 import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 import {NoteOutlineTs} from "@/components/NoteOutlineTs";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";

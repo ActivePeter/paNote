@@ -1,6 +1,6 @@
 import {ElMessage} from "element-plus";
 // @ts-ignore
-import EditorBarFunc, {EditorBar, EditorBarChange} from "@/components/EditorBarFunc";
+import EditorBarFunc, {EditorBar, EditorBarChange} from "@/components/editor_bar/EditorBarFunc";
 import {Gradient} from "@/components/reuseable/Gradient";
 import {LinkCanvasBarToListView} from "@/components/LinkCanvasBarToListView";
 import {AppFuncTs, AppRefsGetter} from "@/AppFunc";
@@ -13,7 +13,7 @@ import {bus, bus_events} from "@/bus";
 import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
 import {search} from "@/search";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
-import {EditorBarTs} from "@/components/EditorBarTs";
+import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
 import {NoteOutlineTs} from "@/components/NoteOutlineTs";
 import {note} from "@/note";
 import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
@@ -22,6 +22,7 @@ import Util from "@/components/reuseable/Util";
 import {User} from "@element-plus/icons-vue";
 import {NoteLog} from "@/log";
 import Path from "@/components/Path.vue";
+import {EditorToolTs} from "@/components/EditorToolTs";
 
 export module NoteCanvasTs{
     export class ChunkHelper {
@@ -434,6 +435,26 @@ export module NoteCanvasTs{
             }
         }
     }
+    export class UserInteractKeyMan{
+        constructor(public ui:UserInteract) {
+        }
+        event_keydown(e:KeyboardEvent){
+            if (e.key === "b") {
+                // console.log("handle_key_up", val);
+                this.ui.canvas.notecanvas.scroll_enabled = true;
+            }
+        }
+        event_keyup(e:KeyboardEvent){
+            const canvas=this.ui.canvas.notecanvas
+            if (e.key === "b"&&e.ctrlKey) {
+                // console.log("handle_key_down", val);
+                canvas.scroll_enabled = false;
+            }
+            if (e.key === "/"&&e.ctrlKey) {
+                this.ui.editortool_state.tryswitchshown();
+            }
+        }
+    }
     export class UserInteract{
         //来自canvas的交互事件
         //界面相关的坐标换算
@@ -444,7 +465,8 @@ export module NoteCanvasTs{
         drag_bar_helper=new EditorBarTs.DragBarHelper()
         line_connect_helper=new LineConnectHelper()
         pathjumpbtn_state:null|PathJumpBtnState=null
-
+        keyman:UserInteractKeyMan
+        editortool_state=new EditorToolTs.EditorToolState(this)
 
         canvas:NoteCanvasDataReacher
         set recent_eb_mouse_down(v:MouseEvent){
@@ -452,7 +474,11 @@ export module NoteCanvasTs{
         }
         constructor(canvas:NoteCanvasDataReacher) {
             this.canvas=canvas
+            this.keyman=new UserInteractKeyMan(this)
+            this.editortool_state=new EditorToolTs.EditorToolState(this)
         }
+
+        //pathjump
         hide_pathjumpbtn(){
             this.pathjumpbtn_state=null
         }
@@ -472,6 +498,9 @@ export module NoteCanvasTs{
                 this.locate_editor_bar(state.pathcomp.$props.path.e_bar)
             }
         }
+
+
+        //range ref
         range_ref_getBoundingClientRect():ClientRect{
             return this.canvas.getref_range_ref().getBoundingClientRect()
         }
@@ -479,8 +508,32 @@ export module NoteCanvasTs{
             return event!=this._recent_eb_mouse_down;
         }
 
+        toolbar_shown=false
+        //toolbar
+
+
+        //events
+        event_rangescroll(e:WheelEvent){
+            //缩放模式下，阻止原生滚动事件
+            if (this.canvas.notecanvas.scroll_enabled
+                ||this.editortool_state.show
+            ) {
+                e.preventDefault();
+            }
+        }
+        event_mousescroll(e:WheelEvent){
+            if(this.editortool_state.show){
+                this.editortool_state.move(e.deltaY)
+                // e
+            }
+            else if (this.canvas.notecanvas.scroll_enabled) {
+                this.canvas.notecanvas.scale_canvas(e.deltaY,e);
+            }
+        }
+
         event_canvas_move(){
-            if (this._recent_mouse_move){
+            if (this._recent_mouse_move
+            ){
                 this.mouse_drag_recorder.move(this.canvas,this._recent_mouse_move)
             }
         }
@@ -582,6 +635,8 @@ export module NoteCanvasTs{
                 canvas.editor_bar_manager.on_mouse_up();
             }
         }
+
+        //scroll
         scroll_get_gradient_scroll():Gradient.Common{
             return this.canvas.notecanvas.state_ts.gradient_scroll
         }
@@ -599,6 +654,8 @@ export module NoteCanvasTs{
             // canvas.$refs.range_ref.scrollLeft += dx;
             // canvas.$refs.range_ref.scrollTop+=dy;
         }
+
+        //pos
         pos_get_content_origin_pos(){
             return this.canvas.notecanvas.get_content_origin_pos();
         }
@@ -745,7 +802,7 @@ export module NoteCanvasTs{
                 const rightpart = AppRefsGetter.create(ctx.app).get_right_part()
                 console.log("rightpart",rightpart)
                 const canvasreach=NoteCanvasTs.NoteCanvasDataReacher.create(canvas)
-                if("note_outline" in rightpart.$refs){
+                if("note_outline" in rightpart.$refs && rightpart.$refs.note_outline){
                     rightpart.$refs.note_outline.note_loaded(
                         notehandle,
                         canvasreach.get_editor_bars(),
@@ -857,6 +914,9 @@ export module NoteCanvasTs{
         }
         static create(notecanvas:any):NoteCanvasDataReacher{
             return new NoteCanvasDataReacher(notecanvas);
+        }
+        getref_toolbar(){
+            return this.notecanvas.$refs.editor_tool_ref
         }
         getref_range_ref(){
             return this.notecanvas.$refs.range_ref

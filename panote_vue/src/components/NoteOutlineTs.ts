@@ -1,4 +1,4 @@
-import {EditorBarTs} from "@/components/EditorBarTs";
+import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
 import {StorageInterface} from "@/storage/StorageInterface";
 import {AppFuncTs} from "@/AppFunc";
 

@@ -2,6 +2,8 @@
 <!--  <div>{{value}}</div>-->
   <input @click="click" ref="input_ref" class="input" type=text v-model="value_"
          @blur="blur"
+         @focus="focus"
+         :placeholder="pre"
   >
 <!--  <div v-else  @click="click">{{value}}</div>-->
 </template>
@@ -14,12 +16,14 @@ import {Watch} from "vue-property-decorator";
 @Options({
   props: {
     value:String,
+    pre:String,
   }
 
 })
 export default class FlatInput extends Vue {
   $props!: {
-    value:string
+    value:string,
+    pre:string
   }
   $refs!:{
     input_ref:HTMLInputElement
@@ -47,7 +51,7 @@ export default class FlatInput extends Vue {
     this.$refs.input_ref.focus()
   }
   focus(){
-
+    this.$emit("focus")
   }
   blur(){
 

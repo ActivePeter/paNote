@@ -52,13 +52,13 @@ export class PathStruct {
     by = 0;
     ex = 0;
     ey = 0;
+    type=0;
     set_begin(b_bar) {
         this.b_bar = b_bar
     }
     set_end(e_bar) {
         this.e_bar = e_bar
     }
-
 }
 
 

@@ -1,14 +1,14 @@
-import EditorBarFunc, {EditorBar, EditorBarChange} from "@/components/EditorBarFunc";
+import EditorBarFunc, {EditorBar, EditorBarChange} from "@/components/editor_bar/EditorBarFunc";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
-import PathFunc from "@/components/PathFunc";
 import {NoteCanvasTs} from "@/components/NoteCanvasTs";
-import {AppFuncTs, AppRefsGetter} from "@/AppFunc";
-import {NoteOutlineTs} from "@/components/NoteOutlineTs";
+import {AppFuncTs} from "@/AppFunc";
 import NoteCanvasFunc from "@/components/NoteCanvasFunc";
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {ElMessage} from "element-plus";
 import Util from "@/components/reuseable/Util";
 import {NoteLog} from "@/log";
+import {EditorBarFloatSetTs} from "@/components/editor_bar/EditorBarFloatSetTs";
+import EditorBarFloatSetType = EditorBarFloatSetTs.EditorBarFloatSetType;
 
 export namespace EditorBarTs {
     export const CursorMode = {
@@ -41,7 +41,21 @@ export namespace EditorBarTs {
     export class EditorBarQuillProxy {
         constructor(public quill: any) {
         }
+        get_selection(){
+            if(!this.quill){
+                return null
+            }
+            return this.quill.getSelection()
+        }
+        set_selection(index:number,len:number){
+            this.quill.setSelection(index,len)
+        }
+        is_blur():boolean{
+            return this.get_selection()==null
+        }
+        undo(){
 
+        }
         get_text(): string {
             return this.quill.getText()
         }
@@ -51,6 +65,17 @@ export namespace EditorBarTs {
         constructor(public comp: any) {
         }
 
+        fakeselect_timer(on:boolean){
+            // console.log("eb fakesel timer",on,this.ebid)
+            if(on){
+                this.comp.fakeselect_timer=setInterval(()=>{
+                    this.comp.fakeselect_show=!this.comp.fakeselect_show
+                },400)
+            }else{
+                clearInterval(this.comp.fakeselect_timer)
+            }
+        }
+
         static create(comp: any): EditorBarCompProxy {
             return new EditorBarCompProxy(comp)
         }
@@ -58,33 +83,195 @@ export namespace EditorBarTs {
         get ebid(): string {
             return this.comp.ebid;
         }
-
-        event_contentchange(content:string){
-            // console.log("event_contentchange",this.comp,this.comp.noteid,this.comp.notehandle.noteid)
-            if((!this.comp.noteid)||
-                this.comp.noteid!==this.comp.notehandle.note_id){
-                this.comp.noteid=this.comp.notehandle.note_id
-                console.log("event_contentchange first",this.comp)
-                return
-            }
-            this.comp.$emit("content_change",this.ebid,content)
+        get ebman():EditorBarTs.EditorBarManager{
+            return this.comp.editor_bar_manager
         }
 
+        editortool_state(){
+            return this.ebman.canvasproxy().get_content_manager().user_interact
+                .editortool_state
+        }
+        update_sel_bound_by_range(range:any){
+            const b=this.comp.selection_bound=
+                this.get_quill().getBounds(range.index,range.length)
+            const s=this.ebman.canvasproxy().get_scale()
+            b.left=b.left/s
+            b.top=b.top/s
+            b.bottom=b.bottom/s
+            b.right=b.right/s
+        }
+        get_sel_pos_by_range(range:any){
+            const b=this.get_quill().getBounds(range.index,range.length)
+            return new _PaUtilTs.Pos2D(b.left,b.top)
+        }
+        get fakeselection_seled():boolean{
+            return this.comp.fakeselection_seled
+        }
+        set fakeselection_seled(v:boolean){
+            this.comp.fakeselection_seled=v
+        }
+        // fakeselection_flag=false
+        fakeselection_show(){
+            const editor_sel=this.editortool_state().editor_sel
+            if(editor_sel.length>0){
+                this.contentchange_pass_flag=true
+                const delta= this.get_quill().formatText(
+                    editor_sel.index,editor_sel.length,
+                    {
+                        background:'#0066cc',
+                        color:'#dfefff'
+                    }
+                )
+                if(delta.ops.length!=0){
+                    this.fakeselection_seled=true
+                }else{
+                    this.contentchange_pass_flag=false
+                }
+                // console.log("fakeselection_show format",delta)
+            }
+        }
+        fakeselection_hide_if_need(after_sel:Function){
+            if(this.fakeselection_seled){
+                // console.log("no fake selection apply")
+                const sel=this.editortool_state().editor_sel
+                this.contentchange_pass_flag=true
+                this.get_quill().history.undo()
+                console.log("fakeselection_hide_if_need","undo")
+                setTimeout(()=>{
+                    this.get_quill().setSelection(sel.index,sel.length)
+                    setTimeout(()=>{
+                        after_sel()
+                    },1)
+                },1)
+                this.fakeselection_seled=false
+            }else{
+                console.log("no fake selection apply")
+                after_sel()
+            }
+        }
+        set contentchange_pass_flag(v:boolean){
+            this.comp.contentchange_pass_flag=v
+        }
+        get contentchange_pass_flag():boolean{
+            return this.comp.contentchange_pass_flag
+        }
+        event_contentchange(content:string){
+            if(this.contentchange_pass_flag){
+                console.log("contentchange_pass once")
+                this.contentchange_pass_flag=false
+                return;
+            }
+            const ui=this.ebman.canvasproxy().get_content_manager().user_interact
+            if(this.ebman.editing_ebid==this.ebid){
+                // this.get_quill_proxy()
+                if(ui.editortool_state.show){
+                    const tool=ui.editortool_state
+                    setTimeout(()=>{
+                        this.get_quill().setContents(tool.editor_delta)
+                        this.get_quill().selection.setRange(tool.editor_sel)
+                    },1)
+
+                    console.log("eb change when select tool")
+                    return;
+                }
+                // console.log("event_contentchange",this.comp,this.comp.noteid,this.comp.notehandle.noteid)
+                if((!this.comp.noteid)||
+                    this.comp.noteid!==this.comp.notehandle.note_id){
+                    this.comp.noteid=this.comp.notehandle.note_id
+                    console.log("event_contentchange first",this.comp)
+                    return
+                }
+                console.log("eb change emit")
+                this.comp.$emit("content_change",this.ebid,content)
+            }
+        }
+        //编辑器可以编辑了，
+        // 可能是刚开始编辑
+        // 也可能是刚选完操作
+        event_eb_enable(){
+
+            this.get_quill().focus()
+            //在编辑工具关闭后使能，需要隐藏之前的fakeselection
+            this.fakeselection_hide_if_need(
+                ()=>{
+                    // setTimeout(()=>{
+                        this.editortool_state().apply_ifexist()
+                    // },1000)
+                }
+            )
+            // this.get_sel_pos_by_range(this.editortool_state().editor_sel)
+        }
+        apply_toolset(args:any){
+            if(args[0]=='indent'){
+                if(args[1]=='foward'){
+                    this.get_ref_quill().do_operation(args[0],1);
+                }else{
+                    this.get_ref_quill().do_operation(args[0],-1);
+                }
+            }else if(args[0]=='head'){
+
+                this.get_ref_quill().quill_format("header",args[1]);
+                // eslint-disable-next-line no-empty
+            }else if(args[0]=='code'){
+                this.get_ref_quill().do_operation('code',true);
+                // eslint-disable-next-line no-empty
+            }else if(args[0]=='url'){
+                this.set_float_set(EditorBarFloatSetType.url)
+            }
+        }
+        set_float_set(floatset:EditorBarFloatSetTs.EditorBarFloatSetType){
+            this.comp.floatset=floatset
+        }
         get_ref_quill() {
             return this.comp.$refs.quill_editor_ref
         }
-
+        get_quill(){
+            return this.get_ref_quill().get_raw_quill()
+        }
         get_quill_proxy() {
             return new EditorBarQuillProxy(this.get_ref_quill().get_raw_quill())
         }
+
     }
 
     export class EditorBarManager {
         canvas: any = null
         corner_drag_helper = null
         ebid_to_ebcomp: any = {}//ebid->1
+
+        editing_ebproxy:EditorBarCompProxy|null=null
+        editing_ebid:string=""
+
         constructor(canvas: any) {
             this.canvas = canvas;
+        }
+
+        editmode_set(eb:EditorBarCompProxy,editing:boolean){
+
+            if(editing){
+                if(this.editing_ebproxy){
+                    this.editmode_set(this.editing_ebproxy,false)
+                }
+                this.editing_ebid=eb.ebid
+                this.editing_ebproxy=eb
+
+                eb.fakeselect_timer(true)
+            }else {
+                this.editing_ebid=""
+                this.editing_ebproxy?.set_float_set(
+                    EditorBarFloatSetType.no
+                )
+                this.editing_ebproxy=null
+                this.canvasproxy().get_content_manager().user_interact
+                    .editortool_state.clear_sel_rec()
+
+                eb.fakeselect_timer(false)
+            }
+            this.canvasproxy().get_content_manager().user_interact
+                .editortool_state.hide()
+        }
+        editmode_switch(eb:EditorBarCompProxy){
+            this.editmode_set(eb,eb.ebid!=this.editing_ebid)
         }
 
         canvasproxy(): NoteCanvasTs.NoteCanvasDataReacher {

@@ -7,6 +7,7 @@
                   :index="i" :depth="0"
                   :select_depth="select_depth"
                   :select_level="select_level"
+                  :p_canvasdr="p_canvasdr"
       />
 
     </div>
@@ -15,11 +16,20 @@
 
 <script>
 import ToolSelect from "@/components/ToolSelect";
+import {NoteCanvasTs} from "@/components/NoteCanvasTs";
 
 export default {
   name: "EditorTool",
   components: {
     ToolSelect
+  },
+  watch:{
+    p_canvasdr(v){
+      this.canvasdr=v
+    }
+  },
+  created() {
+    this.canvasdr=this.p_canvasdr
   },
   mounted() {
     window.addEventListener("keyup", this.handle_key_up);
@@ -33,6 +43,7 @@ export default {
   },
   data() {
     return {
+      canvasdr:new NoteCanvasTs.NoteCanvasDataReacher(null),
       is_show: false,
       select_level: [0, 0],
       select_depth: 0,
@@ -58,15 +69,23 @@ export default {
         {
           name:"code",
           select:null
+        },
+        {
+          name:"url",
+          select:null//["url"]
+        },
+        {
+          name:"color",
+          select:null//["color"]
         }
       ]
     };
   },
-  watch:{
-    is_show(v){
-      this.$emit("change_is_show", v);
-    }
-  },
+  // watch:{
+  //   is_show(v){
+  //     this.$emit("change_is_show", v);
+  //   }
+  // },
   methods: {
     get_range_of_depth(depth) {
       if (depth === 0) {
@@ -92,29 +111,37 @@ export default {
         event.stopPropagation();
       }
     },
+    select_up(){
+      if (this.select_level[this.select_depth] > 0) {
+        this.select_level[this.select_depth]--;
+      }
+    },
+    select_down(){
+      if (this.select_level[this.select_depth] < this.get_range_of_depth(this.select_depth)-1) {
+        this.select_level[this.select_depth]++;
+      }
+    },
     handle_key_up(event) {
       if(this.is_show){
 
         if (event.key === 'ArrowUp') {
-          if (this.select_level[this.select_depth] > 0) {
-            this.select_level[this.select_depth]--;
-          }
+          this.select_up()
           // console.log("range", this.get_range_of_depth(this.select_depth), "1 depth", this.select_depth, "index", this.select_level[this.select_depth])
           // this.$forceUpdate()
         } else if (event.key === 'ArrowDown') {
-          if (this.select_level[this.select_depth] < this.get_range_of_depth(this.select_depth)-1) {
-            this.select_level[this.select_depth]++;
-          }
+          this.select_down()
           // this.$forceUpdate()
           // console.log("range", this.get_range_of_depth(this.select_depth), "2 depth", this.select_depth, "index", this.select_level[this.select_depth])
-        } else if (event.key == 'ArrowRight') {
+        } else if (event.key === 'ArrowRight') {
           if (this.select_depth < this.select_level.length - 1 && this.if_has_next()) {
             this.select_depth++;
+            // console.log("seldep",this.select_depth)
             this.select_level[this.select_depth]=0;
           }
-        } else if (event.key == 'ArrowLeft') {
+        } else if (event.key === 'ArrowLeft') {
           if (this.select_depth > 0) {
             this.select_depth--;
+            // console.log("seldep",this.select_depth)
           }
         }else if (event.key<='9'&&event.key>='1'){
           //有效范围
@@ -127,8 +154,8 @@ export default {
           }
           // console.log("hide tool bar",this.is_show);
         }
-        event.preventDefault();
-        event.stopPropagation();
+        // event.preventDefault();
+        // event.stopPropagation();
       }
     },
     get_select(){
@@ -162,26 +189,23 @@ export default {
       return false;
     },
     do_select(){
-      let g=this.get_select()
-      if(g){
-        //传递到editorbar里的choosetool函数
-        this.$emit("choose_tool", g);
-        return true;
-      }else{
-        return false;
-      }
+      return this.canvasdr.get_content_manager().user_interact.editortool_state
+        .do_select(this)
     },
     switch_show_tool_bar(canvas, editor) {
       if (canvas && editor) {
         console.log("switch_show_tool_bar")
         this.is_show = !this.is_show
       }
+      return this.is_show
     },
-    hide_tool_bar(canvas, editor) {
-      console.log(canvas, editor)
+    hide_tool_bar() {
+      this.is_show=false
     }
   },
-  props: {},
+  props: {
+    p_canvasdr:Object
+  },
 };
 </script>
 

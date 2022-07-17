@@ -1,6 +1,6 @@
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
-import {EditorBar} from "@/components/EditorBarFunc";
-import {EditorBarTs} from "@/components/EditorBarTs";
+import {EditorBar} from "@/components/editor_bar/EditorBarFunc";
+import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
 
 export namespace search {
     export class SearchInCanvas {

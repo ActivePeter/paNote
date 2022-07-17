@@ -4,8 +4,7 @@
     <EditorTool
         class="editor_tool"
         ref="editor_tool_ref"
-        @change_is_show="editor_tool_change_is_show"
-        @choose_tool="choose_tool"
+        :p_canvasdr="data_reacher"
     />
     <NoteCanvasSearchBar class="canvas_relative canvas_right"
       v-model:note_canvas_datareacher="data_reacher"
@@ -112,8 +111,8 @@
               v-for="(item, i) in editor_bars"
               :key="i"
               :ebid="i"
-              :editing_ebid="editing_editor_bar_id"
-              :toolbar_on="editor_tool_helper.tool_bar_on"
+              :editing_ebid="editor_bar_manager.editing_ebid"
+              :toolbar_on="content_manager.user_interact.editortool_state.show"
               :search_ing="content_manager.search_in_canvas.searching"
               :search_tar="i in content_manager.search_in_canvas.searched_bars"
               :selected="i in editor_bar_manager.focused_ebids"
@@ -170,19 +169,19 @@
 // import EditorBar from "./EditorBar.vue";
 
 import ElementResizeDetectorMaker from "element-resize-detector";
-import EditorBarMove from "./EditorBarMoveTest.vue";
+import EditorBarMove from "./editor_bar/EditorBarMoveTest.vue";
 import EditorTool from "@/components/EditorTool";
 import NoteCanvasSearchBar from "@/components/NoteCanvasSearchBar"
 // import SelectRange from "@/3rd/pa_comps/SelectRange"
 
 import NoteCanvasFunc from "./NoteCanvasFunc.js";
 import EditorToolFunc from "@/components/EditorToolFunc";
-import EditorBarFunc from "@/components/EditorBarFunc";
+// import EditorBarFunc from "@/components/EditorBarFunc";
 // import RightMenuFunc from "@/components/RightMenuFunc";
 import {NoteCanvasTs} from "@/components/NoteCanvasTs";
-import {_PaUtilTs} from "@/3rd/pa_util_ts";
+// import {_PaUtilTs} from "@/3rd/pa_util_ts";
 // import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
-import {EditorBarTs} from "@/components/EditorBarTs";
+import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
 import NoteCanvasSelectRange from "@/components/NoteCanvasSelectRange";
 import {AppFuncTs} from "@/AppFunc";
 import Path from "@/components/Path";
@@ -206,11 +205,11 @@ export default {
     cursor_mode(val) {
       console.log("mode select", val);
     },
-    editing_editor_bar_id(val){
-      if(_PaUtilTs._JudgeType.is_number(val)){
-        this.editing_editor_bar_id=val.toString()
-      }
-    }
+    // editing_editor_bar_id(val){
+    //   if(_PaUtilTs._JudgeType.is_number(val)){
+    //     this.editing_editor_bar_id=val.toString()
+    //   }
+    // }
   },
   computed:{
     path_opacity(){
@@ -343,6 +342,7 @@ export default {
     };
   },
   methods: {
+
     path_jump(a,b){
       this.content_manager.user_interact.pathjump(a,b)
     },
@@ -357,21 +357,21 @@ export default {
       this.content_manager.user_interact.open_right_menu_eb(event,tag,obj)
       // RightMenuFuncTs.continue_emit(event,tag,obj,this);
     },
-    editor_tool_change_is_show(is_show) {
-      this.editor_tool_helper.switch_tool_bar(this, is_show)
-    },
-    choose_tool(args) {
-      this.editor_tool_helper.choose_tool(this, args)
-    },
-    try_switch_tool_bar_state() {
-      // this.editor_tool_helper.
-      if (this.editing_editor_bar) {
-        this.$refs.editor_tool_ref.switch_show_tool_bar(
-            this,
-            this.editing_editor_bar
-        );
-      }
-    },
+    // editor_tool_change_is_show(is_show) {
+    //   this.editor_tool_helper.switch_tool_bar(this, is_show)
+    // },
+    // choose_tool(args) {
+    //   this.editor_tool_helper.choose_tool(this, args)
+    // },
+    // try_switch_tool_bar_state() {
+    //   // this.editor_tool_helper.
+    //   if (this.editing_editor_bar) {
+    //     this.$refs.editor_tool_ref.switch_show_tool_bar(
+    //         this,
+    //         this.editing_editor_bar
+    //     );
+    //   }
+    // },
     // add_editor_bar() {
     //   this.editor_bar_manager.add_editor_bar_in_center(this);
     // },
@@ -390,31 +390,19 @@ export default {
       this.content_manager.user_interact.event_canvas_move()
     },
     handle_range_scroll(event) {
-      //缩放模式下，阻止原生滚动事件
-      if (this.scroll_enabled) {
-        event.preventDefault();
-      }
+      this.content_manager.user_interact.event_rangescroll(event)
     },
     handle_key_up(val) {
-      if (val.key === "b") {
-        // console.log("handle_key_up", val);
-        this.scroll_enabled = false;
-      }
+      this.content_manager.user_interact
+        .keyman.event_keyup(val)
     },
     handle_key_down(val) {
-      if (val.key === "b"&&val.ctrlKey) {
-        // console.log("handle_key_down", val);
-        this.scroll_enabled = true;
-      }
-      if (val.key === "/") {
-        this.try_switch_tool_bar_state();
-      }
+      this.content_manager.user_interact
+          .keyman.event_keydown(val)
     },
     handle_scroll(val) {
       //   console.log("handle_scroll", val);
-      if (this.scroll_enabled) {
-        this.scale_canvas(val.deltaY,val);
-      }
+      this.content_manager.user_interact.event_mousescroll(val)
     },
     handle_mouse_down_on_range(event) {
       this.content_manager.user_interact.event_mousedown_range(event)
@@ -512,10 +500,12 @@ export default {
       this.editor_bar_manager.corner_drag_start(a)
     },
     editor_bar_switch_mode(eb) {
-      if(this.content_manager.linkBarToListView.is_linking){
-        return;
-      }
-      EditorBarFunc.editor_bar_switch_mode(this, eb);
+      // if(this.content_manager.linkBarToListView.is_linking){
+      //   return;
+      // }
+      this.editor_bar_manager.editmode_switch(
+          EditorBarTs.EditorBarCompProxy.create(eb))
+      // EditorBarFunc.editor_bar_switch_mode(this, eb);
     },
     editor_bar_drag_release(event, bar) {
       this.content_manager.user_interact.event_mouse_up_on_eb(event,bar)

@@ -1,13 +1,14 @@
 
 import {NoteCanvasTs} from "@/components/NoteCanvasTs";
-import {EditorBarTs} from "@/components/EditorBarTs";
-import {EditorBar} from "@/components/EditorBarFunc";
+import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
+import {EditorBar} from "@/components/editor_bar/EditorBarFunc";
 import {PathStruct} from "@/components/NoteCanvasFunc";
 import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 import {NoteOutlineTs} from "@/components/NoteOutlineTs";
 import {AppFuncTs} from "@/AppFunc";
 import {NoteLog} from "@/log";
 import {NetPackRecv} from "@/net_pack_recv";
+import {_path} from "@/note/path";
 
 export namespace note{
     import OutlineStorageStruct = NoteOutlineTs.OutlineStorageStruct;
@@ -54,6 +55,15 @@ export namespace note{
                 console.error("onlydata_update_with_eb","invalid")
             }
         }
+        get_pathprop(){
+            return _path.LogTrans.PathProp.frompath(this)
+        }
+        fix(){
+            // @ts-ignore
+            if(!("type" in this.path)||!this.path.type){
+                this.path.type=_path.PathType.solid
+            }
+        }
         constructor(public path:PathStruct) {
         }
     }
@@ -75,6 +85,19 @@ export namespace note{
                 return null
             }
             return this.handle.content_data.paths[pathkey]
+        }
+        withlog_changeprop(pathproxy:NoteHandlePathProxy,pathprop:_path.LogTrans.PathProp):null|NoteLog.NoteLogger{
+            const log=AppFuncTs.appctx.logctx.get_log_by_noteid(this.handle.note_id)
+            const rec=NoteLog.Rec.create()
+                .add_trans(new _path.LogTrans.PathPropChange(
+                    pathproxy.get_pathkey(),pathprop
+                ))
+            console.log("withlog_changeprop",pathprop)
+            if(log.try_do_ope(rec,this.handle)){
+                console.log("withlog_changeprop",pathprop)
+                return log
+            }
+            return null
         }
         withlog_del_path(pathkey:string):null|NoteLog.NoteLogger{
             const log=AppFuncTs.appctx.logctx.get_log_by_noteid(this.handle.note_id)
@@ -431,6 +454,8 @@ export namespace note{
                     console.error("invalid path",k)
                     delk.push(k)
                 }else{
+                    const p:PathStruct=data.paths[k]
+                    NoteHandlePathProxy.create(p).fix()
                     // const notehandle=new NoteHandle("",data)
                     // const pp=notehandle.pathman().getpathproxy(k)
                     // const e1=notehandle.ebman().get_ebproxy_by_ebid(ks[0])

@@ -62,16 +62,16 @@ class EditorBarRightMenuHelper {
     }
 }
 export default {
-    editor_bar_switch_mode(canvas,eb){
-        console.log(eb.ebid,canvas.editing_editor_bar_id)
-        if(eb.ebid===canvas.editing_editor_bar_id){
-            canvas.editing_editor_bar_id='-1'
-            canvas.editing_editor_bar=null
-        }else{
-            canvas.editing_editor_bar_id=eb.ebid
-            canvas.editing_editor_bar=eb
-        }
-    },
+    // editor_bar_switch_mode(canvas,eb){
+    //     // console.log(eb.ebid,canvas.editing_editor_bar_id)
+    //     if(eb.ebid===canvas.editing_editor_bar_id){
+    //         canvas.editing_editor_bar_id='-1'
+    //         canvas.editing_editor_bar=null
+    //     }else{
+    //         canvas.editing_editor_bar_id=eb.ebid
+    //         canvas.editing_editor_bar=eb
+    //     }
+    // },
     CornerDragHelper,
     // EditorBarManager,
     EditorBarRightMenuHelper,

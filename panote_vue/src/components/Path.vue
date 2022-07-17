@@ -1,26 +1,31 @@
 <template>
-  <svg
-      class="path"
-      version="1.1"
-      :height="10"
-      :width="pathdesc.len"
-      :style="svgstyle"
-      @mousemove="event_mousemove"
-  >
-
-<!--    {{path.len}}-->
-    <path
-        :d="'M ' + 0+ ' ' + 5 + ' L ' +pathdesc.len + ' ' + 5 "
-        stroke="black"
-        stroke-width="1.3"
-        fill="none"
-    ></path>
-  </svg>
+  <div>
+    <svg
+        class="path"
+        version="1.1"
+        :height="10"
+        :width="pathdesc.len"
+        :style="svgstyle"
+        @mousemove="event_mousemove"
+    >
+      <!--    <line -->
+      <!--        x1="0" y1="5" :x2="pathdesc.len" y2="5" stroke-dasharray="3 2" stroke="#cbe6a3"/>-->
+      <!--    {{path.len}}-->
+      <path
+          :d="'M ' + 0+ ' ' + 5 + ' L ' +pathdesc.len + ' ' + 5 "
+          stroke="black"
+          :stroke-dasharray="dasharray"
+          stroke-width="1.3"
+          fill="none"
+      ></path>
+    </svg>
+  </div>
 </template>
 
 <script lang="ts">
 import {Options, Vue} from 'vue-class-component';
 import {PathStruct} from "@/components/NoteCanvasFunc";
+import {_path} from "@/note/path";
 
 
 @Options({
@@ -33,6 +38,14 @@ export default class Path extends Vue {
   $props!: {
     path:PathStruct
     path_opacity:string
+  }
+  get dasharray():string{
+    if(this.$props.path.type==_path.PathType.solid){
+      return ""
+    }else if(this.$props.path.type==_path.PathType.dashed){
+      return "2 8"
+    }
+    return ""
   }
   get svgstyle(){
     const v:any=
