@@ -13,6 +13,10 @@ export namespace _PaUtilTs {
             this.y=y;
         }
     }
+    export const accDiv=(arg1:number,arg2:number)=>{
+        return arg1/arg2
+
+    }
     export type Vec2D=Pos2D
     export class Rect{
         x:number

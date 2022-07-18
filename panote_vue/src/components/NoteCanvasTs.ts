@@ -25,6 +25,8 @@ import Path from "@/components/Path.vue";
 import {EditorToolTs} from "@/components/EditorToolTs";
 
 export module NoteCanvasTs{
+    import final_set_scale = NoteCanvasTs.UiOperation.final_set_scale;
+
     export class ChunkHelper {
         chunk_max_x = 0;
         chunk_max_y = 0;
@@ -132,12 +134,63 @@ export module NoteCanvasTs{
             this.update_canvas_chunkpadding()
         }
         update_canvas_chunkpadding(){
-            this.canvasp.notecanvas.change_padding(
-                this.chunk_min_y * -400,
-                this.chunk_max_y * 400,
-                this.chunk_max_x * 300,
-                this.chunk_min_x * -300
-            );
+            if(this.canvasp.get_content_manager().user_interact
+                .scaler.scaling()){
+                this.canvasp.get_content_manager().user_interact
+                    .scaler.flag_paddingchange_when_scaling=true
+            }else{
+                this.change_padding(
+                    this.chunk_min_y * -400,
+                    this.chunk_max_y * 400,
+                    this.chunk_max_x * 300,
+                    this.chunk_min_x * -300
+                );
+            }
+
+        }
+
+        change_padding(u:number,
+                       d:number,
+                       r:number,
+                       l:number){
+            const canvas=this.canvasp.notecanvas
+// console.log("change padding", u, d, r, l);
+            const dl = l - canvas.padding_add_left;
+            const dh = u - canvas.padding_add_up;
+
+            canvas.padding_add_up = u;
+            canvas.padding_add_down = d;
+            canvas.padding_add_right = r;
+            canvas.padding_add_left = l;
+
+            if (dl != 0) {
+                // console.log("dr", canvas.$refs.range_ref.scrollLeft, dl);
+                //防止新扩边界后，瞬间偏移，导致进一步
+                if(this.canvasp.get_content_manager().user_interact.scaler
+                    .scaling()){
+                    canvas.scale_offx+= dl * canvas.scale;
+                    canvas.$refs.range_ref.scrollLeft=0
+                    // canvas.scale_offx=0
+                }else{
+                    canvas.$refs.range_ref.scrollLeft += dl * canvas.scale;
+                }
+            }
+
+            //   console.log(u, this.padding_add_up);
+            //   console.log(l, this.padding_add_left);
+            if (dh != 0) {
+                if(this.canvasp.get_content_manager().user_interact.scaler
+                    .scaling()){
+                    canvas.scale_offy+= dh * canvas.scale;
+                    canvas.$refs.range_ref.scrollTop=0
+                    // if(canvas.scale_offy<0)canvas.scale_offy=0
+                }else{
+                    canvas.$refs.range_ref.scrollTop += dh * canvas.scale;
+                }
+                // console.log("dh", this.$refs.range_ref.scrollTop, dh);
+
+            }
+            canvas.$forceUpdate()
         }
     }
     // export class CanvasChunkTs{
@@ -446,7 +499,7 @@ export module NoteCanvasTs{
         }
         event_keyup(e:KeyboardEvent){
             const canvas=this.ui.canvas.notecanvas
-            if (e.key === "b"&&e.ctrlKey) {
+            if (e.key === "b"||e.ctrlKey) {
                 // console.log("handle_key_down", val);
                 canvas.scroll_enabled = false;
             }
@@ -455,18 +508,175 @@ export module NoteCanvasTs{
             }
         }
     }
+    export class UserInteractScaler{
+        _tar_scale=1
+        interval=0
+        v=0
+        curmouse:null|MouseEvent=null
+        lastms=0
+        begin_scroll_t=0
+        begin_scroll_l=0
+        begin_scale_offx=0
+        begin_scale_offy=0
+        begin_scale=0
+
+        flag_paddingchange_when_scaling=false
+        constructor(public ui:UserInteract) {
+        }
+
+        scaling():boolean{
+            return this.interval!=0
+        }
+        on_scale_change(){
+            const canvas=this.ui.canvas.notecanvas
+            if (canvas.moving_obj) {
+                this.ui.drag_bar_helper.update_moving_obj_pos()
+                // this.update_moving_obj_pos();
+            }
+        }
+        on_scale_over(){
+            if(this.flag_paddingchange_when_scaling){
+                this.flag_paddingchange_when_scaling=false
+                this.ui.canvas.get_content_manager()
+                    .chunkhelper.update_canvas_chunkpadding()
+            }
+        }
+        final_set_scale(scale:number,final:boolean){
+            const canvas=this.ui.canvas.notecanvas
+            const mouse_event=this.curmouse
+            if(!mouse_event){
+                return
+            }
+            if(canvas.$refs.range_ref){
+                // const cp=this.ui.pos_from_uipos_2_canvaspos()
+                const range_rec = canvas.$refs.range_ref.getBoundingClientRect();
+                // console.log(range_rec,canvas.edge_size_w)
+                //缩放之后要修改滚动偏移
+                const scale_beginx=range_rec.left
+                    // -this.begin_scroll_l
+                    +canvas.edge_size_w+this.begin_scale_offx;
+                const scale_beginy=range_rec.top
+                    // -this.begin_scroll_t
+                    +canvas.edge_size_h+this.begin_scale_offy;
+                const msbx=mouse_event.clientX-scale_beginx
+                const msby=mouse_event.clientY-scale_beginy
+
+
+                // console.log(mouse_event.clientX,scale_beginx)
+
+                // canvas.$refs.range_ref.scrollLeft+=(mouse_event.clientX-scale_beginx)*(canvas.scale-scale)
+                // canvas.$refs.range_ref.scrollTop-=(mouse_event.clientY-scale_beginy)*(canvas.scale-scale)
+                //
+
+                canvas.scale_offx=this.begin_scale_offx+((msbx)*(1-_PaUtilTs.accDiv( scale*10,10*this.begin_scale)));
+                // canvas.$refs.range_ref.scrollTop=this.begin_scroll_t-
+                canvas.scale_offy=this.begin_scale_offy+((msby)*(1-_PaUtilTs.accDiv(scale*10,10*this.begin_scale)));
+                if(canvas.scale_offx>0)canvas.scale_offx=0
+                if(canvas.scale_offy>0)canvas.scale_offy=0
+                if(final){
+                    this.ui.flag_canvas_scrollbar_move_ignore=true
+                    canvas.$refs.range_ref.scrollLeft=-canvas.scale_offx
+                    canvas.scale_offx=0
+                    canvas.$refs.range_ref.scrollTop=-canvas.scale_offy
+                    canvas.scale_offy=0
+                }
+                canvas.scale = scale;
+                this.on_scale_change()
+                canvas.$forceUpdate()
+                // window.setTimeout(()=>{
+                //     canvas.$refs.range_ref.scrollLeft=this.begin_scroll_l-
+                // },1)
+            }
+
+            // x:
+            //     range_rec.left //滚动显示范围边界
+            //     - canvas.$refs.range_ref.scrollLeft//滚动偏移量
+            //     +canvas.edge_size_w +
+            //     canvas.padding_add_left * canvas.scale,
+            //         y:
+            // range_rec.top -
+            // this.$refs.range_ref.scrollTop +
+            // this.edge_size_h +
+            // this.padding_add_up * this.scale,
+        }
+        set_tar_scale(v:number,e:MouseEvent){
+            if(v==this._tar_scale){
+                return;
+            }
+            this.curmouse=e
+
+            // this.begin_scroll_l=this.ui.canvas.getref_range_ref().scrollLeft
+            // this.begin_scroll_t=this.ui.canvas.getref_range_ref().scrollTop
+
+            this._tar_scale=v
+            if(this.interval==0){
+
+                this.begin_scale=this.ui
+                    .canvas.get_scale()
+                const rangel=this.ui.canvas.getref_range_ref().scrollLeft
+                const ranget=this.ui.canvas.getref_range_ref().scrollTop
+                this.ui.canvas.notecanvas.scale_offx=-rangel
+                this.ui.canvas.notecanvas.scale_offy=-ranget
+                {
+                    this.ui.flag_canvas_scrollbar_move_ignore=true
+                    this.ui.canvas.getref_range_ref().scrollLeft=0
+                    this.ui.canvas.getref_range_ref().scrollTop=0
+                }
+                this.begin_scale_offx=this.ui.canvas.notecanvas.scale_offx
+                this.begin_scale_offy=this.ui.canvas.notecanvas.scale_offy
+
+                this.lastms=0
+                this.interval=window.setInterval(()=>{
+                    const canvas=this.ui.canvas;
+                    const cur_scale=canvas.get_scale()
+                    const delta=this._tar_scale-cur_scale
+                    const curms=_PaUtilTs.time_stamp_number()
+
+                    let dt=curms-this.lastms
+                    if(this.lastms==0){
+                        this.ui.canvas.notecanvas.$forceUpdate()
+                        dt=50
+                    }
+                    this.lastms=curms
+                    if(Math.abs(delta)<0.001){
+                        // console.error("clear interval")
+                        this.final_set_scale(this._tar_scale,true)
+                        clearInterval(this.interval)
+                        this.interval=0
+                        this.on_scale_over()
+                    }else{
+                        this.v=(this.v+delta)/180
+                        const tarscale=this.v*dt+cur_scale
+                        this.final_set_scale(tarscale,false)
+                    }
+                },50)
+            }else{
+                this.begin_scale=this.ui
+                    .canvas.get_scale()
+                this.begin_scale_offx=this.ui.canvas.notecanvas.scale_offx
+                this.begin_scale_offy=this.ui.canvas.notecanvas.scale_offy
+            }
+        }
+    }
+
+    //来自canvas的交互事件
+    //界面相关的坐标换算
+    //无数据操作，仅界面的一些操作
     export class UserInteract{
-        //来自canvas的交互事件
-        //界面相关的坐标换算
-        //无数据操作，仅界面的一些操作
+        //记录鼠标拖拽事件，选择框
         mouse_drag_recorder=new CanvasMouseDragRecorder()
+        //最近一下eb点击
         _recent_eb_mouse_down:undefined|MouseEvent
+        //最近一下鼠标移动
         _recent_mouse_move:undefined|MouseEvent
-        drag_bar_helper=new EditorBarTs.DragBarHelper()
+        drag_bar_helper=new EditorBarTs.DragBarHelper(this)
         line_connect_helper=new LineConnectHelper()
         pathjumpbtn_state:null|PathJumpBtnState=null
         keyman:UserInteractKeyMan
         editortool_state=new EditorToolTs.EditorToolState(this)
+        scaler=new UserInteractScaler(this)
+
+        flag_canvas_scrollbar_move_ignore=false
 
         canvas:NoteCanvasDataReacher
         set recent_eb_mouse_down(v:MouseEvent){
@@ -476,8 +686,9 @@ export module NoteCanvasTs{
             this.canvas=canvas
             this.keyman=new UserInteractKeyMan(this)
             this.editortool_state=new EditorToolTs.EditorToolState(this)
+            this.scaler=new UserInteractScaler(this)
+            this.drag_bar_helper=new EditorBarTs.DragBarHelper(this)
         }
-
         //pathjump
         hide_pathjumpbtn(){
             this.pathjumpbtn_state=null
@@ -531,7 +742,21 @@ export module NoteCanvasTs{
             }
         }
 
-        event_canvas_move(){
+        event_canvas_move(from_scroll_bar:boolean,e:Event){
+            if(this.flag_canvas_scrollbar_move_ignore){
+
+                console.log("event_canvas_move flag_canvas_scrollbar_move_ignore",e)
+                this.flag_canvas_scrollbar_move_ignore=false
+                return
+            }
+            if (
+                this.canvas.notecanvas.moving_obj && !this.scaler.scaling()
+                //   && this.record_content_rect != null
+            ) {
+                // console.log("handle_scroll_bar",this.moving_obj,event);
+                this.drag_bar_helper.update_moving_obj_pos()
+                // this.update_moving_obj_pos();
+            }
             if (this._recent_mouse_move
             ){
                 this.mouse_drag_recorder.move(this.canvas,this._recent_mouse_move)
@@ -570,6 +795,13 @@ export module NoteCanvasTs{
                     event.clientY //+ cp.y
                     //   event.screenX, event.screenY
                 );
+                if(this.scaler.interval!=0){
+                    // this.scaler.curmouse=event
+                    return;
+                }
+                if (event.buttons == 0) {
+                    return;
+                }
                 // let delta = this.mouse_recorder.get_delta();
 
                 //拖拽画布
@@ -579,7 +811,7 @@ export module NoteCanvasTs{
 
                 //拖拽文本块
                 if (canvas.moving_obj != null) {
-                    this.drag_bar_helper.update_moving_obj_pos(canvas);
+                    this.drag_bar_helper.update_moving_obj_pos();
                     //   let bar_data = this.editor_bars[this.moving_obj.ebid];
 
                     //   this.editor_bar_set_new_pos(
@@ -655,9 +887,41 @@ export module NoteCanvasTs{
             // canvas.$refs.range_ref.scrollTop+=dy;
         }
 
+        pos_get_canvas_off():_PaUtilTs.Pos2D{
+            const canvas=this.canvas.notecanvas
+            if(canvas.scale_offx==0&&canvas.$refs.range_ref.scrollLeft!=0){
+                return new _PaUtilTs.Pos2D(-
+                    canvas.$refs.range_ref.scrollLeft,
+                    -
+                        canvas.$refs.range_ref.scrollTop)
+            }
+            return new _PaUtilTs.Pos2D(
+                canvas.scale_offx,
+                canvas.scale_offy
+            )
+        }
         //pos
-        pos_get_content_origin_pos(){
-            return this.canvas.notecanvas.get_content_origin_pos();
+        pos_get_content_origin_pos():_PaUtilTs.Pos2D{
+            const canvas=this.canvas.notecanvas
+            const canvas_off=this.pos_get_canvas_off()
+            // console.log("pos_get_content_origin_pos",canvas_off)
+            // console.log("get_content_origin_pos",this,this.$refs.range_ref)
+            const range_rec = canvas.$refs.range_ref.getBoundingClientRect();
+
+            const pos =
+                new _PaUtilTs.Pos2D(
+                    range_rec.left +
+                    canvas_off.x+
+                    canvas.edge_size_w +
+                    canvas.padding_add_left * canvas.scale,
+
+                    range_rec.top +
+                    canvas_off.y +
+                    canvas.edge_size_h +
+                    canvas.padding_add_up * canvas.scale
+                )
+            // console.log("canvas origin ui pos",pos)
+            return pos;
         }
         pos_from_uipos_2_canvaspos(pos:_PaUtilTs.Pos2D):_PaUtilTs.Pos2D{
             const canvas=this.canvas.notecanvas
@@ -761,6 +1025,10 @@ export module NoteCanvasTs{
             canvas.connecting_path=null
 
             this.chunkhelper.reset()
+
+            //ui resets
+            this.canvas.notecanvas.scale_offx=0
+            this.canvas.notecanvas.scale_offy=0
         }
 
         canvas_unmount(){
@@ -968,10 +1236,10 @@ export module NoteCanvasTs{
                 //缩放之后要修改滚动偏移
                 const scale_beginx=range_rec.left
                     -canvas.$refs.range_ref.scrollLeft
-                    +canvas.edge_size_w;
+                    +canvas.edge_size_w+canvas.scale_offx;
                 const scale_beginy=range_rec.top
                     -canvas.$refs.range_ref.scrollTop
-                    +canvas.edge_size_h;
+                    +canvas.edge_size_h+canvas.scale_offy;
                 const msbx=mouse_event.clientX-scale_beginx
                 const msby=mouse_event.clientY-scale_beginy
 
@@ -983,6 +1251,7 @@ export module NoteCanvasTs{
                 // canvas.$refs.range_ref.scrollTop-=(mouse_event.clientY-scale_beginy)*(canvas.scale-scale)
                 //
                 canvas.scale = scale;
+                canvas.$forceUpdate()
             }
 
             // x:

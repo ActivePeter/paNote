@@ -8,7 +8,9 @@ import {ElMessage} from "element-plus";
 import Util from "@/components/reuseable/Util";
 import {NoteLog} from "@/log";
 import {EditorBarFloatSetTs} from "@/components/editor_bar/EditorBarFloatSetTs";
+import EditorBarFloatSet from "@/components/editor_bar/EditorBarFloatSet.vue";
 import EditorBarFloatSetType = EditorBarFloatSetTs.EditorBarFloatSetType;
+import editor from "@/3rd/quill-1.3.7/core/editor";
 
 export namespace EditorBarTs {
     export const CursorMode = {
@@ -40,6 +42,10 @@ export namespace EditorBarTs {
 
     export class EditorBarQuillProxy {
         constructor(public quill: any) {
+        }
+        get_selected_text():string{
+            const sel=this.quill.getSelection()
+            return this.quill.getText(sel.index,sel.length)
         }
         get_selection(){
             if(!this.quill){
@@ -178,8 +184,8 @@ export namespace EditorBarTs {
                 if((!this.comp.noteid)||
                     this.comp.noteid!==this.comp.notehandle.note_id){
                     this.comp.noteid=this.comp.notehandle.note_id
-                    console.log("event_contentchange first",this.comp)
-                    return
+                    // console.log("event_contentchange first",this.comp)
+                    // return
                 }
                 console.log("eb change emit")
                 this.comp.$emit("content_change",this.ebid,content)
@@ -201,6 +207,11 @@ export namespace EditorBarTs {
             )
             // this.get_sel_pos_by_range(this.editortool_state().editor_sel)
         }
+        //设置在编辑器恢复可编辑状态后的回调
+        applyope_set_cb(cb:()=>void){
+            this.editortool_state().applyafterhide=cb
+        }
+        //要放入回调
         apply_toolset(args:any){
             if(args[0]=='indent'){
                 if(args[1]=='foward'){
@@ -216,14 +227,55 @@ export namespace EditorBarTs {
                 this.get_ref_quill().do_operation('code',true);
                 // eslint-disable-next-line no-empty
             }else if(args[0]=='url'){
-                this.set_float_set(EditorBarFloatSetType.url)
+                this.floatset_set2url()
             }
+        }
+        //要放入回调
+        apply_operation(args:[string,any]){
+            if(args[0]=='url'){
+                const sel=this.get_quill().getSelection()
+                if(this.get_quill().getText()!=args[1].show){
+                    this.get_quill().deleteText(sel.index,sel.length)
+                    console.log(
+                        this.get_quill().insertText(sel.index,args[1].show))
+                    this.get_quill().formatText(sel.index,args[1].show.length,
+                        { link:  args[1].url})
+                }
+                // this.get_quill().deleteTe
+            }else if(args[0]=='urlremove'){
+                const sel=this.get_quill().getSelection()
+                this.get_quill().removeFormat(sel.index,sel.length)
+            }
+        }
+        floatset_set2url(){
+            // this.get_ref_floatset().urlsetdata_init(
+            //     this.get_quill_proxy().get_selected_text())
+            this.set_float_set(EditorBarFloatSetType.url)
+        }
+        floatset_remove_url(){
+            this.applyope_set_cb(()=>{
+                this.apply_operation(["urlremove",null])
+            })
+            this.set_float_set(EditorBarFloatSetType.no)
+        }
+        floatset_done_url(show:string,url:string){
+            this.applyope_set_cb(()=>{
+                this.apply_operation(["url",
+                    {
+                        show,
+                        url
+                    }])
+            })
+            this.set_float_set(EditorBarFloatSetType.no)
         }
         set_float_set(floatset:EditorBarFloatSetTs.EditorBarFloatSetType){
             this.comp.floatset=floatset
         }
         get_ref_quill() {
             return this.comp.$refs.quill_editor_ref
+        }
+        get_ref_floatset():EditorBarFloatSet{
+            return this.comp.$refs.floatset
         }
         get_quill(){
             return this.get_ref_quill().get_raw_quill()
@@ -504,7 +556,8 @@ export namespace EditorBarTs {
         }
 
         get_editor_bar_client_pos(ebid: string) {
-            const op: any = this.canvas.get_content_origin_pos();
+            const op: any = this.canvasproxy().get_content_manager().user_interact
+                .pos_get_content_origin_pos();
             const eb_data: any = this.canvas.editor_bars[ebid];
             return {
                 x: op.x + eb_data.pos_x * this.canvas.scale,
@@ -691,24 +744,34 @@ export namespace EditorBarTs {
         last_update_time = 0;
         eb_transs: null | NoteLog.SubTrans.EbTrans[] = null
 
+        constructor(public ui:NoteCanvasTs.UserInteract) {
+        }
         calc_eb_tar_pos(canvas: any): _PaUtilTs.Pos2D {
-            const origin_pos = canvas.get_content_origin_pos();
+            const origin_pos = this.ui.pos_get_content_origin_pos();
             //   var bar_pos = this.get_moving_obj_pos();
 
             const tarx =
                 canvas.mouse_recorder.mouse_cur_x -
                 origin_pos.x -
-                canvas.moving_obj.drag_on_x;// / canvas.scale;
+                canvas.moving_obj.drag_on_x*canvas.scale;// / canvas.scale;
             const tary =
                 canvas.mouse_recorder.mouse_cur_y -
                 origin_pos.y -
-                canvas.moving_obj.drag_on_y;// / canvas.scale;
-
+                canvas.moving_obj.drag_on_y*canvas.scale;// / canvas.scale;
+            // console.log(
+            //     "calc_eb_tar_pos",
+            //     canvas.mouse_recorder.mouse_cur_y ,
+            //     origin_pos.y ,
+            //     canvas.moving_obj.drag_on_y*canvas.scale,
+            //     tary
+            // )
             return new _PaUtilTs.Pos2D(tarx / canvas.scale, tary / canvas.scale)
         }
 
         // _end_ms=0;
-        update_moving_obj_pos(canvas: any) {
+        update_moving_obj_pos() {
+            const canvas =this.ui.canvas.notecanvas
+
             const ms = _PaUtilTs.time_stamp_number()
             const ebman = canvas.editor_bar_manager as EditorBarTs.EditorBarManager
             const canvasdr = NoteCanvasTs.NoteCanvasDataReacher.create(canvas)
@@ -850,8 +913,8 @@ export namespace EditorBarTs {
             // console.log(ebpos)
 
             //点下时记录鼠标与文本块的相对坐标
-            eb.drag_on_x = event.clientX - ebcpos.x
-            eb.drag_on_y = event.clientY - ebcpos.y
+            eb.drag_on_x = (event.clientX - ebcpos.x)/canvas.scale
+            eb.drag_on_y = (event.clientY - ebcpos.y)/canvas.scale
 
             this.update_cnt = 0;
 

@@ -7,23 +7,26 @@
         :p_canvasdr="data_reacher"
     />
     <NoteCanvasSearchBar class="canvas_relative canvas_right"
-      v-model:note_canvas_datareacher="data_reacher"
+                         v-model:note_canvas_datareacher="data_reacher"
     />
     <div
         class="range noselect"
         ref="range_ref"
         @mousedown="handle_mouse_down_on_range"
         @mouseup="handle_mouse_up"
+        :style="content_manager.user_interact.scaler.interval!==0?{
+          overflow:'hidden1'
+        }:{}"
     >
+
       <div
           ref="content_padding_ref"
           class="content_padding"
           :style="{
-          padding:
-            edge_size_h +
-            padding_add_up * scale +
+      padding:
+            edge_size_h + padding_add_up * scale +
             'px ' +
-            (edge_size_w + padding_add_right * scale + 300 * (scale - 1)) +
+            (edge_size_w + padding_add_right * scale + 300 * (scale)) +
             'px ' +
             (edge_size_h + padding_add_down * scale + 400 * (scale - 1)) +
             'px ' +
@@ -36,8 +39,10 @@
             ref="content_ref"
             class="content"
             :style="{
-            transform: 'scale(' + scale + ')',
-          }"
+            transform: 'translate('+
+             ((0) +scale_offx)+'px,'+
+            ((0) +scale_offy)+'px) '
+              +'scale(' + scale + ') ' }"
         >
 
           <div
@@ -49,6 +54,7 @@
               bottom: -padding_add_down + 'px',
             }"
           ></div>
+
           <Path
               v-for="(item, i) in paths"
               :key="i"
@@ -106,7 +112,7 @@
                 fill="none"
             ></path>
           </svg>
-<!--          <EditorBar/>-->
+          <!--          <EditorBar/>-->
           <EditorBarMove
               v-for="(item, i) in editor_bars"
               :key="i"
@@ -140,7 +146,9 @@
               @copy="editor_bar_copy_lside"
           />
 
-          <PathJumpBtn v-if="content_manager.user_interact.pathjumpbtn_state"
+          <PathJumpBtn v-if="content_manager.user_interact.pathjumpbtn_state
+                             &&content_manager.user_interact.scaler.interval===0
+                        "
                        :state="content_manager.user_interact.pathjumpbtn_state"
                        :notehandle="content_manager.notehandle"
                        @jump="path_jump"
@@ -154,13 +162,15 @@
     </div>
 
     <div class="info">
-      scroll_enabled:{{ scroll_enabled }}, scale: {{ scale }}, dragging:
+      scroll_enabled:{{ scroll_enabled }}, scale: {{ scale }},
+      <!--      {{'translate('+scale_offx+'px,'+scale_offy+'px)'}}, -->
+      dragging:
       {{ canvas_mouse_drag_helper ? canvas_mouse_drag_helper.dragging : false }},
-<!--      {{moving_obj?"moving_obj":"no moving_obj"}},-->
-      searching:{{this.content_manager.search_in_canvas.searching}},
-      {{this.content_manager.search_in_canvas.search_time}},
-{{this.content_manager.search_in_canvas.ui_match_case}},
-      {{this.content_manager.search_in_canvas.ui_keyword_any_or_each}}
+      <!--      {{moving_obj?"moving_obj":"no moving_obj"}},-->
+      searching:{{ this.content_manager.search_in_canvas.searching }},
+      {{ this.content_manager.search_in_canvas.search_time }},
+      {{ this.content_manager.search_in_canvas.ui_match_case }},
+      {{ this.content_manager.search_in_canvas.ui_keyword_any_or_each }}
     </div>
   </div>
 </template>
@@ -188,11 +198,12 @@ import Path from "@/components/Path";
 import PathJumpBtn from "@/components/PathJumpBtn";
 
 
-
 export default {
   name: "NoteCanvas",
   components: {
+    // eslint-disable-next-line vue/no-unused-components
     PathJumpBtn,
+    // eslint-disable-next-line vue/no-unused-components
     Path,
     NoteCanvasSelectRange,
     // EditorBar,
@@ -211,22 +222,22 @@ export default {
     //   }
     // }
   },
-  computed:{
-    path_opacity(){
-      if(this.content_manager.search_in_canvas.searching){
+  computed: {
+    path_opacity() {
+      if (this.content_manager.search_in_canvas.searching) {
         return "30%"
-      }else{
+      } else {
         return "100%"
       }
     },
-    connecting_path(){
+    connecting_path() {
       return this.content_manager.user_interact.line_connect_helper.connecting_path
     }
   },
   created() {
-    this.context=AppFuncTs.appctx
-    this.data_reacher=new NoteCanvasTs.NoteCanvasDataReacher(this)
-    this.content_manager=new NoteCanvasTs.ContentManager(this)
+    this.context = AppFuncTs.appctx
+    this.data_reacher = new NoteCanvasTs.NoteCanvasDataReacher(this)
+    this.content_manager = new NoteCanvasTs.ContentManager(this)
   },
   unmounted() {
     window.removeEventListener("keyup", this.handle_key_up);
@@ -242,11 +253,11 @@ export default {
     // this.$emit("get_context",this);
 
     // this.chunk_helper ;
-    this.storage=new NoteCanvasFunc.Storage(this)
+    this.storage = new NoteCanvasFunc.Storage(this)
     // this.editor_bar_manager=new EditorBarTs.EditorBarManager(this)
     this.mouse_recorder = NoteCanvasFunc.new_mouse_recorder();
     this.canvas_mouse_drag_helper = new NoteCanvasFunc.CanvasMouseDragHelper();
-    this.content_manager.search_in_canvas.init_refs(this.editor_bars,this.editor_bar_manager)
+    this.content_manager.search_in_canvas.init_refs(this.editor_bars, this.editor_bar_manager)
 
     // this.storage.load_all();
     // this.editor_bar_manager.add_if_no()
@@ -267,7 +278,7 @@ export default {
         this.handle_range_scroll
     );
 
-    this.$refs.select_range.init(this.data_reacher,this.content_manager.user_interact.select_range_down_check_ok)
+    this.$refs.select_range.init(this.data_reacher, this.content_manager.user_interact.select_range_down_check_ok)
 
     let _this = this;
     let erd = ElementResizeDetectorMaker();
@@ -293,13 +304,15 @@ export default {
   data() {
     return {
       //context ref
-      data_reacher:null,
-      context:AppFuncTs.Context.getfakeone(),
+      data_reacher: null,
+      context: AppFuncTs.Context.getfakeone(),
 
       //界面效果相关
       scroll_enabled: false,
       scale: 1,
-      scale_step: 0.1,
+      scale_offx: 0,
+      scale_offy: 0,
+      scale_step: 0.14,
       edge_size_w: 100,
       edge_size_h: 100,
 
@@ -312,11 +325,11 @@ export default {
 
       //data to save->
       editor_bars: {},
-      next_editor_bar_id:1000,
+      next_editor_bar_id: 1000,
       paths: {},
 
       //manage data
-      content_manager:null,
+      content_manager: null,
 
       //区块管理
       chunk_helper: null,
@@ -336,15 +349,16 @@ export default {
       editor_tool_helper: new EditorToolFunc.EditorToolHelper(),
 
       //存储
-      storage:null,
+      storage: null,
 
-      state_ts:new NoteCanvasTs.NoteCanvasStateTs()
+      state_ts: new NoteCanvasTs.NoteCanvasStateTs()
     };
   },
   methods: {
 
-    path_jump(a,b){
-      this.content_manager.user_interact.pathjump(a,b)
+    path_jump(a, b) {
+      this.content_manager.user_interact.pathjump(a, b)
+
     },
     // set_context(ctx){
     //
@@ -353,8 +367,8 @@ export default {
     //   // this..pub_note_list_mounted(ctx,this);
     // },
 
-    editor_bar_right_menu(event,tag,obj){
-      this.content_manager.user_interact.open_right_menu_eb(event,tag,obj)
+    editor_bar_right_menu(event, tag, obj) {
+      this.content_manager.user_interact.open_right_menu_eb(event, tag, obj)
       // RightMenuFuncTs.continue_emit(event,tag,obj,this);
     },
     // editor_tool_change_is_show(is_show) {
@@ -379,22 +393,14 @@ export default {
     //   this.drag_bar_helper.update_moving_obj_pos(this);
     // },
     handle_scroll_bar(event) {
-      if (
-          this.moving_obj
-          //   && this.record_content_rect != null
-      ) {
-        console.log("handle_scroll_bar",this.moving_obj,event);
-        this.content_manager.user_interact.drag_bar_helper.update_moving_obj_pos(this)
-        // this.update_moving_obj_pos();
-      }
-      this.content_manager.user_interact.event_canvas_move()
+      this.content_manager.user_interact.event_canvas_move(true, event)
     },
     handle_range_scroll(event) {
       this.content_manager.user_interact.event_rangescroll(event)
     },
     handle_key_up(val) {
       this.content_manager.user_interact
-        .keyman.event_keyup(val)
+          .keyman.event_keyup(val)
     },
     handle_key_down(val) {
       this.content_manager.user_interact
@@ -409,16 +415,16 @@ export default {
 
     },
     handle_mouse_move(val) {
-      if (val.buttons != 0) {
-        this.content_manager.user_interact.event_mouse_move(val)
+      // if (val.buttons != 0) {
+      this.content_manager.user_interact.event_mouse_move(val)
 
-      }
+      // }
     },
     handle_mouse_up(event) {
       this.content_manager.user_interact.event_mouse_up(event)
     },
-    handle_pathmouse(event,path){
-      this.content_manager.user_interact.event_pathmouse(event,path)
+    handle_pathmouse(event, path) {
+      this.content_manager.user_interact.event_pathmouse(event, path)
     },
     get_canvas_client_pos() {
       let r = this.$refs.range_ref.getBoundingClientRect();
@@ -427,49 +433,40 @@ export default {
         x: r.left, // - this.$refs.range_ref.scrollLeft,
       };
     },
-    scale_canvas(dir,event) {
+    scale_canvas(dir, event) {
       let scale_bak = this.scale;
+      if (Math.abs(scale_bak - 0.1) < 0.0001 ||
+          Math.abs(scale_bak - 3) < 0.0001
+      ) {
+        return
+      }
       if (dir > 0) {
         scale_bak += this.scale_step;
+        if (scale_bak > 3) {
+          scale_bak = 3
+        }
       } else {
         scale_bak -= this.scale_step;
+        if (scale_bak < 0.1) {
+          scale_bak = 0.1
+        }
       }
+
       if (scale_bak < 3 && scale_bak > 0.1) {
-        NoteCanvasTs.UiOperation.final_set_scale(this,scale_bak,event)
+        this.content_manager.user_interact.scaler.set_tar_scale(scale_bak, event)
+        // NoteCanvasTs.UiOperation.final_set_scale(this,scale_bak,event)
         // this.final_set_scale(scale_bak);
       }
-      if (this.moving_obj) {
-        this.content_manager.user_interact.drag_bar_helper.update_moving_obj_pos(this)
-        // this.update_moving_obj_pos();
-      }
+
     },
     // final_set_scale(scale) {
     //
     //   this.scale = scale;
     //   // this.canvas_drawer.draw(this);
     // },
-    change_padding(u, d, r, l) {
-      // console.log("change padding", u, d, r, l);
-      let dl = l - this.padding_add_left;
-      let dh = u - this.padding_add_up;
-
-      this.padding_add_up = u;
-      this.padding_add_down = d;
-      this.padding_add_right = r;
-      this.padding_add_left = l;
-
-      if (dl != 0) {
-        console.log("dr", this.$refs.range_ref.scrollLeft, dl);
-        this.$refs.range_ref.scrollLeft += dl * this.scale;
-      }
-
-      //   console.log(u, this.padding_add_up);
-      //   console.log(l, this.padding_add_left);
-      if (dh != 0) {
-        console.log("dh", this.$refs.range_ref.scrollTop, dh);
-        this.$refs.range_ref.scrollTop += dh * this.scale;
-      }
-    },
+    // change_padding(u, d, r, l) {
+    //
+    // },
 
     //区域原点的client坐标
     get_content_origin_pos() {
@@ -490,11 +487,11 @@ export default {
 
       return pos;
     },
-    editor_bar_copy_lside(editorbar){
-      this.editor_bar_manager.copy_editor_bar_left_side(this,editorbar.ebid)
+    editor_bar_copy_lside(editorbar) {
+      this.editor_bar_manager.copy_editor_bar_left_side(this, editorbar.ebid)
     },
-    editor_bar_corner_drag_start(a){
-      if(this.content_manager.linkBarToListView.is_linking){
+    editor_bar_corner_drag_start(a) {
+      if (this.content_manager.linkBarToListView.is_linking) {
         return;
       }
       this.editor_bar_manager.corner_drag_start(a)
@@ -508,12 +505,12 @@ export default {
       // EditorBarFunc.editor_bar_switch_mode(this, eb);
     },
     editor_bar_drag_release(event, bar) {
-      this.content_manager.user_interact.event_mouse_up_on_eb(event,bar)
+      this.content_manager.user_interact.event_mouse_up_on_eb(event, bar)
     },
-    editor_bar_content_change(ebid,content){
+    editor_bar_content_change(ebid, content) {
       //判断是否刚刚加载笔记
       NoteCanvasTs.NoteCanvasDataReacher.create(this).get_content_manager()
-          .notehandle.ebman().withlog_eb_edit(ebid,content)
+          .notehandle.ebman().withlog_eb_edit(ebid, content)
       // this.content_manager.
       // if(this.content_manager.linkBarToListView.is_linking){
       //   return;
@@ -521,7 +518,7 @@ export default {
       // this.editor_bar_manager.content_change(ebid,content);
     },
     editor_bar_mousedown(event, eb) {
-      this.content_manager.user_interact.event_mousedown_eb(event,eb);
+      this.content_manager.user_interact.event_mousedown_eb(event, eb);
     },
   },
   props: {
@@ -531,9 +528,10 @@ export default {
 </script>
 
 <style scoped>
-.editor_tool{
+.editor_tool {
   z-index: 400;
 }
+
 .info {
   float: left;
 }
@@ -588,20 +586,24 @@ export default {
 
   -ms-user-select: none; /* Internet Explorer/Edge */
 
-  user-select: none; /* Non-prefixed version, currently
+  user-select: none;
+  /* Non-prefixed version, currently
 
-not supported by any browser */
+ not supported by any browser */
 
 }
-.canvas_relative{
+
+.canvas_relative {
   position: absolute;
 
 }
-.canvas_right{
+
+.canvas_right {
   right: 25px;
-  top:10px;
+  top: 10px;
 }
-.note_canvas{
+
+.note_canvas {
   position: relative;
 }
 </style>

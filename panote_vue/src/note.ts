@@ -444,6 +444,21 @@ export namespace note{
             }
 
             const delk=[]
+            // for(const k in data.editor_bars){
+            //     const eb=data.editor_bars[k] as EditorBar
+            //     if(eb.pos_x>10000){
+            //         eb.pos_x=10000
+            //     }
+            //     if(eb.pos_x<-10000){
+            //         eb.pos_x=-10000
+            //     }
+            //     if(eb.pos_y>10000){
+            //         eb.pos_y=10000
+            //     }
+            //     if(eb.pos_y<-10000){
+            //         eb.pos_y=-10000
+            //     }
+            // }
             //path
             for(const k in data.paths){
                 const ks=k.split(",")

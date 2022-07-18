@@ -21,6 +21,7 @@
         v-if="ebid===editing_ebid&&this.floatset!==floatsettypes.no"
         :ebcomp="proxy"
         :type="floatset"
+        ref="floatset"
     />
     <quill-editor
       :value="content"
@@ -155,7 +156,7 @@ export default {
       corner_drag_helper:new EditorBarFunc.CornerDragHelper(this),
 
       input_able:false,
-      drag_on_x: 0,
+      drag_on_x: 0,//鼠标与文本块的相对坐标(canvas坐标系
       drag_on_y: 0,
 
       curTheme: "snow",
@@ -273,6 +274,9 @@ export default {
   border-width: 4px;
   margin-left: -3px;
   margin-top: -3px;
+}
+.editor_bar .ql-editor{
+  padding: 8px;
 }
 .editor_bar {
   background: rgba(235, 234, 234,90%);

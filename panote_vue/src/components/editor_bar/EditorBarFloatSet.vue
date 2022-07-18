@@ -12,23 +12,32 @@
     <template #default>
       <div class="floatset"
            v-if="type===floatset_types.url">
-        <FlatInput
-            class="input"
-            v-model:value="this.urlsetdata.show"
-            pre="显示文字"
-        ></FlatInput>
+        <div style="width: 100%;">显示文字
+          <FlatInput
+              class="input"
+              v-model:value="this.urlsetdata.show"
+              pre="显示文字"
+          ></FlatInput>
+        </div>
         <div style="height: 10px"/>
-        <FlatInput
-            class="input"
-            v-model:value="this.urlsetdata.url"
-            pre="链接"
-        ></FlatInput>
+        <div style="width: 100%;">
+          链接
+          <FlatInput
+              class="input"
+              v-model:value="this.urlsetdata.url"
+              pre="链接"
+          ></FlatInput>
+        </div>
         <div style="height: 10px"/>
         <el-button size="small" class="btn"
           @mouseup="cancel"
         >取消</el-button>
         <el-button size="small" class="btn"
+                   @mouseup="remove"
+        >移除</el-button>
+        <el-button size="small" class="btn"
                    type="primary"
+                   @mouseup="done"
         >完成</el-button>
       </div>
     </template>
@@ -77,7 +86,19 @@ export default class EditorBarFloatSet extends Vue {
     show:"",
     url:""
   }
-
+  created(){
+    if(this.$props.type==this.floatset_types.url){
+      this.urlsetdata_init(
+          this.$props.ebcomp.get_quill_proxy().get_selected_text()
+      )
+    }
+  }
+  // eslint-disable-next-line no-unused-vars
+  urlsetdata_init(selected:string){
+    // this._selected = selected;
+    this.urlsetdata.show=selected
+    this.urlsetdata.url=selected
+  }
   // @Watch('canvas.scale')
   // watch_scale() {
   //   console.log("canvas scale")
@@ -114,6 +135,16 @@ export default class EditorBarFloatSet extends Vue {
       this.update_pos()
     }
   }
+  done(){
+    if(this.$props.type==this.floatset_types.url) {
+      this.$props.ebcomp.floatset_done_url(this.urlsetdata.show, this.urlsetdata.url)
+    }
+  }
+  remove(){
+    if(this.$props.type==this.floatset_types.url) {
+      this.$props.ebcomp.floatset_remove_url()
+    }
+  }
   cancel(){
     // if(this.$props.type==this.floatset_types.url){
       this.$props.ebcomp.set_float_set(this.floatset_types.no)
@@ -137,6 +168,7 @@ t<!-- Add "scoped" attribute to limit CSS to this component only -->
 .input{
   /*padding: 10px 10px 0 10px;*/
   font-size: 13px;
+  width: 100%;
 }
 .btn{
   margin: 0px 10px 0px 0px;
