@@ -510,12 +510,10 @@ export module NoteCanvasTs{
     }
     export class UserInteractScaler{
         _tar_scale=1
-        interval=0
+        interval=0//代表有没有在缩放，需要和坐标切换代码一起变更
         v=0
         curmouse:null|MouseEvent=null
         lastms=0
-        begin_scroll_t=0
-        begin_scroll_l=0
         begin_scale_offx=0
         begin_scale_offy=0
         begin_scale=0
@@ -526,6 +524,10 @@ export module NoteCanvasTs{
 
         scaling():boolean{
             return this.interval!=0
+        }
+        on_canvas_drag(dx:number,dy:number){
+            this.begin_scale_offx+=dx
+            this.begin_scale_offy+=dy
         }
         on_scale_change(){
             const canvas=this.ui.canvas.notecanvas
@@ -579,6 +581,9 @@ export module NoteCanvasTs{
                     canvas.scale_offx=0
                     canvas.$refs.range_ref.scrollTop=-canvas.scale_offy
                     canvas.scale_offy=0
+
+                    clearInterval(this.interval)
+                    this.interval=0
                 }
                 canvas.scale = scale;
                 this.on_scale_change()
@@ -641,8 +646,7 @@ export module NoteCanvasTs{
                     if(Math.abs(delta)<0.001){
                         // console.error("clear interval")
                         this.final_set_scale(this._tar_scale,true)
-                        clearInterval(this.interval)
-                        this.interval=0
+
                         this.on_scale_over()
                     }else{
                         this.v=(this.v+delta)/180
@@ -719,9 +723,21 @@ export module NoteCanvasTs{
             return event!=this._recent_eb_mouse_down;
         }
 
-        toolbar_shown=false
         //toolbar
+        toolbar_shown=false
 
+        //canvas
+        canvas_drag(dx:number,dy:number){
+            const canvas=this.canvas.notecanvas
+            if(this.scaler.scaling()){
+                this.canvas.notecanvas.scale_offx+=dx
+                this.canvas.notecanvas.scale_offy+=dy
+                this.scaler.on_canvas_drag(dx,dy)
+            }else{
+                canvas.$refs.range_ref.scrollLeft -= dx;
+                canvas.$refs.range_ref.scrollTop -= dy;
+            }
+        }
 
         //events
         event_rangescroll(e:WheelEvent){
@@ -795,17 +811,19 @@ export module NoteCanvasTs{
                     event.clientY //+ cp.y
                     //   event.screenX, event.screenY
                 );
-                if(this.scaler.interval!=0){
-                    // this.scaler.curmouse=event
-                    return;
-                }
                 if (event.buttons == 0) {
                     return;
                 }
+                if(this.scaler.interval!=0){
+                    //拖拽画布
+                    canvas.canvas_mouse_drag_helper.on_drag(canvas, event);
+                    // this.scaler.curmouse=event
+                    return;
+                }else{
+                    canvas.canvas_mouse_drag_helper.on_drag(canvas, event);
+                }
                 // let delta = this.mouse_recorder.get_delta();
 
-                //拖拽画布
-                canvas.canvas_mouse_drag_helper.on_drag(canvas, event);
 
 
 
@@ -1029,6 +1047,7 @@ export module NoteCanvasTs{
             //ui resets
             this.canvas.notecanvas.scale_offx=0
             this.canvas.notecanvas.scale_offy=0
+            this.user_interact.hide_pathjumpbtn()
         }
 
         canvas_unmount(){

@@ -151,6 +151,7 @@
                         "
                        :state="content_manager.user_interact.pathjumpbtn_state"
                        :notehandle="content_manager.notehandle"
+                       :scale="scale"
                        @jump="path_jump"
                        @hide="content_manager.user_interact.hide_pathjumpbtn()"
           >

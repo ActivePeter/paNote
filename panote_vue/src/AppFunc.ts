@@ -141,7 +141,9 @@ export module AppFuncTs{
             return new ContextGetter(this)
         }
         get_reviewpart_man():undefined|ReviewPartFunc.ReviewPartManager{
-            return this.app.$refs.review_part_ref.review_part_man
+            if('review_part_ref' in  this.app.$refs){
+                return this.app.$refs.review_part_ref.review_part_man
+            }
         }
         constructor(app:any) {
             this.app=app

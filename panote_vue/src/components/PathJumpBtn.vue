@@ -1,13 +1,12 @@
 <template>
   <EditorBarReflect
       class="editor_bar"
-    v-if="show_eb1"
+
     :editorbar="eb1"
     :style="eb1style"
   ></EditorBarReflect>
   <EditorBarReflect
       class="editor_bar"
-      v-if="show_eb2"
       :editorbar="eb2"
       :style="eb2style"
   ></EditorBarReflect>
@@ -48,30 +47,76 @@ import {_path} from "@/note/path";
   components: {EditorBarReflect, MoreFilled, ArrowLeft,ArrowRight},
   props: {
     state:Object,
-    notehandle:Object
+    notehandle:Object,
+    scale:Number,
   },
   emits: ['jump', 'hide']
 })
 export default class Path extends Vue {
   $props!: {
     state:NoteCanvasTs.PathJumpBtnState,
-    notehandle:note.NoteHandle
+    notehandle:note.NoteHandle,
+    scale:number
   }
 
   get eb1style(){
+
+    if(!this.eb1) {
+      return ""
+    }
+    const w=Math.min(this.eb1.width,200)
+    const h=Math.min(this.eb1.height,200)
+    let top=this.$props.state.pos.y
+        -50*Math.sin(this.$props.state.pathcomp.pathdesc.rotate/180*Math.PI)
+    let left=this.$props.state.pos.x
+        -50*Math.cos(this.$props.state.pathcomp.pathdesc.rotate/180*Math.PI)
+    // let mw=0,mh=0
+    if(Math.cos(
+        this.$props.state.pathcomp.pathdesc.rotate/180*Math.PI)>0){
+      left-=w/this.$props.scale
+    }
+    if(Math.sin(
+        this.$props.state.pathcomp.pathdesc.rotate/180*Math.PI)>0){
+      top-=h/this.$props.scale
+    }
     return {
-      width:this.eb1.width+'px',
-      height:this.eb1.height+'px',
-      top:this.$props.state.pos.y+20+'px',
-      left:this.$props.state.pos.x+20+'px',
+      width:w+'px',
+      height:h+'px',
+      top:0,
+      left:0,
+      // top:top+'px',
+      // left:left+'px',
+      transformOrigin:'0 0 0',
+      transform:'translate('+left+'px,'+top+'px) '+
+          'scale('+1/this.$props.scale+')'
     }
   }
   get eb2style(){
+    if(!this.eb2) {
+      return ""
+    }
+    const w=Math.min(this.eb2.width,200)
+    const h=Math.min(this.eb2.height,200)
+    let left =this.$props.state.pos.x
+        +50*Math.cos(this.$props.state.pathcomp.pathdesc.rotate/180*Math.PI)
+    let top=this.$props.state.pos.y+50*Math.sin(
+        this.$props.state.pathcomp.pathdesc.rotate/180*Math.PI)
+    if(Math.cos(
+        this.$props.state.pathcomp.pathdesc.rotate/180*Math.PI)<0){
+      left-=w/this.$props.scale
+    }
+    if(Math.sin(
+        this.$props.state.pathcomp.pathdesc.rotate/180*Math.PI)<0){
+      top-=h/this.$props.scale
+    }
     return {
-      width:this.eb2.width+'px',
-      height:this.eb2.height+'px',
-      top:this.$props.state.pos.y+20+'px',
-      left:this.$props.state.pos.x+20+'px',
+      width:w+'px',
+      height:h+'px',
+      top:top+'px',
+      left:left+'px',
+
+      transformOrigin:'0 0 0',
+      transform:'scale('+1/this.$props.scale+')'
     }
   }
   get eb2():EditorBar{

@@ -35,8 +35,12 @@ class CanvasMouseDragHelper {
         let delta = canvas.mouse_recorder.get_delta();
         // canvas.scale_offx+=delta.dx
         // canvas.scale_offy+=delta.dy
-        canvas.$refs.range_ref.scrollLeft -= delta.dx;
-        canvas.$refs.range_ref.scrollTop -= delta.dy;
+        canvas.content_manager.user_interact.canvas_drag(
+            delta.dx,
+        delta.dy
+        )
+        // canvas.$refs.range_ref.scrollLeft -=;
+        // canvas.$refs.range_ref.scrollTop -= ;
         // console.log(canvas);
         // canvas.mouse_recorder.get_delta()
         // canvas = 1
