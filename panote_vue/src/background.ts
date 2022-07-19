@@ -11,12 +11,15 @@ import {auto_update} from "@/auto_update";
 // import ipcMain = Electron.Main.ipcMain;
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
+const contextMenu = require('electron-context-menu');
+contextMenu({
+  showSaveImageAs: true
+});
+
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
-
-
 
 async function createWindow() {
   // Create the browser window.
@@ -99,3 +102,5 @@ if (isDevelopment) {
     })
   }
 }
+
+

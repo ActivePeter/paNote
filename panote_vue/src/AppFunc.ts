@@ -123,8 +123,17 @@ export module AppFuncTs{
                     this.anki_connected=res
                 })
             }
-        }
 
+
+        }
+        // app_unmount(){
+        //
+        //     // renderer
+        //     window.removeEventListener('contextmenu', (e) => {
+        //         e.preventDefault()
+        //         ipcRenderer.send('show-context-menu')
+        //     })
+        // }
 
         storage_manager=new Storage.StorageManager(this)
         timer=new Timer.TimerState()
@@ -194,6 +203,7 @@ import BottomLine from "@/components/BottomLine.vue";
 import RightPart from "@/components/RightPart.vue";
 import {note} from "@/note";
 import {NoteLog} from "@/log";
+import {ipcRenderer} from "electron";
 
 // import {NoteContentData} from "@/components/NoteCanvasFunc";
 export default {

@@ -19,6 +19,7 @@
     "axios": "^0.27.2",
     "core-js": "^3.6.5",
     "download": "^8.0.0",
+    "electron-context-menu": "^3.3.0",
     "electron-updater": "^5.0.1",
     "element-plus": "^2.0.2",
     "element-resize-detector": "^1.2.4",
