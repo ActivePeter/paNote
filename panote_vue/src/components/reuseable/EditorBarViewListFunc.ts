@@ -1,6 +1,7 @@
 // @ts-ignore
 import $ from "jquery";
 import AppFunc from "@/AppFunc";
+import {NoteCanvasTs} from "@/components/NoteCanvasTs";
 
 module EditorBarViewListFunc{
      export class EditorBarViewListHelper{
@@ -205,8 +206,9 @@ module EditorBarViewListFunc{
             }
             export const link_canvas_bar_2_list_bar=(canvas:any,canvas_bar:any,helper:EditorBarViewListHelper)=>{
                 if(helper.linkingbar_id>-1){
+                    const canvasp=NoteCanvasTs.NoteCanvasDataReacher.create(canvas);
                     helper.bars[helper.linkingbar_id].linking_info=new LinkingInfo(
-                        canvas.content_manager.cur_note_id,canvas_bar.ebid
+                        canvasp.get_content_manager().cur_note_id,canvas_bar.ebid
                     )
                 }
             }

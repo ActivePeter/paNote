@@ -523,7 +523,7 @@ export namespace EditorBarTs {
                 contentman.user_interact.recent_eb_mouse_down = event;
                 //连接到复习卡片的listview
                 if (contentman.linkBarToListView.is_linking) {
-                    contentman.linkBarToListView.link_canvas_bar(this, ebcomp)
+                    contentman.linkBarToListView.link_canvas_bar(this.canvas, ebcomp)
                     return;
                 }
                 //   console.log(eb);

@@ -63,7 +63,7 @@
         <!--      <div v-if="">-->
 
         <div class="card_list" :style="{
-          height:'calc(100vh - ' +($refs.top.offsetHeight+80)+'px)'
+          height:'calc(100vh - ' +(280)+'px)'
         }">
           <ReviewPartReviewing
               v-if="review_part_man.reviewing_state.card_id!==''"
@@ -253,7 +253,7 @@ export default {
 
 .card_list {
 
-  /*height: 100%;*/
+  height: 100%;
   overflow-y: scroll;
 }
 </style>
