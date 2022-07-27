@@ -24,7 +24,7 @@
 
 <script lang="ts">
 import {Options, Vue} from 'vue-class-component';
-import {PathStruct} from "@/components/NoteCanvasFunc";
+import {PathStruct} from "@/components/note_canvas/NoteCanvasFunc";
 import {_path} from "@/note/path";
 
 

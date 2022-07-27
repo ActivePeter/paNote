@@ -73,7 +73,7 @@
 
 <script>
 // import HelloWorld from "./components/HelloWorld.vue";
-import NoteCanvas from "./components/NoteCanvas.vue";
+import NoteCanvas from "./components/note_canvas/NoteCanvas.vue";
 import RightMenu from "@/components/RightMenu";
 import ReviewPart from "@/components/ReviewPart";
 import SideBarContainer from "@/components/reuseable/SideBarContainer";

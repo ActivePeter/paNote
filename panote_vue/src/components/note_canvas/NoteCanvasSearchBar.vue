@@ -40,7 +40,7 @@ import {Options, Vue} from 'vue-class-component';
 import FlatInput from "@/3rd/pa_comps/flat_input.vue";
 import {Search,DeleteFilled,MoreFilled} from "@element-plus/icons-vue";
 import {ElIcon} from "element-plus";
-import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 import {Watch} from "vue-property-decorator";
 // import {Watch} from "vue-property-decorator";
 
@@ -128,7 +128,7 @@ t<!-- Add "scoped" attribute to limit CSS to this component only -->
 
   background: rgba(235, 234, 234,90%);
   /*background: #8a8a8a;*/
-  z-index: 1;
+
 }
 .icobtn{
   color: gray;

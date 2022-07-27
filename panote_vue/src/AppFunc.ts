@@ -2,7 +2,7 @@
 import Storage from "@/storage/Storage";
 import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
 // import {NoteListManager} from "@/components/NoteListFunc";
-import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 import {bus, bus_event_names, bus_events} from "@/bus";
 import NoteConfigDialog from "@/components/NoteConfigDialog.vue";
 import {ElMessage, ElMessageBox} from "element-plus";

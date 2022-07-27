@@ -11,7 +11,7 @@
 <script lang="ts">
 import {Options, Vue} from 'vue-class-component';
 import FlatInput from "@/3rd/pa_comps/flat_input.vue";
-import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 // import {Watch} from "vue-property-decorator";
 
 

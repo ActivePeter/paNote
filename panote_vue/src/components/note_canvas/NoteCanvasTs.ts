@@ -17,12 +17,13 @@ import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
 import {NoteOutlineTs} from "@/components/NoteOutlineTs";
 import {note} from "@/note";
 import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
-import NoteCanvasFunc, {PathStruct} from "@/components/NoteCanvasFunc";
+import NoteCanvasFunc, {PathStruct} from "@/components/note_canvas/NoteCanvasFunc";
 import Util from "@/components/reuseable/Util";
 import {User} from "@element-plus/icons-vue";
 import {NoteLog} from "@/log";
 import Path from "@/components/Path.vue";
 import {EditorToolTs} from "@/components/EditorToolTs";
+import CanvasLinkBarHolder from "@/components/note_canvas/CanvasLinkBarHolder.vue";
 
 export module NoteCanvasTs{
     import final_set_scale = NoteCanvasTs.UiOperation.final_set_scale;
@@ -312,6 +313,9 @@ export module NoteCanvasTs{
     }
     class LineConnectHelper {
         connecting_path:null|PathStruct=null
+        //加入一个holder状态,
+        holder_connect_path:null|PathStruct=null
+
         path_set_pos(path:PathStruct,bx:number, by:number, ex:number, ey:number) {
             path.w = Math.abs(bx - ex)
             path.h = Math.abs(by - ey)
@@ -366,6 +370,10 @@ export module NoteCanvasTs{
         stop_connect_if_not(){
             this.connecting_path=null
         }
+        hold_connect(){
+            this.holder_connect_path=this.connecting_path;
+            this.connecting_path=null;
+        }
         end_connect(ui:UserInteract, canvas_x:number, canvas_y:number, ebid:string) {
             if(!this.connecting_path){
                 return
@@ -415,7 +423,14 @@ export module NoteCanvasTs{
             }
             this.connecting_path = null;
         }
-        move_connect_if_connecting(NoteCanvasFunc:any, canvas:any, bclient_x:number, bclient_y:number) {
+        conti_from_hold(e:MouseEvent,canvas:NoteCanvasDataReacher){
+            this.connecting_path=this.holder_connect_path
+            this.holder_connect_path=null;
+            this.move_connect_if_connecting(
+                canvas.notecanvas,
+                e.clientX,e.clientY)
+        }
+        move_connect_if_connecting( canvas:any, bclient_x:number, bclient_y:number) {
             if(this.connecting_path){
                 const startp = NoteCanvasFunc.client_pos_2_canvas_item_pos(
                     canvas,
@@ -845,12 +860,17 @@ export module NoteCanvasTs{
                 }
                 // if (canvas.connecting_path != null) {
                 this.line_connect_helper.move_connect_if_connecting(
-                    NoteCanvasFunc,
+                    // NoteCanvasFunc,
                     canvas,
                     event.clientX,
                     event.clientY
                 );
                 // }
+            }
+        }
+        event_mouseup_on_linkbar_holder(){
+            if(this.line_connect_helper.connecting_path){
+                this.line_connect_helper.hold_connect();
             }
         }
         event_mouse_up_on_eb(event:MouseEvent,ebcomp:any){

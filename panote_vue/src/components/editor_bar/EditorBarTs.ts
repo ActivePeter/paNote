@@ -1,8 +1,8 @@
 import EditorBarFunc, {EditorBar, EditorBarChange} from "@/components/editor_bar/EditorBarFunc";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
-import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 import {AppFuncTs} from "@/AppFunc";
-import NoteCanvasFunc from "@/components/NoteCanvasFunc";
+import NoteCanvasFunc from "@/components/note_canvas/NoteCanvasFunc";
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {ElMessage} from "element-plus";
 import Util from "@/components/reuseable/Util";

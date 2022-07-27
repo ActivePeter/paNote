@@ -33,7 +33,7 @@
 
 <script lang="ts">
 import {Options, Vue} from 'vue-class-component';
-import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 import {ArrowLeft, ArrowRight, MoreFilled} from "@element-plus/icons-vue";
 import EditorBarReflect from "@/components/editor_bar/EditorBarReflect.vue";
 import { note } from '@/note';

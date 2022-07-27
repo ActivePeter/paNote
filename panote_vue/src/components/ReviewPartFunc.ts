@@ -1,7 +1,7 @@
 import AppFunc, {AppFuncTs} from "@/AppFunc";
 // import RightMenuFunc from "@/components/RightMenuFunc";
 import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
-import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 import Storage from "@/storage/Storage";
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {bus_events} from "@/bus";

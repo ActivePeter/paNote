@@ -1,5 +1,5 @@
 // @ts-ignore
-import NoteCanvasFunc, {NoteContentData} from "@/components/NoteCanvasFunc";
+import NoteCanvasFunc, {NoteContentData} from "@/components/note_canvas/NoteCanvasFunc";
 import Util from "../components/reuseable/Util";
 import {ElMessage} from 'element-plus'
 import {AppFuncTs} from "@/AppFunc";
@@ -11,7 +11,7 @@ import {app, ipcRenderer} from "electron";
 import {_ipc} from "@/ipc";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {MemoryHolder} from "@/storage/MemoryHolder";
-import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 import {note} from "@/note";
 // import AppFunc from "@/AppFunc";
 

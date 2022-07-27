@@ -14,7 +14,7 @@
 
 <script lang="ts">
 import {Options, Vue} from 'vue-class-component';
-import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 // import {EditorBar} from './EditorBarFunc';
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 // import {camelize} from "vue";

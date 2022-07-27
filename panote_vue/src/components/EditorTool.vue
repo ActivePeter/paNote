@@ -16,7 +16,7 @@
 
 <script>
 import ToolSelect from "@/components/ToolSelect";
-import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 
 export default {
   name: "EditorTool",

@@ -6,9 +6,16 @@
         ref="editor_tool_ref"
         :p_canvasdr="data_reacher"
     />
-    <NoteCanvasSearchBar class="canvas_relative canvas_right"
-                         v-model:note_canvas_datareacher="data_reacher"
-    />
+    <div class="canvas_relative canvas_right">
+      <NoteCanvasSearchBar
+          class="column_item"
+                           v-model:note_canvas_datareacher="data_reacher"
+      />
+      <CanvasLinkBarHolder
+          class="column_item"
+          :canvasp="data_reacher"
+      ></CanvasLinkBarHolder>
+    </div>
     <div
         class="range noselect"
         ref="range_ref"
@@ -180,28 +187,30 @@
 // import EditorBar from "./EditorBar.vue";
 
 import ElementResizeDetectorMaker from "element-resize-detector";
-import EditorBarMove from "./editor_bar/EditorBarMoveTest.vue";
+import EditorBarMove from "../editor_bar/EditorBarMoveTest.vue";
 import EditorTool from "@/components/EditorTool";
-import NoteCanvasSearchBar from "@/components/NoteCanvasSearchBar"
+import NoteCanvasSearchBar from "@/components/note_canvas/NoteCanvasSearchBar"
 // import SelectRange from "@/3rd/pa_comps/SelectRange"
 
 import NoteCanvasFunc from "./NoteCanvasFunc.js";
 import EditorToolFunc from "@/components/EditorToolFunc";
 // import EditorBarFunc from "@/components/EditorBarFunc";
 // import RightMenuFunc from "@/components/RightMenuFunc";
-import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 // import {_PaUtilTs} from "@/3rd/pa_util_ts";
 // import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
-import NoteCanvasSelectRange from "@/components/NoteCanvasSelectRange";
+import NoteCanvasSelectRange from "@/components/note_canvas/NoteCanvasSelectRange";
 import {AppFuncTs} from "@/AppFunc";
 import Path from "@/components/Path";
 import PathJumpBtn from "@/components/PathJumpBtn";
+import CanvasLinkBarHolder from "@/components/note_canvas/CanvasLinkBarHolder";
 
 
 export default {
   name: "NoteCanvas",
   components: {
+    CanvasLinkBarHolder,
     // eslint-disable-next-line vue/no-unused-components
     PathJumpBtn,
     // eslint-disable-next-line vue/no-unused-components
@@ -602,8 +611,15 @@ export default {
 .canvas_right {
   right: 25px;
   top: 10px;
+  display: flex;
+  flex-direction: column;
+  /*text-align: right;*/
+  align-items: flex-end;
+  z-index: 1;
 }
-
+.column_item{
+  margin-bottom: 10px;
+}
 .note_canvas {
   position: relative;
 }

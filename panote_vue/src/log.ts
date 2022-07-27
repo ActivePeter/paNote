@@ -5,7 +5,7 @@ import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 import {NoteOutlineTs} from "@/components/NoteOutlineTs";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {AppFuncTs} from "@/AppFunc";
-import {PathStruct} from "@/components/NoteCanvasFunc";
+import {PathStruct} from "@/components/note_canvas/NoteCanvasFunc";
 
 export namespace NoteLog {
 

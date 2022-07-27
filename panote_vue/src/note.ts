@@ -1,8 +1,8 @@
 
-import {NoteCanvasTs} from "@/components/NoteCanvasTs";
+import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
 import {EditorBar} from "@/components/editor_bar/EditorBarFunc";
-import {PathStruct} from "@/components/NoteCanvasFunc";
+import {PathStruct} from "@/components/note_canvas/NoteCanvasFunc";
 import {ReviewPartFunc} from "@/components/ReviewPartFunc";
 import {NoteOutlineTs} from "@/components/NoteOutlineTs";
 import {AppFuncTs} from "@/AppFunc";
