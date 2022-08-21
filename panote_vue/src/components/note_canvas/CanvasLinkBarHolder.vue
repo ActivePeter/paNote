@@ -1,6 +1,6 @@
 <template>
   <el-tooltip
-      placement="left-start"
+      placement="top"
   >
     <template #content>
       <div v-html="hover_str"></div>
@@ -65,14 +65,18 @@ export default class CanvasLinkBarHolder extends Vue {
 t<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .linkbar_holder{
-  width: 40px;
-  height: 30px;
+  /*width: 40px;*/
+  /*height: 30px;*/
   border-radius: 5px;
-  border:2px dashed #ccc;
+  border:1px dashed #ccc;
   background: rgba(235, 234, 234,90%);
+  line-height: 1;
+  padding: 4px 13px;
+  align-items: center;
+  /*text-align: center;*/
 }
 .linkbar_holder_switch{
-  margin-top: 14px;
+  /*margin-top: 14px;*/
 }
 /*.cmd_name {*/
 /*  display: inline-block;*/

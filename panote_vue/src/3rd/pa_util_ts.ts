@@ -3,6 +3,13 @@ import * as buffer from "buffer";
 import {_algrithms} from "@/3rd/pa_util_parts/algrithms";
 
 export namespace _PaUtilTs {
+    export class Pos2DChange{
+        constructor(public f:Pos2D,public t:Pos2D) {
+        }
+        static create(f:Pos2D,t:Pos2D){
+            return new Pos2DChange(f,t)
+        }
+    }
     export class Pos2D{
         x=0
         y=0

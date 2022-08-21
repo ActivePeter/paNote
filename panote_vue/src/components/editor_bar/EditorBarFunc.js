@@ -1,8 +1,13 @@
 // import RightMenuFunc from "@/components/RightMenuFunc";
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
+import {NoteLog} from "@/log";
+// import {EditorBarCompProxy} from "@/components/editor_bar/EditorBarTs";
+import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
+import {AppFuncTs} from "@/AppFunc";
 
-class CornerDragHelper{
+export class CornerDragHelper{
     editor_bar=null
+    trans
     constructor(editor_bar) {
         this.editor_bar=editor_bar;
     }
@@ -10,8 +15,32 @@ class CornerDragHelper{
     handle_mouse_drag_down(event){
         if(event.buttons===1){
             // console.log("handle_mouse_drag_down",tag)
+            const ebcp=EditorBarTs.EditorBarCompProxy.create(
+                this.editor_bar)
+            const ebdata=ebcp.ebman.get_editor_bar_data_by_ebid(ebcp.ebid)
+            this.trans=new NoteLog.SubTrans.EbTrans(
+                ebcp.ebid,ebdata.pos_x,ebdata.pos_y,
+                ebdata.width,ebdata.height
+            )
+            this.trans.old_state=this.trans.state.clone()
             this.editor_bar.$emit("corner_drag_start", this);
         }
+    }
+    handle_mouse_up(){
+        console.log("eb corner drag up")
+        const ebcp=EditorBarTs.EditorBarCompProxy.create(
+            this.editor_bar)
+        const ebman=ebcp.ebman
+        const notehandle=ebman.canvasproxy().get_content_manager().notehandle
+        const log=AppFuncTs.appctx.logctx.get_log_by_noteid(notehandle.note_id)
+        const rec=new NoteLog.Rec()
+        const ebdata=ebman.get_editor_bar_data_by_ebid(ebcp.ebid)
+
+        this.trans.state.copyfromdata(ebdata)
+        rec.add_trans(this.trans)
+        // rec.add_trans(new NoteLog.SubTrans.EbConn([[bbar,ebid]]))
+        log.try_do_ope(rec,notehandle)
+        log.set_store_flag_after_do()
     }
 }
 export class EditorBar{

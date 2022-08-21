@@ -68,6 +68,12 @@ export namespace NoteLog {
                 this.w=data.width
                 this.h=data.height
             }
+            clone():EbTransState{
+                return new EbTransState(this.x,
+                this.y,
+                this.w,
+                this.h)
+            }
             static makefrom_data(data:EditorBar):EbTransState{
                 return new EbTransState(data.pos_x,data.pos_y,data.width,data.height)
             }
@@ -557,6 +563,7 @@ export namespace NoteLog {
             if (rec.doable(handle,this)) {
                 this.undo_list.clear()
                 rec.transs.forEach((v)=>{
+                    console.log("log do",v)
                     v.redo(handle,this,ctx)
                 })
                 //状态的设置需要确保之前的状态已经被记录下来

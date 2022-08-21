@@ -668,7 +668,7 @@ export module NoteCanvasTs{
                         const tarscale=this.v*dt+cur_scale
                         this.final_set_scale(tarscale,false)
                     }
-                },50)
+                },30)
             }else{
                 this.begin_scale=this.ui
                     .canvas.get_scale()
@@ -910,6 +910,50 @@ export module NoteCanvasTs{
         scroll_get_gradient_scroll():Gradient.Common{
             return this.canvas.notecanvas.state_ts.gradient_scroll
         }
+        scroll_jump_redo:_PaUtilTs.Pos2DChange[]=[]
+        scroll_jump_undo:_PaUtilTs.Pos2DChange[]=[]
+        scroll_jump_ope(undo:boolean,
+                        show_warn_whenfail:boolean):boolean{
+            if(undo){
+                if(this.scroll_jump_undo.length==0){
+                    return false
+                }else{
+                    const p=this.scroll_jump_undo.pop()
+                    if(p){
+                        const cur =this.pos_get_canvas_off()
+                        this.scroll_move(
+                            cur.x-p.f.x,
+                            cur.y-p.f.y);
+                        this.scroll_jump_redo.push(p)
+                    }
+                    return true;
+                }
+            }else{
+                if(this.scroll_jump_redo.length==0){
+                    return false
+                }else{
+                    const p=this.scroll_jump_redo.pop()
+                    if(p){
+                        const cur =this.pos_get_canvas_off()
+                        this.scroll_move(cur.x-p.t.x,cur.y-p.t.y);
+                        this.scroll_jump_undo.push(p)
+                    }
+                    return true;
+                }
+            }
+        }
+        scroll_move_before_ope(dx:number,dy:number){
+            this.scroll_jump_redo=[]
+            const f=this.pos_get_canvas_off()
+            const t=this.pos_get_canvas_off()
+            t.x-=dx
+            t.y-=dy
+            this.scroll_jump_undo.push(
+                _PaUtilTs.Pos2DChange.create(
+                    f,t
+                )
+            )
+        }
         scroll_move(dx:number,dy:number){
             const range_ref=this.canvas.getref_range_ref()
             this.scroll_get_gradient_scroll().start_walk(
@@ -974,6 +1018,8 @@ export module NoteCanvasTs{
                 origin_pos.y ;
             return new _PaUtilTs.Pos2D(tarx/this.canvas.get_scale(),tary/this.canvas.get_scale())
         }
+
+
         locate_editor_bar(ebid:string){
 // console.log("locate_editor_bar",editor_bar_id)
             const bar_data=this.canvas.get_editorbar_man().get_editor_bar_data_by_ebid(ebid)
@@ -994,6 +1040,8 @@ export module NoteCanvasTs{
                 const dx = bar_client_pos.x- mid_x;
                 const dy = bar_client_pos.y-mid_y;
 
+
+                this.scroll_move_before_ope(dx,dy);
                 this.scroll_move(dx,dy)
                 // DomOperation.scroll_move(canvas,dx,dy)
             }

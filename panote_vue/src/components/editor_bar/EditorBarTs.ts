@@ -1,4 +1,4 @@
-import EditorBarFunc, {EditorBar, EditorBarChange} from "@/components/editor_bar/EditorBarFunc";
+import EditorBarFunc, {CornerDragHelper, EditorBar, EditorBarChange} from "@/components/editor_bar/EditorBarFunc";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 import {AppFuncTs} from "@/AppFunc";
@@ -288,7 +288,7 @@ export namespace EditorBarTs {
 
     export class EditorBarManager {
         canvas: any = null
-        corner_drag_helper = null
+        corner_drag_helper:null|CornerDragHelper = null
         ebid_to_ebcomp: any = {}//ebid->1
 
         editing_ebproxy:EditorBarCompProxy|null=null
@@ -693,7 +693,7 @@ export namespace EditorBarTs {
         //     return delta
         // }
 
-        corner_drag_start(drag_helper: any) {
+        corner_drag_start(drag_helper: CornerDragHelper) {
             // eslint-disable-next-line no-empty
             if (drag_helper) {
                 // console.log(drag_helper)
@@ -725,7 +725,11 @@ export namespace EditorBarTs {
         }
 
         on_mouse_up() {
-            this.corner_drag_helper = null
+            if(this.corner_drag_helper){
+                this.corner_drag_helper.handle_mouse_up()
+                // this.canvasproxy().get_content_manager().
+                this.corner_drag_helper = null
+            }
         }
 
     }

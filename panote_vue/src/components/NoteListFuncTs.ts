@@ -13,7 +13,7 @@ import {note} from "@/note";
 export namespace NoteListFuncTs {
     import Context = AppFuncTs.Context;
     import NoteStoreToFileStruct = Storage.NoteStoreToFileStruct;
-    import NoteContentData = note.NoteContentData;
+    // import NoteContentData = note.NoteContentData;
 
     export class NoteConfigInfo {
         bind_file: string | null = null
@@ -144,7 +144,7 @@ export namespace NoteListFuncTs {
         //新建笔记，并且写入到文件
         new_note_bind_file(ctx: AppFuncTs.Context, fpath: string) {
             const newid=this._new_note_id()
-            const struct=new NoteStoreToFileStruct(newid,NoteContentData.get_default())
+            const struct=new NoteStoreToFileStruct(newid,note.NoteContentData.get_default())
             this.new_note_changefile_from_NoteStoreToFileStruct(ctx,fpath,struct)
         }
 
@@ -199,7 +199,7 @@ export namespace NoteListFuncTs {
                     if (conf) {
                         let _note = await ctx.storage_manager.load_note_all(noteid, conf)
                         if(!_note){
-                            _note=NoteContentData.get_default()
+                            _note=note.NoteContentData.get_default()
                         }
                         const handle=note.NoteHandle.create(noteid,_note)
                         // ctx.note_loaded_and_open(handle)

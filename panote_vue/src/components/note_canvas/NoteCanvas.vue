@@ -11,10 +11,16 @@
           class="column_item"
                            v-model:note_canvas_datareacher="data_reacher"
       />
-      <CanvasLinkBarHolder
-          class="column_item"
-          :canvasp="data_reacher"
-      ></CanvasLinkBarHolder>
+      <div style="display: flex; flex-direction: row">
+        <CanvasJumpUndo
+            style="margin-right: 10px"
+            :canvasp="data_reacher">
+        </CanvasJumpUndo>
+        <CanvasLinkBarHolder
+            class="column_item"
+            :canvasp="data_reacher"
+        ></CanvasLinkBarHolder>
+      </div>
     </div>
     <div
         class="range noselect"
@@ -205,11 +211,13 @@ import {AppFuncTs} from "@/AppFunc";
 import Path from "@/components/Path";
 import PathJumpBtn from "@/components/PathJumpBtn";
 import CanvasLinkBarHolder from "@/components/note_canvas/CanvasLinkBarHolder";
+import CanvasJumpUndo from "@/components/note_canvas/CanvasJumpUndo";
 
 
 export default {
   name: "NoteCanvas",
   components: {
+    CanvasJumpUndo,
     CanvasLinkBarHolder,
     // eslint-disable-next-line vue/no-unused-components
     PathJumpBtn,
