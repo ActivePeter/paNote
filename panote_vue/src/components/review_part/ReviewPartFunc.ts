@@ -7,7 +7,7 @@ import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {bus_events} from "@/bus";
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {ElMessage} from "element-plus";
-import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
+import {_ReviewPartSyncAnki} from "@/components/review_part/ReviewPartSyncAnki";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {note} from "@/note";
 import {NoteLog} from "@/log";
@@ -204,7 +204,6 @@ export namespace ReviewPartFunc{
         selected_card_set=""
         add_new_card__editing_mode=false
         add_new_card__editing_mode_card:null|Card=null
-        sync_anki=new _ReviewPartSyncAnki._StoreStruct.Class()
         note_store_part?:NoteCanvasTs.PartOfNoteContentData
         // reviewing=false
         // reviewing_card_id=""
@@ -215,6 +214,12 @@ export namespace ReviewPartFunc{
         constructor() {
             this.card_set_man=new CardSetManager()
         }
+        //syncanki 同步anki的逻辑
+        sync_anki=new _ReviewPartSyncAnki._StoreStruct.Class()
+        sync_anki_proxy(){
+            return new _ReviewPartSyncAnki._StoreStruct.Proxy(this)
+        }
+
         f_from_anki(){
             return new ReviewPartManFromAnkiFunc(this)
         }

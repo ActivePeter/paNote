@@ -1,6 +1,6 @@
 import electron_net from "@/electron_net";
 import {SendState} from "@/electron_net_ts";
-import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
+import {_ReviewPartSyncAnki} from "@/components/review_part/ReviewPartSyncAnki";
 
 // export namespace TalkWithAnki{
 //     // export enum TalkState{

@@ -75,7 +75,7 @@
 // import HelloWorld from "./components/HelloWorld.vue";
 import NoteCanvas from "./components/note_canvas/NoteCanvas.vue";
 import RightMenu from "@/components/RightMenu";
-import ReviewPart from "@/components/ReviewPart";
+import ReviewPart from "@/components/review_part/ReviewPart";
 import SideBarContainer from "@/components/reuseable/SideBarContainer";
 import NoteList from "@/components/NoteList";
 import BottomLine from "@/components/BottomLine"

@@ -48,7 +48,7 @@
 
 <script lang="ts">
 import {Options, Vue} from 'vue-class-component';
-import {ReviewPartFunc} from "@/components/ReviewPartFunc";
+import {ReviewPartFunc} from "@/components/review_part/ReviewPartFunc";
 import ReviewPartCard from "./ReviewPartCard.vue"
 import { _ipc } from '@/ipc';
 import {TalkPacker} from "@/talk_packer";

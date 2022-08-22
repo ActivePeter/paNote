@@ -116,7 +116,7 @@ export module AppFuncTs{
             // bus_events.cancel_listen_all()
             set_up_detail.notelist_rela(this);
             set_up_detail.storage_rela(this);
-
+            this.rewiew_part_man.mount(this)
             _ipc.MainCallRender.regist(this)
             {
                 _ipc.Tasks.tasks.get_net_state.call().then((res)=>{
@@ -198,7 +198,7 @@ import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {NoteListScanFileBind} from "@/storage/NoteListScanFileBind";
 import {Timer} from "@/timer/Timer";
 import {_ipc} from "@/ipc";
-import {ReviewPartFunc} from "@/components/ReviewPartFunc";
+import {ReviewPartFunc} from "@/components/review_part/ReviewPartFunc";
 import BottomLine from "@/components/BottomLine.vue";
 import RightPart from "@/components/RightPart.vue";
 import {note} from "@/note";

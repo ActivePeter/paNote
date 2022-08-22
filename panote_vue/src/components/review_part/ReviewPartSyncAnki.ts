@@ -1,4 +1,4 @@
-import {ReviewPartFunc} from "@/components/ReviewPartFunc";
+import {ReviewPartFunc} from "@/components/review_part/ReviewPartFunc";
 import {Delete} from "@element-plus/icons-vue";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {AppFuncTs} from "@/AppFunc";
@@ -61,6 +61,45 @@ export namespace _ReviewPartSyncAnki {
         }
     }
     export namespace _StoreStruct {
+        import ReviewPartManager = ReviewPartFunc.ReviewPartManager;
+
+        export class Proxy{
+            push_new_ope (
+                // rpman: ReviewPartFunc.ReviewPartManager,
+                ope: _OneOperation.OneOperation) {
+                const rpman=this.rpman
+                const syncanki = rpman.sync_anki
+                console.log("push_new_ope",ope)
+                console.log("syncanki bf push",syncanki.operation_queue.count)
+                if (ope.ope_type == _OneOperation.OpeType.Delete) {
+                    let head = syncanki.operation_queue.head
+                    let del = false;
+                    while (head) {
+                        if (_OneOperation.OneOperation.same_ope_data(head.element, ope)) {
+                            syncanki.operation_queue.remove_node(head)
+                            del = true
+                            break
+                        }
+                        head = head.next
+                    }
+                    if (!del) {
+                        syncanki.operation_queue.push(ope)
+                    }
+                } else {
+                    syncanki.operation_queue.push(ope)
+                    console.log("syncanki pushed",syncanki.operation_queue.count)
+                }
+                console.log("syncanki pushed",syncanki.operation_queue.count)
+                if (rpman.note_store_part && rpman.context) {
+                    rpman.note_store_part.sync_anki_serialized = syncanki.operation_queue.to_string()
+                    rpman.context.storage_manager.buffer_save_note_review_syncanki(rpman.note_id, rpman.note_store_part.sync_anki_serialized)
+                    rpman.context.get_notelist_manager()?.pub_set_note_newedited_flag(rpman.note_id)
+                }
+            }
+
+            constructor(public rpman:ReviewPartManager) {
+            }
+        }
         export class Class {
             operation_queue = new _PaUtilTs.DataStructure.ListSerializable.Class<_OneOperation.OneOperation>()
         }
@@ -71,16 +110,21 @@ export namespace _ReviewPartSyncAnki {
                 import ReviewPartManager = ReviewPartFunc.ReviewPartManager;
                 export const mount = (ctx: AppFuncTs.Context, rpman: ReviewPartManager) => {
                     Timer._TimerState.regi_1s(ctx.timer, async () => {
-                        let cnt = 100
+                        // let cnt = 100
                         const netman: NetManager | null = electron_net.get_net_manager()
                         if (rpman.note_id_valid()) {
+                            // console.log("sync anki timer 1s noteid valid", rpman.sync_anki.operation_queue.count)
                             while (netman && netman.connected && //tcp保持连接
-                            rpman.sync_anki.operation_queue.count > 0 && cnt > 0) {
+                            rpman.sync_anki.operation_queue.count > 0
+                            // && cnt > 0
+                                ) {
                                 const elem = DataSet.pop_one_ope(rpman)
                                 console.log("send edit", elem)
                                 const res = await _ipc.Tasks.tasks.send_to_anki.call(JSON.stringify(elem))
-                                cnt--
+                                // cnt--
                             }
+                        }else{
+                            // console.log("sync anki timer 1s noteid invalid")
                         }
                     })
                 }
@@ -90,6 +134,7 @@ export namespace _ReviewPartSyncAnki {
             export namespace DataSet {//操作队列后，要将队列序列化后存入buffer
                 export const push_new_ope = (rpman: ReviewPartFunc.ReviewPartManager, ope: _OneOperation.OneOperation) => {
                     const syncanki = rpman.sync_anki
+                    console.log("push_new_ope",ope)
                     if (ope.ope_type == _OneOperation.OpeType.Delete) {
                         let head = syncanki.operation_queue.head
                         let del = false;
@@ -117,6 +162,7 @@ export namespace _ReviewPartSyncAnki {
                     const syncanki = rpman.sync_anki
                     if (rpman.context && rpman.note_store_part) {
                         const pop = rpman.sync_anki.operation_queue.pop()
+                        console.log("pop_one_ope",pop)
                         if (pop) {
                             rpman.note_store_part.sync_anki_serialized = syncanki.operation_queue.to_string()
                             rpman.context.storage_manager.buffer_save_note_review_syncanki(rpman.note_id, rpman.note_store_part.sync_anki_serialized)

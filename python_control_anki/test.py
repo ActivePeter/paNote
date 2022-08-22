@@ -6,7 +6,7 @@ import threading
 import socket
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
 import tcp_pack_construct
-
+from . import debug_window
 
 # 信号对象
 class QTypeSignal(QObject):
@@ -90,13 +90,15 @@ def slot_handle(msg):
     utils.showInfo(msg + "panote 客户端已经连接上anki插件")
 
 
+debug=debug_window.TextEditWidget()
+
 
 # 插件生命周期
 def init():
     print('将信号绑定槽：')
     # 将信号绑定到槽函数上
     global_send.sendmsg.connect(slot_handle)
-
+    debug.show()
     thread = threading.Thread(target=thread_server, args=(global_send,))
     thread.start()
 def about_2_quit():

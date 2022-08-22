@@ -1,11 +1,12 @@
 import {note} from "@/note";
 import {NetPackRecv} from "@/net_pack_recv";
 import {EditorBar} from "@/components/editor_bar/EditorBarFunc";
-import {ReviewPartFunc} from "@/components/ReviewPartFunc";
+import {ReviewPartFunc} from "@/components/review_part/ReviewPartFunc";
 import {NoteOutlineTs} from "@/components/NoteOutlineTs";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {AppFuncTs} from "@/AppFunc";
 import {PathStruct} from "@/components/note_canvas/NoteCanvasFunc";
+import {_ReviewPartSyncAnki} from "@/components/review_part/ReviewPartSyncAnki";
 
 export namespace NoteLog {
 
@@ -343,6 +344,18 @@ export namespace NoteLog {
                     return
                 }
                 this.cardid = setp.add_card(this.cardfront, this.cardback)
+                {
+                    AppFuncTs.appctx.rewiew_part_man.sync_anki_proxy()
+                        .push_new_ope(
+                            new _ReviewPartSyncAnki._OneOperation.OneOperation(
+                                _ReviewPartSyncAnki._OneOperation.OpeType.Add,
+                                _PaUtilTs.get_time_stamp(),
+                                new _ReviewPartSyncAnki._OneOperation.OpeCard(
+                                    handle.note_id,this.cardset_name,this.cardid
+                                )
+                            )
+                        )
+                }
                 // handle.content_data.part.review_card_set_man;
             }
 
@@ -353,6 +366,16 @@ export namespace NoteLog {
                 }
                 if (this.cardid != "") {
                     setp.del_card(this.cardid)
+                    AppFuncTs.appctx.rewiew_part_man.sync_anki_proxy()
+                        .push_new_ope(
+                            new _ReviewPartSyncAnki._OneOperation.OneOperation(
+                                _ReviewPartSyncAnki._OneOperation.OpeType.Delete,
+                                _PaUtilTs.get_time_stamp(),
+                                new _ReviewPartSyncAnki._OneOperation.OpeCard(
+                                    handle.note_id,this.cardset_name,this.cardid
+                                )
+                            )
+                        )
                 }
             }
 
@@ -377,6 +400,16 @@ export namespace NoteLog {
                     return
                 }
                 this.card = setp.del_card(this.cardid)
+                AppFuncTs.appctx.rewiew_part_man.sync_anki_proxy()
+                    .push_new_ope(
+                        new _ReviewPartSyncAnki._OneOperation.OneOperation(
+                            _ReviewPartSyncAnki._OneOperation.OpeType.Delete,
+                            _PaUtilTs.get_time_stamp(),
+                            new _ReviewPartSyncAnki._OneOperation.OpeCard(
+                                handle.note_id,this.cardset_name,this.cardid
+                            )
+                        )
+                    )
             }
 
             undo(handle: note.NoteHandle,log:NoteLogger, ctx: AppFuncTs.Context): void {
@@ -386,6 +419,16 @@ export namespace NoteLog {
                 }
                 if (this.card) {
                     setp.add_card_deleted(this.card)
+                    AppFuncTs.appctx.rewiew_part_man.sync_anki_proxy()
+                        .push_new_ope(
+                            new _ReviewPartSyncAnki._OneOperation.OneOperation(
+                                _ReviewPartSyncAnki._OneOperation.OpeType.Add,
+                                _PaUtilTs.get_time_stamp(),
+                                new _ReviewPartSyncAnki._OneOperation.OpeCard(
+                                    handle.note_id,this.cardset_name,this.cardid
+                                )
+                            )
+                        )
                 }
             }
 

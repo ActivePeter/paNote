@@ -4,7 +4,7 @@
       anki未连接
     </div>
     <div v-else>
-      {{ review_part_man.note_store_part ? review_part_man.note_store_part.sync_anki_serialized : "" }}
+<!--      {{ review_part_man.note_store_part ? review_part_man.note_store_part.sync_anki_serialized : "" }}-->
       <div ref="top">
         <el-select v-model="review_part_man.selected_card_set" class="m-2" placeholder="Select">
           <el-option
@@ -120,18 +120,18 @@
 </template>
 
 <script>
-import {ReviewPartFunc} from "@/components/ReviewPartFunc.ts";
+import {ReviewPartFunc} from "@/components/review_part/ReviewPartFunc.ts";
 import ReviewPartAddNewCard from "./ReviewPartAddNewCard"
 // import {ReviewPartFuncNew} from "@/components/ReviewPartFunc";
 // import {ElMessage} from "element-plus";
-import ReviewPartCard from "@/components/ReviewPartCard"
+import ReviewPartCard from "@/components/review_part/ReviewPartCard"
 // import {bus_events} from "@/bus";
 import {AppFuncTs} from "@/AppFunc";
 import {_ipc} from "@/ipc";
 import electron_net from "@/electron_net";
 import {TalkPacker} from "@/talk_packer";
-import {_ReviewPartSyncAnki} from "@/components/ReviewPartSyncAnki";
-import ReviewPartReviewing from "@/components/ReviewPartReviewing";
+import {_ReviewPartSyncAnki} from "@/components/review_part/ReviewPartSyncAnki";
+import ReviewPartReviewing from "@/components/review_part/ReviewPartReviewing";
 
 export default {
   name: "ReviewPart",
@@ -152,7 +152,8 @@ export default {
     // }
   },
   created() {
-    this.review_part_man.mount(AppFuncTs.appctx)
+    this.review_part_man=AppFuncTs.appctx.rewiew_part_man
+    // this.review_part_man.mount(AppFuncTs.appctx)
   },
   unmounted() {
     // bus_events.events.note_canvas_data_loaded.cancel(this.note_canvas_loaded)

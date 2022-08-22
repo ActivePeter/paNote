@@ -11,7 +11,7 @@ import {answer_showned} from "@/ipc_tasks/main_call_render/answer_showned";
 import {no_card_2_review} from "@/ipc_tasks/main_call_render/no_card_2_review";
 import {anki_state_not_match} from "@/ipc_tasks/main_call_render/anki_state_not_match";
 import {auto_update} from "@/ipc_tasks/main_call_render/auto_update";
-import {ReviewPartFunc} from "@/components/ReviewPartFunc";
+import {ReviewPartFunc} from "@/components/review_part/ReviewPartFunc";
 import {auto_update as _auto_update} from "@/auto_update"
 import {net_state_change} from "@/ipc_tasks/main_call_render/net_state_change";
 // import {electron_bg} from "@/background";

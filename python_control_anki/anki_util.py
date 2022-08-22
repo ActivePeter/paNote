@@ -22,6 +22,7 @@ from typing import (
 )
 import queue
 
+from . import debug_window
 from . import net_send
 
 tasks = queue.Queue()
@@ -314,9 +315,11 @@ def add_card(card: str, card_set: str, note: str):
                 newnote = mw.col.new_note(notetype)
                 newnote.fields[0] = card
                 mw.col.add_note(newnote, card_set_node.deck_id)
-
+                notecheck=mw.col.get_note(newnote.id)
+                debug_window.println("note added ?"+str(notecheck.id))
                 mw.deckBrowser.show()
             else:
+                debug_window.println("note add redo1")
                 tasks.put(redo)
             # deckname=deck_tree_root.name+"::"+note_node.name+"::"+card_set_node.name
             # notes = mw.col.find_notes(f'deck:"{deckname}"')
@@ -326,6 +329,7 @@ def add_card(card: str, card_set: str, note: str):
         else:
             # utils.showInfo("redo push")
             # utils.showInfo("err create node fail")/
+            debug_window.println("note add redo2")
             tasks.put(redo)
 
         # utils.showInfo(str(deck_tree_root.children))

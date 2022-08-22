@@ -1,5 +1,5 @@
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
-import {ReviewPartFunc} from "@/components/ReviewPartFunc";
+import {ReviewPartFunc} from "@/components/review_part/ReviewPartFunc";
 
 export namespace ReviewPartCardFunc{
     export const construct_right_menu=(review_part:any,review_part_card:any)=>{

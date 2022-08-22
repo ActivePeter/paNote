@@ -48,7 +48,7 @@
 import EditorBarViewList from "@/components/reuseable/EditorBarViewList"
 import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
-import {ReviewPartCardFunc} from "@/components/ReviewPartCardFunc";
+import {ReviewPartCardFunc} from "@/components/review_part/ReviewPartCardFunc";
 // import AppFunc from "@/AppFunc";
 
 export default {

@@ -13,6 +13,7 @@ from . import tcp_pack_construct
 from . import handle_msg
 from . import anki_util
 from . import net_send
+from . import debug_window
 import json
 
 
@@ -167,9 +168,12 @@ def timer_event_timed():
 timer = QTimer()
 timer_1s=QTimer()
 timer_timed=QTimer()
+# debug=debug_window.TextEditWidget()
 
 # 插件生命周期
 def init():
+    debug_window.init()
+    # debug.show()
     timer.timeout.connect(timerEvent)
     timer.start(100)
 

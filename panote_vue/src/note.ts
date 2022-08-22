@@ -3,7 +3,7 @@ import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
 import {EditorBar} from "@/components/editor_bar/EditorBarFunc";
 import {PathStruct} from "@/components/note_canvas/NoteCanvasFunc";
-import {ReviewPartFunc} from "@/components/ReviewPartFunc";
+import {ReviewPartFunc} from "@/components/review_part/ReviewPartFunc";
 import {NoteOutlineTs} from "@/components/NoteOutlineTs";
 import {AppFuncTs} from "@/AppFunc";
 import {NoteLog} from "@/log";

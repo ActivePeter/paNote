@@ -1,10 +1,10 @@
 <template>
   <div>
-    reviewing
-    {{$props.rpman.reviewing_state.front_linked_note_ids}}
+<!--    reviewing-->
+<!--    {{$props.rpman.reviewing_state.front_linked_note_ids}}-->
 <!--    {{}}-->
     <div v-if="$props.rpman&&$props.rpman.reviewing_state.card_id!==''">
-      {{$props.rpman.reviewing_state.card_id}}
+<!--      {{$props.rpman.reviewing_state.card_id}}-->
 <!--      {{$props.rpman.card_set_man.cardsets[$props.rpman.selected_card_set].cards[$props.rpman.reviewing_card_id]}}-->
 <!--      {{$props.rpman.card_set_man.cardsets[$props.rpman.selected_card_set].cards[$props.rpman.reviewing_card_id]}}-->
       <el-card
@@ -49,7 +49,7 @@
 
 <script lang="ts">
 import {Options, Vue} from 'vue-class-component';
-import {ReviewPartFunc} from "@/components/ReviewPartFunc";
+import {ReviewPartFunc} from "@/components/review_part/ReviewPartFunc";
 import ReviewPartCard from "./ReviewPartCard.vue"
 import { _ipc } from '@/ipc';
 import {TalkPacker} from "@/talk_packer";

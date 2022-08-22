@@ -3,7 +3,7 @@ import NoteCanvasFunc, {NoteContentData} from "@/components/note_canvas/NoteCanv
 import Util from "../components/reuseable/Util";
 import {ElMessage} from 'element-plus'
 import {AppFuncTs} from "@/AppFunc";
-import {ReviewPartFunc} from "@/components/ReviewPartFunc";
+import {ReviewPartFunc} from "@/components/review_part/ReviewPartFunc";
 import {bus, bus_event_names} from "@/bus";
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {NoteListScanFileBind} from "@/storage/NoteListScanFileBind";

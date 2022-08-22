@@ -1,7 +1,7 @@
 import {AppFuncTs} from "@/AppFunc";
 import {ipcRenderer} from "electron";
 import {_ipc} from "@/ipc";
-import {ReviewPartFunc} from "@/components/ReviewPartFunc";
+import {ReviewPartFunc} from "@/components/review_part/ReviewPartFunc";
 
 
 export namespace no_card_2_review{
