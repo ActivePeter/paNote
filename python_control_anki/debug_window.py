@@ -117,13 +117,14 @@ def _window_sync():
 
 def println(line: str):
     global content
-    content += line + "\n"
+    content += line + "<br>"
+    # utils.showInfo("debug "+line)
     _window_sync()
 
 
 def on_debug_show():
     global window, content
-    utils.showInfo("show debug")
+    # utils.showInfo("show debug")
     if window is None:
         window = TextEditWidget()
 
@@ -141,5 +142,5 @@ def init():
     button.clicked.connect(on_debug_show)
     # shot.activated.connect(on_debug_show)
     window = TextEditWidget()
-    on_debug_show()
+    # on_debug_show()
     println("hhhhhh")

@@ -346,11 +346,18 @@ def find_or_create_deck_in_node(node: decks.DeckTreeNode, deck_name: str) -> Opt
         )
         mw.deckBrowser.show()
         fnode = find_deck_in_node(node, deck_name)
-
+    debug_window.println("find_or_create_deck_in_node "+str(fnode))
     return fnode
 
 
 def find_deck_in_node(node: decks.DeckTreeNode, deck_name: str) -> Optional[decks.DeckTreeNode]:
+    blank_ids=[]
+    for i in range(len(node.children)):
+        if node.children[i].name.find('blank')>-1:
+            debug_window.println("has blank "+str(node.children[i]))
+            blank_ids.append(node.children[i].deck_id)
+
+    mw.col.decks.remove(blank_ids)
     for i in range(len(node.children)):
         # utils.showInfo(str(node.children[i].deck_id))
         if node.children[i].name == deck_name:
