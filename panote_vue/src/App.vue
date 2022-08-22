@@ -139,7 +139,9 @@ export default {
       // obj.context=this.context;
     },
     add_editor_bar() {
-      AppFuncTs.appctx.ui_refs().main_canvasproxy().get_editorbar_man().add_editor_bar_in_center()
+      AppFuncTs.appctx.ui_refs().main_canvasproxy()
+          .get_editorbar_man()
+          .add_editor_bar_in_center()
       // AppFuncTs.appctx.
       // this.$refs.note_canvas_ref.add_editor_bar();
     },

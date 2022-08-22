@@ -53,6 +53,21 @@ export module NoteCanvasTs{
                 non_empty_chunks[ck]++;
             }
             this.recalc_chunk_range()
+
+            return this
+        }
+        remove_one_in_chunks(ck:string){
+            if(!(ck in this.non_empty_chunks)){
+                console.warn("chunk to remove one not found")
+                return
+            }
+            this.non_empty_chunks[ck]--
+            if(this.non_empty_chunks[ck]==0){
+                delete this.non_empty_chunks[ck]
+            }
+            this.recalc_chunk_range()
+
+            return this
         }
         calc_chunk_pos(x:number, y:number) {
             let cx = 0, cy = 0;
@@ -117,6 +132,19 @@ export module NoteCanvasTs{
                 }
             }
         }
+
+        eb_add(eb:EditorBar):ChunkHelper{
+            const ck = this.calc_chunk_pos(eb.pos_x, eb.pos_y);
+            this.add_new_2chunks(ck);
+
+            return this
+        }
+        eb_remove(eb:EditorBar):ChunkHelper{
+            const ck = this.calc_chunk_pos(eb.pos_x, eb.pos_y);
+            this.remove_one_in_chunks(ck);
+return this
+        }
+
         first_calc_chunks(){
             const cm=this.canvasp.get_content_manager()
             console.log("first_calc_chunks")

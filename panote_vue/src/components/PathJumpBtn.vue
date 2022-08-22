@@ -84,6 +84,7 @@ export default class Path extends Vue {
       height:h+'px',
       top:0,
       left:0,
+      opacity:'80%',
       // top:top+'px',
       // left:left+'px',
       transformOrigin:'0 0 0',
@@ -114,7 +115,7 @@ export default class Path extends Vue {
       height:h+'px',
       top:top+'px',
       left:left+'px',
-
+      opacity:'80%',
       transformOrigin:'0 0 0',
       transform:'scale('+1/this.$props.scale+')'
     }
@@ -224,6 +225,7 @@ export default class Path extends Vue {
   background: #e8f3ff;
   opacity: 80%;
   position: absolute;
+  z-index: 10;
 }
 .pathjumpbtn{
   display: flex;

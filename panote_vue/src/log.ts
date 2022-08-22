@@ -36,12 +36,28 @@ export namespace NoteLog {
                 }else{
                     handle.ebman().onlydata_add_eb_with_id(this.eb,this.ebid)
                 }
+                //变更完后重新
+                if(ctx.cur_canvasproxy?.get_content_manager().notehandle.note_id
+                    ==handle.note_id
+                ){
+                    ctx.cur_canvasproxy?.get_content_manager().chunkhelper
+                        .eb_add(this.eb)
+                        .update_canvas_chunkpadding()
+                }
             }
 
             undo(handle: note.NoteHandle,log:NoteLogger, ctx: AppFuncTs.Context): void {
                 console.log("EbAdd","undo")
                 if (this.ebid != "") {
                     handle.ebman().onlydata_del_eb(this.ebid)
+                }
+
+                if(ctx.cur_canvasproxy?.get_content_manager().notehandle.note_id
+                    ==handle.note_id
+                ){
+                    ctx.cur_canvasproxy?.get_content_manager().chunkhelper
+                        .eb_remove(this.eb)
+                        .update_canvas_chunkpadding()
                 }
             }
 
@@ -168,6 +184,14 @@ export namespace NoteLog {
                 //先断开路径
                 this.rec_conn.redo(handle,log, ctx)
                 handle.ebman().onlydata_del_eb(this.ebid)
+
+                if(ctx.cur_canvasproxy?.get_content_manager().notehandle.note_id
+                    ==handle.note_id
+                ){
+                    ctx.cur_canvasproxy?.get_content_manager().chunkhelper
+                        .eb_remove(this.ebdata)
+                        .update_canvas_chunkpadding()
+                }
             }
 
             undo(handle: note.NoteHandle,log:NoteLogger, ctx: AppFuncTs.Context): void {
@@ -176,6 +200,14 @@ export namespace NoteLog {
                     //要恢复成原先id 不然路径信息会失效
                     handle.ebman().onlydata_add_eb_with_id(this.ebdata, this.ebid)
                     this.rec_conn?.undo(handle,log, ctx)
+
+                    if(ctx.cur_canvasproxy?.get_content_manager().notehandle.note_id
+                        ==handle.note_id
+                    ){
+                        ctx.cur_canvasproxy?.get_content_manager().chunkhelper
+                            .eb_add(this.ebdata)
+                            .update_canvas_chunkpadding()
+                    }
                 }
             }
 
