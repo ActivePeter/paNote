@@ -9,6 +9,7 @@ import {AppFuncTs} from "@/AppFunc";
 import {NoteLog} from "@/log";
 import {NetPackRecv} from "@/net_pack_recv";
 import {_path} from "@/note/path";
+import {ElMessage} from "element-plus/es";
 
 export namespace note{
     import OutlineStorageStruct = NoteOutlineTs.OutlineStorageStruct;
@@ -349,13 +350,14 @@ export namespace note{
 
         has_root_node(ebid:string){
             const ol=this.handle.content_data.part.note_outline
-            let has=false;
-            ol.trees.forEach((v)=>{
-                if(v.root_node.cur_ebid==ebid){
-                    has=true
-                }
-            })
-            return has
+            // let has=false;
+            return ol.trees.length>0
+            // ol.trees.forEach((v)=>{
+            //     if(v.root_node.cur_ebid==ebid){
+            //         has=true
+            //     }
+            // })
+            // return has
         }
         withlog_add_root(ebid:string):NoteLog.NoteLogger|null {
             const log=AppFuncTs.appctx.logctx.get_log_by_noteid(this.handle.note_id)
@@ -364,6 +366,7 @@ export namespace note{
             if (log.try_do_ope(rec,this.handle)){
                 return log
             }
+            ElMessage.error('根节点已存在')
             return null
         }
         onlydata_add_root(ebid:string):null|OutlineStorageStructOneTreeHelper{

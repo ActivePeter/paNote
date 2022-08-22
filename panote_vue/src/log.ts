@@ -438,7 +438,7 @@ export namespace NoteLog {
             }
 
             doable(handle: note.NoteHandle,log:NoteLogger, ctx: AppFuncTs.Context): boolean {
-                return handle.olman().has_root_node(this.ebid)
+                return !handle.olman().has_root_node(this.ebid)
                 // return true;
             }
 
