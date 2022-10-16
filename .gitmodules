@@ -1,3 +1,6 @@
 [submodule "pa_note_web/pa_note_server/pakv"]
 	path = pa_note_web/pa_note_server/pakv
 	url = https://github.com/ActivePeter/pakv.git
+[submodule "pa_note_web/script/paTools"]
+	path = pa_note_web/script/paTools
+	url = https://github.com/ActivePeter/paTools
