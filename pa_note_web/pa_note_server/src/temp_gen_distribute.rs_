@@ -1,0 +1,114 @@
+use crate::note_man::NoteManager;
+use crate::server::ToClientSender;
+
+// const MSG_GET_NOTES_META: &'static str ="MSG_GET_NOTES_META";
+//
+// const MSG_GET_NOTE_META: &'static str ="MSG_GET_NOTE_META";
+// #[derive(Serialize, Deserialize, Debug)]
+// pub struct ApiGetNoteMetaArg {
+//     pub noteid:String
+// }
+//
+// // const MSG_GET_CHUNK_NOTEIDS: &'static str ="MSG_GET_CHUNK_NOTEIDS";
+// #[derive(Serialize, Deserialize, Debug)]
+// pub struct ApiGetChunkNoteIdsArg {
+//     pub noteid:String,
+//     pub chunkx:i32,
+//     pub chunky:i32
+// }
+//
+// // const MSG_GET_NOTEBAR_INFO: &'static str ="MSG_GET_NOTEBAR_INFO";
+// #[derive(Serialize, Deserialize, Debug)]
+// pub struct ApiGetNoteBarInfoArg {
+//     pub noteid:String,
+//     pub notebarid:String,
+// }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetNotesMataArg {}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetNoteMataArg {
+    pub noteid: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetChunkNoteIdsArg {
+    pub noteid: String,
+    pub chunkx: i32,
+    pub chunky: i32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetNoteBarInfoArg {
+    pub noteid: String,
+    pub notebarid: String,
+}
+
+
+
+async fn distribute(msg_type: &str, msg_value: serde_json::Value, mut sender: ToClientSender) {
+    match msg_type {
+        GetNotesMataArg => {
+            let arg = serde_json::from_value::<GetNotesMataArg>(msg_value);
+            if let Ok(arg) = arg {
+                sender.send(&NoteManager::get().get_notes_mata(
+                    arg
+                ).await);
+            }
+        }
+
+        GetNoteMataArg => {
+            let arg = serde_json::from_value::<GetNoteMataArg>(msg_value);
+            if let Ok(arg) = arg {
+                sender.send(&NoteManager::get().get_note_mata(
+                    arg
+                ).await);
+            }
+        }
+
+        GetChunkNoteIdsArg => {
+            let arg = serde_json::from_value::<GetChunkNoteIdsArg>(msg_value);
+            if let Ok(arg) = arg {
+                sender.send(&NoteManager::get().get_chunk_note_ids(
+                    arg
+                ).await);
+            }
+        }
+
+        GetNoteBarInfoArg => {
+            let arg = serde_json::from_value::<GetNoteBarInfoArg>(msg_value);
+            if let Ok(arg) = arg {
+                sender.send(&NoteManager::get().get_note_bar_info(
+                    arg
+                ).await);
+            }
+        }
+
+
+        // MSG_GET_NOTES_META=>{
+        //     sender.send(&NoteManager::get().api_get_notes_mata().await);
+        // }
+        // MSG_GET_NOTE_META=>{
+        //     let arg=serde_json::from_value::<ApiGetNoteMetaArg>(msg_value);
+        //     if let Ok(arg)=arg{
+        //         sender.send(&NoteManager::get().get_note_meta(
+        //             arg
+        //         ).await);
+        //     }
+        // }
+        // MSG_GET_CHUNK_NOTEIDS=>{
+        //     let arg=serde_json::from_value::<ApiGetChunkNoteIdsArg>(msg_value);
+        //     if let Ok(arg)=arg{
+        //         sender.send(&NoteManager::get().api_get_note_chunk_info(arg).await);
+        //     }
+        // }
+        // MSG_GET_NOTEBAR_INFO=>{
+        //     let arg=serde_json::from_value::<ApiGetNoteBarInfoArg>(msg_value);
+        //     if let Ok(arg)=arg{
+        //         sender.send(&NoteManager::get().api_get_notebar_info(arg).await);
+        //     }
+        // }
+        _ => {}
+    }
+}
