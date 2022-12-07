@@ -1,5 +1,15 @@
 # pa_note_web
 
+## Code Specification
+
+There's been a chaos in my code, so I decide to make up a standard
+
+`namespace` _xxx_xxx with snake
+
+`variable name`xxx_xxx with snake, private begin with _
+
+`class name` XxxXxx UpperCamelCase
+
 ## Project setup
 ```
 npm install

@@ -14,19 +14,16 @@ import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
 import {NoteOutlineTs} from "@/components/NoteOutlineTs";
 import {note} from "@/logic/note/note";
-import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
 import NoteCanvasFunc, {PathStruct} from "@/components/note_canvas/NoteCanvasFunc";
 import Util from "@/components/reuseable/Util";
-import {User} from "@element-plus/icons-vue";
 import {NoteLog} from "@/logic/log";
 import Path from "@/components/Path.vue";
 import {EditorToolTs} from "@/components/EditorToolTs";
-import CanvasLinkBarHolder from "@/components/note_canvas/CanvasLinkBarHolder.vue";
 import {CanvasPathsProxyMan} from "@/components/PathTS";
 
 export module NoteCanvasTs{
-    import final_set_scale = NoteCanvasTs.UiOperation.final_set_scale;
-
+    const CHUNK_WIDTH=300;
+    const CHUNK_HEIGHT=400;
     export class ChunkHelper {
         chunk_max_x = 0;
         chunk_max_y = 0;
@@ -1079,7 +1076,32 @@ return this
             return new _PaUtilTs.Pos2D(tarx/this.canvas.get_scale(),tary/this.canvas.get_scale())
         }
 
+        locate_pos(x:number,y:number){
+// console.log("locate_editor_bar",editor_bar_id)
+            const range_ref=this.canvas.getref_range_ref()
+            const locate=()=>{
 
+                const range_rec = range_ref.getBoundingClientRect() ;
+
+                //区域中心 client坐标
+                const mid_y = (range_rec.top + range_rec.bottom) / 2;
+                const mid_x = (range_rec.left + range_rec.right) / 2;
+
+                const origin_pos = this.pos_get_content_origin_pos()
+                const bar_client_pos={
+                    x:origin_pos.x+x,
+                    y:origin_pos.y+y
+                }
+                const dx = bar_client_pos.x- mid_x;
+                const dy = bar_client_pos.y-mid_y;
+
+
+                this.scroll_move_before_ope(dx,dy);
+                this.scroll_move(dx,dy)
+                // DomOperation.scroll_move(canvas,dx,dy)
+            }
+            locate()
+        }
         locate_editor_bar(ebid:string){
 // console.log("locate_editor_bar",editor_bar_id)
             const bar_data=this.canvas.get_editorbar_man().get_editor_bar_data_by_ebid(ebid)
@@ -1119,12 +1141,40 @@ return this
     }
     export class ChunkLoader{
         tick
-        constructor(cmanager:ContentManager) {
+        private get_canvas_view_chunk_range(){
+            // const canvasp = this.cmanager.canvas
+            // canvasp.get_content_manager().user_interact.
+            // console.log("add_editor_bar");
+            const ui = this.cmanager.user_interact
+            const range_rec = ui.range_ref_getBoundingClientRect()
+
+            //区域中心 client坐标
+            // const mid_y = (range_rec.top + range_rec.bottom) / 2;
+            // const mid_x = (range_rec.left + range_rec.right) / 2;
+
+            const _0_0 = ui.pos_from_uipos_2_canvaspos(new _PaUtilTs.Pos2D(range_rec.top,range_rec.left));
+            const _1_1 = ui.pos_from_uipos_2_canvaspos(new _PaUtilTs.Pos2D(range_rec.bottom,range_rec.right));
+
+            let cx0=Math.floor(_0_0.x/CHUNK_WIDTH);
+            let cy0=Math.floor(_0_0.y/CHUNK_HEIGHT);
+            let cx1=Math.floor(_1_1.x/CHUNK_WIDTH)-cx0;
+            let cy1=Math.floor(_1_1.y/CHUNK_HEIGHT)-cy0;
+
+            //对齐范围
+            cx0=Math.max(cx0,this.cmanager.chunkhelper.chunk_min_x);
+            cy0=Math.max(cy0,this.cmanager.chunkhelper.chunk_min_y);
+            cx1=Math.min(cx1,this.cmanager.chunkhelper.chunk_max_x);
+            cy1=Math.min(cy1,this.cmanager.chunkhelper.chunk_max_y);
+            return new _PaUtilTs.Rect(
+                cx0,cy0,cx1-cx0,cy1-cy0
+            )
+        }
+        constructor(public cmanager:ContentManager) {
             this.tick=window.setInterval(()=>{
                 if(cmanager.notehandle.syncrange_if_chunkrange_changed()){
                     cmanager.chunkhelper.set_chunk_range_by_notehandle(cmanager.notehandle)
                 }
-                cmanager.notehandle.tick_load()
+                cmanager.notehandle.tick_load(this.get_canvas_view_chunk_range())
                 cmanager.notehandle.for_each_chunk((ck)=>{
                     if(true){//如果chunk在视野内，就绑定到gui上
                         cmanager.set_chunk_to_render(ck)
@@ -1276,6 +1326,8 @@ return this
             {//复习界面
                 // AppFuncTs.appctx.get_reviewpart_man()?.sync_from_canvas(this.canvas)
             }
+
+            this.user_interact.locate_pos(0,0)
         }
         // _backend_set_curnote_newedit_flag(ctx:AppFuncTs.Context){
         //     const nlman= ctx.get_notelist_manager()

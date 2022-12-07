@@ -12,7 +12,7 @@ export class AuthorityMan{
                 .verify_token(new VerifyTokenArg(token),(r)=>{
                     if(r.if_success){
                         this.verified=true
-                        this.ctx.app.showlogbar=false
+                        this.ctx.app.showlogbtn=false
                         window.localStorage["panote_token"]=r.new_token
                         ElNotification({
                             title: 'Success',
@@ -33,7 +33,7 @@ export class AuthorityMan{
             .login(new LoginArg(id,pw),(r)=>{
                 if(r.if_success==1){
                     this.verified=true
-                    this.ctx.app.showlogbar=false
+                    this.ctx.app.showlogbtn=false
                     window.localStorage["panote_token"]=r.token
 
                     ElNotification({

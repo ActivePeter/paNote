@@ -311,6 +311,8 @@ export default {
         _this.edge_size_h = height;
       }
     });
+    // this.$nextTick(()=>{
+    // })
   },
   data() {
     return {

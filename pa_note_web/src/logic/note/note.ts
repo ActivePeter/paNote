@@ -11,6 +11,7 @@ import {NoteLog} from "../log";
 import {_path} from "./path";
 import {ElMessage} from "element-plus/es";
 import {GetChunkNoteIdsArg, GetNoteBarInfoArg, GetNoteBarInfoReply} from "@/logic/commu/api_caller";
+import {_PaUtilTs} from "@/3rd/pa_util_ts";
 
 export namespace note{
     import OutlineStorageStruct = NoteOutlineTs.OutlineStorageStruct;
@@ -522,13 +523,18 @@ export namespace note{
         private loaded_chunks:any={
 
         }
-        private loading_chunk:undefined|NoteChunk=undefined
+        private loading_chunks:undefined|NoteChunk[]=undefined
         private chunk_range_change_flag:undefined|{minx:number,maxx:number,miny:number,maxy:number}=undefined
         chunk_loaded(chunk:NoteChunk){
             let x=chunk.posx
             let y=chunk.posy
             this.loaded_chunks[x+"_"+y]=chunk
-            this.loading_chunk=undefined
+            this.loading_chunks=this.loading_chunks?.filter((v)=>{
+                return v.posx!=x||v.posy!=y
+            })
+            if(this.loading_chunks?.length==0){
+                this.loading_chunks=undefined
+            }
             console.log("chunk_"+x+"_"+y,"loaded")
         }
         is_chunk_loaded(x:number,y:number){
@@ -586,17 +592,45 @@ export namespace note{
                 }
             }
         }
-        tick_load(){//每100ms调用，检查是否有未load完的chunk
-            if(this.loading_chunk){
+        push_new_loading_chunk(ck:NoteChunk):boolean{
+            if(this.loading_chunks==undefined){
+                this.loading_chunks=[]
+            }
+            this.loading_chunks.push(ck)
+
+            return this.loading_chunks.length==10
+        }
+        //传入chunkrange，优先扫描chunkrange是否加载
+        tick_load(chunk_range:_PaUtilTs.Rect){//每100ms调用，检查是否有未load完的chunk
+            if(this.loading_chunks){
                 return;
+            }
+            //先扫描视野区块，视野未加载完，先加载视野
+            console.log("view ck range",chunk_range)
+            for(let i=chunk_range.x;i<=chunk_range.right();i++){
+                for(let j=chunk_range.y;j<=chunk_range.bottom();j++){
+                    if(!this.is_chunk_loaded(i,j)){
+                        let newchunk=new NoteChunk(i,j)
+                        const ret=this.push_new_loading_chunk(newchunk)
+                        newchunk.load(this)
+                        console.log("load in view chunk",i,j)
+                        if(ret){
+                            return
+                        }
+                    }
+                }
             }
             for(let i=this.content_data.chunkminx;i<=this.content_data.chunkmaxx;i++){
                 for(let j=this.content_data.chunkminy;j<=this.content_data.chunkmaxy;j++){
                     if(!this.is_chunk_loaded(i,j)){
                         let newchunk=new NoteChunk(i,j)
-                        this.loading_chunk=newchunk
+                        const ret=this.push_new_loading_chunk(newchunk)
                         newchunk.load(this)
-                        break;
+                        console.log("load all range chunk",i,j)
+
+                        if(ret){
+                            return
+                        }
                     }
                 }
             }

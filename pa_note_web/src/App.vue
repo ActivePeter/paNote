@@ -29,7 +29,7 @@
               <!--            <el-radio-button label="选择"></el-radio-button>-->
             </el-radio-group>
             <div style="width: 10px"></div>
-            <el-button v-show="showlogbar" @click="show_log_panel">
+            <el-button v-show="showlogbtn" @click="show_log_panel">
               登录
             </el-button>
             <input v-if="file" type="file" ref="file_ref" style="display: none" @change="read_f">
@@ -41,11 +41,12 @@
         >
           <template v-slot:sidebar>
             <RightPart ref="right_part">
-              <ReviewPart
-                  class="review_part"
-                  ref="review_part_ref"
-                  @request_for_conttext="handle_request_for_conttext"
-              ></ReviewPart>
+              <ArticleList></ArticleList>
+<!--              <ReviewPart-->
+<!--                  class="review_part"-->
+<!--                  ref="review_part_ref"-->
+<!--                  @request_for_conttext="handle_request_for_conttext"-->
+<!--              ></ReviewPart>-->
             </RightPart>
           </template>
           <template v-slot:content>
@@ -77,11 +78,13 @@ import NoteCanvas from "./components/note_canvas/NoteCanvas.vue";
 import NoteList from "./components/NoteList.vue"
 import RightMenu from "./components/RightMenu.vue"
 import LoginPanel from "@/components/LoginPanel.vue";
+import ArticleList from "@/components/ArticleList.vue";
 
 // import AppFunc from './logic/AppFunc';
 
 @Options({
   components: {
+    ArticleList,
     LoginPanel,
     HelloWorld,
     SideBarContainer,
@@ -93,7 +96,7 @@ import LoginPanel from "@/components/LoginPanel.vue";
 export default class App extends Vue {
   context:undefined|AppFuncTs.Context
   cursor_mode_selected=""
-  showlogbar=false
+  showlogbtn=true
 
   created() {
     this.context=new AppFuncTs.Context(this)

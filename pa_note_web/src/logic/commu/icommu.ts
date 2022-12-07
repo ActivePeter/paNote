@@ -1,4 +1,6 @@
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
+import {ElNotification} from "element-plus";
+import {h} from "vue";
 
 export interface ICommu{
     // send_str(str:string):void
@@ -12,8 +14,28 @@ export class WebCommu implements ICommu{
     constructor(private on_commu_established:()=>void) {
         this.connect()
     }
+
+    reconnect_timer=0
+    start_reconnect_timer(){
+        window.clearTimeout(this.reconnect_timer)
+        this.reconnect_timer=window.setTimeout(()=>{
+            this.connect()
+        },10000)
+    }
+
+    heartbeat_timer=0;
+    start_heartbeat_timer(){
+        const call=()=>{
+            this.ws?.send("{}");
+        }
+        this.heartbeat_timer=window.setInterval(call,1);
+    }
+    close_heartbeat_timer(){
+        window.clearInterval(this.heartbeat_timer)
+    }
+
     connect(){
-        this.ws = new WebSocket('ws://localhost:3004/ws');
+        this.ws = new WebSocket('wss://hanbaoaaa.xyz/panote_api/ws');
         this.ws.onmessage=(msg)=>{
             // console.log("ws recv",)
             this.handle_recv(JSON.parse(msg.data))
@@ -22,14 +44,28 @@ export class WebCommu implements ICommu{
         this.ws.onopen=()=>{
             this_.connected=true;
             console.log("on_commu_established")
+            this.start_heartbeat_timer()
             this.on_commu_established()
         }
         this.ws.onclose=(reason)=>{
             console.log("on_commu_close",reason)
             this.connected=false;
+            ElNotification({
+                title: '网络断开',
+                message: '',
+            })
+            this.start_reconnect_timer()
+            this.close_heartbeat_timer()
         }
         this.ws.onerror=(err)=>{
+            // this.start_reconnect_timer()
             console.error("ws err",err)
+            ElNotification({
+                title: '网络错误',
+                message: ''+err,
+            })
+            this.start_reconnect_timer()
+            this.close_heartbeat_timer()
         }
     }
     is_connected(){

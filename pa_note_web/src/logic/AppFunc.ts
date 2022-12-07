@@ -103,6 +103,9 @@ export module AppFuncTs{
                 console.log("reply",reply)
                 this.ctx.get_notelist_manager()?.update_notelist(reply.node_id_name_list)
                 this.ctx.ui_refs().notelist().$forceUpdate();
+                if(reply.node_id_name_list.length>0){
+                    AppFuncTs.get_ctx().start_open_note(reply.node_id_name_list[0][0])
+                }
                 // console.log()
             })
             this.ctx.authority_man.verify_token_when_first_load()
