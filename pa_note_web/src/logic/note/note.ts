@@ -606,7 +606,7 @@ export namespace note{
                 return;
             }
             //先扫描视野区块，视野未加载完，先加载视野
-            console.log("view ck range",chunk_range)
+            // console.log("view ck range",chunk_range)
             for(let i=chunk_range.x;i<=chunk_range.right();i++){
                 for(let j=chunk_range.y;j<=chunk_range.bottom();j++){
                     if(!this.is_chunk_loaded(i,j)){
