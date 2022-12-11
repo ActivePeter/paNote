@@ -58,7 +58,9 @@ pub async fn handle_socket(mut socket: WebSocket) {
         if let Ok(msg) = msg {
             match msg {
                 Message::Text(t) => {
-                    println!("recv text {}",t);
+                    if &*t!="{}"{
+                        println!("recv text {}",t);
+                    }
                     let res:serde_json::Value= serde_json::from_str(&*t).unwrap();
                     if res.is_object() {
                         let res_obj=res.as_object().unwrap();

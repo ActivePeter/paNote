@@ -68,10 +68,7 @@ pub article_name:String,
 pub barid:String,
 pub noteid:String}
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ArticleListArg{pub bind_unbind_rename:String,
-pub article_name:String,
-pub barid:String,
-pub noteid:String}
+pub struct ArticleListArg{pub noteid:String}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetNotesMataReply{pub node_id_name_list:Vec<serde_json::Value>}
 #[derive(Serialize, Deserialize, Debug)]

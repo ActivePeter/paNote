@@ -7,6 +7,7 @@ pub mod server;
 pub mod gen_distribute;
 pub mod gen_send;
 pub mod authority;
+pub mod util;
 
 use axum::{
     extract::{

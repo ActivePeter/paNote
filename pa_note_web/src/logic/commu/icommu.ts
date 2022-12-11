@@ -6,8 +6,9 @@ export interface ICommu{
     // send_str(str:string):void
     send_obj(obj:any,cb:undefined|any):void
 }
-const server_addr=//'wss://hanbaoaaa.xyz/panote_api/ws'
-    'ws://127.0.0.1:3004/ws'
+const server_addr=
+    'wss://hanbaoaaa.xyz/panote_api/ws'
+    // 'ws://127.0.0.1:3004/ws'
 export class WebCommu implements ICommu{
     private tasks:any={}//记录回调函数，有结果时调用回调函数
     private ws:WebSocket|undefined

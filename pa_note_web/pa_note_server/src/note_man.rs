@@ -14,6 +14,7 @@ use crate::gen_distribute::{ApiHandler, GetNoteMataArg, GetChunkNoteIdsArg, GetN
 use crate::gen_send;
 use crate::gen_distribute;
 use crate::authority::AuthorityMan;
+use crate::util::time_stamp_ms_u64;
 
 lazy_static::lazy_static! {
     pub static ref G_NOTE_MAN : NoteManager = NoteManager::new();
@@ -132,6 +133,9 @@ pub struct NoteBarInfo{
     pub create_time:Option<u64>
 }
 impl NoteBarInfo{
+    pub fn update_edit_time(&mut self){
+        self.edit_time=Some(time_stamp_ms_u64());
+    }
     pub fn to_reply(self)->GetNoteBarInfoReply{
         GetNoteBarInfoReply{
             x: self.x,
@@ -160,7 +164,8 @@ impl ArticleList{
         for a in &self.list{
             if a.barid==arg.barid{
                 //文章已绑定
-                return false;
+                self.rename(arg);
+                return true;
             }
         }
         self.list.push(ArticleListNode{
@@ -444,7 +449,8 @@ impl NoteManager{
         let next=meta.next_noteid;
         meta.next_noteid+=1;
         let ret={//notebar 信息
-            let ret = GetNoteBarInfoReply {
+            let time=time_stamp_ms_u64();
+            let ret = NoteBarInfo {
                 x,
                 y,
                 w: 150.0,
@@ -452,11 +458,13 @@ impl NoteManager{
                 text: "".to_string(),
                 formatted: "".to_string(),
                 connected: vec![],
+                edit_time: Some(time),
+                create_time: Some(time)
             };//保存笔记信息
             let key = format!("{}|bar|{}", noteid, next);
             self.kernel.set(key,
                             serde_json::to_string(&ret).unwrap());
-            ret
+            ret.to_reply()
         };
 
         let (cx, cy) = self.note_pos_to_chunkpos(x, y);
@@ -568,18 +576,29 @@ impl NoteManager{
         match self.kernel.get(key.clone()){
             None => {
                 // let store=ArticleList::default()
-                self.kernel.set(key,"[]".to_string());
+                println!("no article list stored");
+                self.kernel.set(key,"{\"list\":[]}".to_string());
                 ArticleList::default()
             }
             Some(serial) => {
-                (serde_json::from_str::<ArticleList>(&*serial).unwrap())
-
+                println!("get_article_list {}",serial);
+                match (serde_json::from_str::<ArticleList>(&*serial)) {
+                    Ok(v) => {
+                        return v;
+                    }
+                    Err(e) => {
+                        self.kernel.set(key,"{\"list\":[]}".to_string());
+                        eprintln!("unserial article list failed {}",serial);
+                        unreachable!();
+                    }
+                }
             }
         }
     }
     fn set_article_list(&self,noteid:&str,article_list:&ArticleList){
         let key=format!("{}|articlelist",noteid);
-        self.kernel.set(key,serde_json::to_string(article_list).unwrap());
+        self.kernel.set(key.clone(),serde_json::to_string(article_list).unwrap());
+        println!("set article list {}",self.kernel.get(key).unwrap());
     }
     pub fn remove_note_path_info(&self,noteid:&str,pathid:&str){
         let key=format!("{}|path|{}",noteid,pathid);
@@ -721,6 +740,7 @@ impl ApiHandler for NoteManager{
         let mut nb=self.get_notebar_info(arg.noteid.clone(),arg.barid.clone()).unwrap();
         nb.formatted=arg.formatted;
         nb.text=arg.text;
+        nb.update_edit_time();
         self.set_notebar_info(&*(arg.noteid),&*(arg.barid),&nb);
         async move{
             gen_send::send_update_bar_content_reply(sender,taskid,UpdateBarContentReply{}).await;
@@ -863,9 +883,6 @@ impl ApiHandler for NoteManager{
         std::mem::swap(&mut task_type,&mut arg.bind_unbind_rename);
         let mut al =self.get_article_list(&*noteid);
         let reply=match &*task_type {
-            _=>{
-                unreachable!()
-            }
             "bind"=>{
                 let ret=ArticleBinderReply{
                     if_success: if al.bind(arg) {1} else{0}
@@ -887,6 +904,10 @@ impl ApiHandler for NoteManager{
                 self.set_article_list(&noteid,&al);
                 ret
             }
+            _=>{
+                eprintln!("unreachable task type {}",task_type);
+                unreachable!()
+            }
         };
         async move{
             gen_send::send_article_binder_reply(sender,taskid,reply).await;
@@ -902,7 +923,7 @@ impl ApiHandler for NoteManager{
             =Vec::new();
         for a in al.list{
             let bar=self.get_notebar_info(noteid.clone(),a.barid.clone());
-            if let Some(bar_info)=bar{
+            if let Some(mut bar_info)=bar{
                 if let Some(time)=bar_info.edit_time{
                     let mut map=serde_json::Map::new();
                     map.insert("barid".to_string(),Value::from(a.barid));
@@ -910,7 +931,21 @@ impl ApiHandler for NoteManager{
                     map.insert("edittime".to_string(),Value::from(time));
                     collect_noteinfos.push(
                         Value::Object(map)                     );
+                }else{
+                    // eprintln!("articlelist collecting bar no edit time");
+                    let time=time_stamp_ms_u64();
+                    bar_info.edit_time=Some(time);
+                    self.set_notebar_info(&*noteid,&*a.barid,&bar_info);
+
+                    let mut map=serde_json::Map::new();
+                    map.insert("barid".to_string(),Value::from(a.barid));
+                    map.insert("artname".to_string(),Value::from(a.artname));
+                    map.insert("edittime".to_string(),Value::from(time));
+                    collect_noteinfos.push(
+                        Value::Object(map)                     );
                 }
+            }else{
+                eprintln!("articlelist collecting bar not found;")
             }
         }
         collect_noteinfos.sort_by(|v1,v2|{
@@ -918,6 +953,7 @@ impl ApiHandler for NoteManager{
                  .cmp(&v2.as_object().unwrap().get("edittime").unwrap().as_u64().unwrap())
         });
 
+        println!("artile list collected {}",collect_noteinfos.len());
         async move{
             gen_send::send_article_list_reply(sender,taskid,ArticleListReply {
                 if_success: 1,
