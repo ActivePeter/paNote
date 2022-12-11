@@ -13,6 +13,7 @@
       <div v-for="(item, i) in content"
            :key="i"
         @click="click_selection(item)"
+           class="right_menu_one_sel"
       >
         {{item.text}}
       </div>
@@ -111,7 +112,12 @@ export default {
   position: absolute;
   background: gray;
   width: 100px;
-  height: 100px;
+  /*height: 100px;*/
   z-index: 302;
+  cursor: pointer;
+}
+.right_menu_one_sel:hover{
+  color: white;
+
 }
 </style>

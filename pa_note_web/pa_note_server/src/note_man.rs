@@ -3,14 +3,14 @@ use tokio::io::AsyncReadExt;
 use tokio::sync::RwLock;
 use std::ops::DerefMut;
 use std::collections::{HashSet, HashMap};
-use serde_json::{Deserializer, Serializer, Value};
+use serde_json::{Deserializer, Serializer, Value, Error};
 // use crate::server::{ApiGetNoteBarInfoArg, ApiGetChunkNoteIdsArg, ApiGetNoteMetaArg};
 use std::future::Future;
 use pakv_kernel::PaKVCtx;
 use serde::{Serialize, Deserialize};
 
 use crate::server::ToClientSender;
-use crate::gen_distribute::{ApiHandler, GetNoteMataArg, GetChunkNoteIdsArg, GetNoteBarInfoArg, GetNotesMataArg, GetNotesMataReply, CreateNewNoteArg, CreateNewNoteReply, GetNoteMataReply, GetChunkNoteIdsReply, CreateNewBarArg, GetNoteBarInfoReply, CreateNewBarReply, UpdateBarContentArg, UpdateBarTransformArg, RedoArg, UpdateBarTransformReply, UpdateBarContentReply, AddPathArg, AddPathReply, DeleteBarArg, DeleteBarReply, GetPathInfoArg, SetPathInfoArg, GetPathInfoReply, SetPathInfoReply, RemovePathArg, RemovePathReply, LoginArg, VerifyTokenArg, LoginReply, VerifyTokenReply};
+use crate::gen_distribute::{ApiHandler, GetNoteMataArg, GetChunkNoteIdsArg, GetNoteBarInfoArg, GetNotesMataArg, GetNotesMataReply, CreateNewNoteArg, CreateNewNoteReply, GetNoteMataReply, GetChunkNoteIdsReply, CreateNewBarArg, GetNoteBarInfoReply, CreateNewBarReply, UpdateBarContentArg, UpdateBarTransformArg, RedoArg, UpdateBarTransformReply, UpdateBarContentReply, AddPathArg, AddPathReply, DeleteBarArg, DeleteBarReply, GetPathInfoArg, SetPathInfoArg, GetPathInfoReply, SetPathInfoReply, RemovePathArg, RemovePathReply, LoginArg, VerifyTokenArg, LoginReply, VerifyTokenReply, ArticleBinderArg, ArticleListArg, ArticleBinderReply, ArticleListReply};
 use crate::gen_send;
 use crate::gen_distribute;
 use crate::authority::AuthorityMan;
@@ -118,10 +118,79 @@ impl NoteInfo{
     }
 }
 
-mod note_bar_info_funcs{
-    use crate::gen_distribute::GetNoteBarInfoReply;
 
-    pub fn remove_path_in_info(pathid:&str, info:&mut GetNoteBarInfoReply){
+#[derive(Serialize,Deserialize)]
+pub struct NoteBarInfo{
+    pub x:f32,
+    pub y:f32,
+    pub w:f32,
+    pub h:f32,
+    pub text:String,
+    pub formatted:String,
+    pub connected:Vec<serde_json::Value>,
+    pub edit_time:Option<u64>,
+    pub create_time:Option<u64>
+}
+impl NoteBarInfo{
+    pub fn to_reply(self)->GetNoteBarInfoReply{
+        GetNoteBarInfoReply{
+            x: self.x,
+            y: self.y,
+            w: self.w,
+            h: self.h,
+            text: self.text,
+            formatted: self.formatted,
+            connected: self.connected
+        }
+    }
+}
+
+#[derive(Serialize,Deserialize)]
+struct ArticleListNode{
+    pub barid:String,
+    pub artname:String,
+}
+
+#[derive(Serialize,Deserialize,Default)]
+struct ArticleList{
+    pub list:Vec<ArticleListNode>
+}
+impl ArticleList{
+    pub fn bind(&mut self,arg:ArticleBinderArg)->bool{
+        for a in &self.list{
+            if a.barid==arg.barid{
+                //文章已绑定
+                return false;
+            }
+        }
+        self.list.push(ArticleListNode{
+            barid: arg.barid,
+            artname: arg.article_name
+        });
+        true
+    }
+    pub fn unbind(&mut self,arg:ArticleBinderArg)->bool{
+        let oldsz=self.list.len();
+        self.list.retain(|v|{
+            v.barid!=arg.article_name
+        });
+        oldsz!=self.list.len()
+    }
+    pub fn rename(&mut self, mut arg:ArticleBinderArg) ->bool{
+        for a in &mut self.list{
+            if a.barid==arg.barid{
+                std::mem::swap(&mut a.artname,&mut arg.article_name);
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+mod note_bar_info_funcs{
+    use crate::note_man::NoteBarInfo;
+
+    pub fn remove_path_in_info(pathid:&str, info:&mut NoteBarInfo){
         info.connected.retain(|s|{
             s.as_str().unwrap()!=pathid
         })
@@ -407,12 +476,12 @@ impl NoteManager{
 
         (ret,(cx,cy))
     }
-    pub fn set_notebar_info(&self,noteid:&str,barid:&str,newinfo:&GetNoteBarInfoReply){
+    pub fn set_notebar_info(&self,noteid:&str,barid:&str,newinfo:&NoteBarInfo){
         let key=format!("{}|bar|{}",noteid,barid);
         // println!("get_notebar_info {}",key);
         self.kernel.set(key,serde_json::to_string(newinfo).unwrap() );
     }
-    pub fn get_notebar_info(&self,noteid:String,barid:String)->Option<GetNoteBarInfoReply>{
+    pub fn get_notebar_info(&self,noteid:String,barid:String)->Option<NoteBarInfo>{
         let key=format!("{}|bar|{}",noteid,barid);
         println!("get_notebar_info {}",key);
         let s=self.kernel.get(key.clone());
@@ -422,7 +491,7 @@ impl NoteManager{
                 None
             }
             Some(s) => {
-                Some(serde_json::from_str::<GetNoteBarInfoReply>(&s).unwrap())
+                Some(serde_json::from_str::<NoteBarInfo>(&s).unwrap())
             }
         }
     }
@@ -494,6 +563,24 @@ impl NoteManager{
         let key=format!("{}|path|{}",noteid,pathid);
         self.kernel.set(key,serde_json::to_string(info).unwrap());
     }
+    fn get_article_list(&self, noteid:&str) ->ArticleList{
+        let key=format!("{}|articlelist",noteid);
+        match self.kernel.get(key.clone()){
+            None => {
+                // let store=ArticleList::default()
+                self.kernel.set(key,"[]".to_string());
+                ArticleList::default()
+            }
+            Some(serial) => {
+                (serde_json::from_str::<ArticleList>(&*serial).unwrap())
+
+            }
+        }
+    }
+    fn set_article_list(&self,noteid:&str,article_list:&ArticleList){
+        let key=format!("{}|articlelist",noteid);
+        self.kernel.set(key,serde_json::to_string(article_list).unwrap());
+    }
     pub fn remove_note_path_info(&self,noteid:&str,pathid:&str){
         let key=format!("{}|path|{}",noteid,pathid);
         self.kernel.del(key);
@@ -538,6 +625,7 @@ impl NoteManager{
 
         meta
     }
+
 }
 
 impl ApiHandler for NoteManager{
@@ -585,7 +673,7 @@ impl ApiHandler for NoteManager{
     fn api_get_note_bar_info(&self, arg: GetNoteBarInfoArg, taskid: String, sender: ToClientSender) -> Self::GetNoteBarInfoFuture {
         let ans=self.get_notebar_info(arg.noteid,arg.notebarid).unwrap();
         async move{
-            gen_send::send_get_note_bar_info_reply(sender,taskid,ans).await;
+            gen_send::send_get_note_bar_info_reply(sender,taskid,ans.to_reply()).await;
             ()
         }
     }
@@ -764,6 +852,77 @@ impl ApiHandler for NoteManager{
                 new_token: if ok.is_ok(){AuthorityMan::get().gen_token()}else{"".to_string()}
             }).await;
             ()
+        }
+    }
+
+    type ArticleBinderFuture= impl Future<Output=()>;
+    fn api_article_binder(&self, mut arg:ArticleBinderArg, taskid:String, sender:ToClientSender) ->Self::ArticleBinderFuture{
+        let mut task_type =String::new();
+        let mut noteid=String::new();
+        std::mem::swap(&mut noteid,&mut arg.noteid);
+        std::mem::swap(&mut task_type,&mut arg.bind_unbind_rename);
+        let mut al =self.get_article_list(&*noteid);
+        let reply=match &*task_type {
+            _=>{
+                unreachable!()
+            }
+            "bind"=>{
+                let ret=ArticleBinderReply{
+                    if_success: if al.bind(arg) {1} else{0}
+                };
+                self.set_article_list(&*noteid,&al);
+                ret
+            }
+            "unbind"=>{
+                let ret=ArticleBinderReply{
+                    if_success: if al.unbind(arg) {1}else{0}
+                };
+                self.set_article_list(&noteid,&al);
+                ret
+            }
+            "rename"=>{
+                let ret=ArticleBinderReply{
+                    if_success: if al.rename(arg) {1}else{0}
+                };
+                self.set_article_list(&noteid,&al);
+                ret
+            }
+        };
+        async move{
+            gen_send::send_article_binder_reply(sender,taskid,reply).await;
+        }
+    }
+
+    type ArticleListFuture= impl Future<Output=()>;
+    fn api_article_list(&self, mut arg:ArticleListArg, taskid:String, sender:ToClientSender) ->Self::ArticleListFuture{
+        let mut noteid=String::new();
+        std::mem::swap(&mut noteid,&mut arg.noteid);
+        let al=self.get_article_list(&*noteid);
+        let mut collect_noteinfos:Vec<Value>//barid-time-article
+            =Vec::new();
+        for a in al.list{
+            let bar=self.get_notebar_info(noteid.clone(),a.barid.clone());
+            if let Some(bar_info)=bar{
+                if let Some(time)=bar_info.edit_time{
+                    let mut map=serde_json::Map::new();
+                    map.insert("barid".to_string(),Value::from(a.barid));
+                    map.insert("artname".to_string(),Value::from(a.artname));
+                    map.insert("edittime".to_string(),Value::from(time));
+                    collect_noteinfos.push(
+                        Value::Object(map)                     );
+                }
+            }
+        }
+        collect_noteinfos.sort_by(|v1,v2|{
+             v1.as_object().unwrap().get("edittime").unwrap().as_u64().unwrap()
+                 .cmp(&v2.as_object().unwrap().get("edittime").unwrap().as_u64().unwrap())
+        });
+
+        async move{
+            gen_send::send_article_list_reply(sender,taskid,ArticleListReply {
+                if_success: 1,
+                list: collect_noteinfos
+            }).await;
         }
     }
 }

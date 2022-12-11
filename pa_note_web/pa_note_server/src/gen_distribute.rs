@@ -63,6 +63,16 @@ pub pw:String}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct VerifyTokenArg{pub token:String}
 #[derive(Serialize, Deserialize, Debug)]
+pub struct ArticleBinderArg{pub bind_unbind_rename:String,
+pub article_name:String,
+pub barid:String,
+pub noteid:String}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ArticleListArg{pub bind_unbind_rename:String,
+pub article_name:String,
+pub barid:String,
+pub noteid:String}
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GetNotesMataReply{pub node_id_name_list:Vec<serde_json::Value>}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetNoteMataReply{pub next_noteid:i32,
@@ -116,6 +126,11 @@ pub token:String}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct VerifyTokenReply{pub if_success:i32,
 pub new_token:String}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ArticleBinderReply{pub if_success:i32}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ArticleListReply{pub if_success:i32,
+pub list:Vec<serde_json::Value>}
 pub trait ApiHandler{
 
     type GetNotesMataFuture: Future<Output=()>;
@@ -165,6 +180,12 @@ pub trait ApiHandler{
 
     type VerifyTokenFuture: Future<Output=()>;
     fn api_verify_token(&self,arg:VerifyTokenArg,taskid:String,sender:ToClientSender)->Self::VerifyTokenFuture;
+
+    type ArticleBinderFuture: Future<Output=()>;
+    fn api_article_binder(&self,arg:ArticleBinderArg,taskid:String,sender:ToClientSender)->Self::ArticleBinderFuture;
+
+    type ArticleListFuture: Future<Output=()>;
+    fn api_article_list(&self,arg:ArticleListArg,taskid:String,sender:ToClientSender)->Self::ArticleListFuture;
 
 }
 
@@ -320,6 +341,24 @@ let (value,taskid)=get_obj_and_taskid(msg_value);            let arg=serde_json:
 let (value,taskid)=get_obj_and_taskid(msg_value);            let arg=serde_json::from_value::<VerifyTokenArg>(value);
             if let Ok(arg)=arg{
                  NoteManager::get().api_verify_token(
+                     arg,taskid,sender
+                 ).await;
+            }
+}
+
+"MsgArticleBinder"=>{
+let (value,taskid)=get_obj_and_taskid(msg_value);            let arg=serde_json::from_value::<ArticleBinderArg>(value);
+            if let Ok(arg)=arg{
+                 NoteManager::get().api_article_binder(
+                     arg,taskid,sender
+                 ).await;
+            }
+}
+
+"MsgArticleList"=>{
+let (value,taskid)=get_obj_and_taskid(msg_value);            let arg=serde_json::from_value::<ArticleListArg>(value);
+            if let Ok(arg)=arg{
+                 NoteManager::get().api_article_list(
                      arg,taskid,sender
                  ).await;
             }

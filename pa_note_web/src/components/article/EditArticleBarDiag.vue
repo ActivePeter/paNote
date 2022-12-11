@@ -1,5 +1,7 @@
 <template>
-  文章列表
+  <div>
+    <el-input v-model="article_name" placeholder="命名笔记块的文章名" />
+  </div>
 </template>
 
 <script lang="ts">
@@ -10,13 +12,20 @@ import {Options, Vue} from 'vue-class-component';
   props: {
   }
 })
-export default class BindNote2LocalFileDialog extends Vue {
+export default class ArticleList extends Vue {
   $props!: {
   }
-  start_edit(){
+  article_name=""
+   start_edit(_0_edit_1_new:number,
+             ebid:string,
+             articlename:string){
+    this.article_name=articlename
+    if(_0_edit_1_new==0){
 
+    }else{
+
+    }
   }
-
 }
 </script>
 

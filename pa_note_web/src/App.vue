@@ -41,7 +41,7 @@
         >
           <template v-slot:sidebar>
             <RightPart ref="right_part">
-              <ArticleList></ArticleList>
+              <ArticleList ref="article_list_ref"> </ArticleList>
 <!--              <ReviewPart-->
 <!--                  class="review_part"-->
 <!--                  ref="review_part_ref"-->
@@ -78,7 +78,7 @@ import NoteCanvas from "./components/note_canvas/NoteCanvas.vue";
 import NoteList from "./components/NoteList.vue"
 import RightMenu from "./components/RightMenu.vue"
 import LoginPanel from "@/components/LoginPanel.vue";
-import ArticleList from "@/components/ArticleList.vue";
+import ArticleList from "@/components/article/ArticleList.vue";
 
 // import AppFunc from './logic/AppFunc';
 

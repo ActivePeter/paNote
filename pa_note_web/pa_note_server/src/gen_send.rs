@@ -98,5 +98,17 @@ pub async fn send_verify_token_reply(mut sender:ToClientSender, taskid:String, r
     obj.insert("msg_value".to_string(),serde_json::to_value(reply).unwrap());
     obj.insert("taskid".to_string(),serde_json::Value::String(taskid));    sender.send(&obj).await;
 }
+pub async fn send_article_binder_reply(mut sender:ToClientSender, taskid:String, reply:gen_distribute::ArticleBinderReply){
+    let mut obj=Map::new();
+    obj.insert("msg_type".to_string(),serde_json::Value::String("ArticleBinderReply".to_string()));
+    obj.insert("msg_value".to_string(),serde_json::to_value(reply).unwrap());
+    obj.insert("taskid".to_string(),serde_json::Value::String(taskid));    sender.send(&obj).await;
+}
+pub async fn send_article_list_reply(mut sender:ToClientSender, taskid:String, reply:gen_distribute::ArticleListReply){
+    let mut obj=Map::new();
+    obj.insert("msg_type".to_string(),serde_json::Value::String("ArticleListReply".to_string()));
+    obj.insert("msg_value".to_string(),serde_json::to_value(reply).unwrap());
+    obj.insert("taskid".to_string(),serde_json::Value::String(taskid));    sender.send(&obj).await;
+}
 
 

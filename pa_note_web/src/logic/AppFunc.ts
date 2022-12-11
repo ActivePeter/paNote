@@ -15,6 +15,8 @@ import {ApiCaller, GetNoteMataArg, GetNotesMataArg} from "@/logic/commu/api_call
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import LoginPanel from "@/components/LoginPanel.vue";
 import {AuthorityMan} from "@/logic/authority";
+import {ArticleUiMan} from "@/components/article/article_ui";
+import ArticleList from "@/components/article/ArticleList.vue";
 
 
 export class AppRefsGetter{
@@ -75,6 +77,9 @@ export module AppFuncTs{
         }
         login_panel():LoginPanel{
             return this.ctx.app.$refs.login_panel_ref
+        }
+        article_list():ArticleList{
+            return this.ctx.app.$refs.article_list_ref
         }
         constructor(private ctx:Context) {
         }
@@ -199,6 +204,7 @@ export module AppFuncTs{
          *   ui
          * */
         uiman_rightmenu
+        uiman_article
         ui_refs(){
             return new ContextUiRefGetter(this)
         }
@@ -227,6 +233,7 @@ export module AppFuncTs{
             this.app=app
             this.event_center=new EventCenter(this)
             this.uiman_rightmenu=new RightMenuFuncTs.RightMenuMan(this)
+            this.uiman_article=new ArticleUiMan(this)
             this.authority_man=new AuthorityMan(this)
         }
         init(){

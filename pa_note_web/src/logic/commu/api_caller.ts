@@ -86,6 +86,20 @@ export class VerifyTokenArg{
 constructor(public token:string){}
 }
 
+export class ArticleBinderArg{
+constructor(public bind_unbind_rename:string,
+public article_name:string,
+public barid:string,
+public noteid:string){}
+}
+
+export class ArticleListArg{
+constructor(public bind_unbind_rename:string,
+public article_name:string,
+public barid:string,
+public noteid:string){}
+}
+
 export class GetNotesMataReply{
 constructor(public node_id_name_list:any[]){}
 }
@@ -172,6 +186,15 @@ constructor(public if_success:number,
 public new_token:string){}
 }
 
+export class ArticleBinderReply{
+constructor(public if_success:number){}
+}
+
+export class ArticleListReply{
+constructor(public if_success:number,
+public list:any[]){}
+}
+
 
 
 export class ApiCaller{
@@ -199,5 +222,7 @@ remove_path(arg:RemovePathArg,cb:(reply:RemovePathReply)=>void):void{if(AppFuncT
 delete_bar(arg:DeleteBarArg,cb:(reply:DeleteBarReply)=>void):void{if(AppFuncTs.get_ctx().authority_man.is_logged_in()){ this.get_icommu().send_obj({msg_type:'MsgDeleteBar',msg_value:arg},cb) } }
 login(arg:LoginArg,cb:(reply:LoginReply)=>void):void{ this.get_icommu().send_obj({msg_type:'MsgLogin',msg_value:arg},cb)  }
 verify_token(arg:VerifyTokenArg,cb:(reply:VerifyTokenReply)=>void):void{ this.get_icommu().send_obj({msg_type:'MsgVerifyToken',msg_value:arg},cb)  }
+article_binder(arg:ArticleBinderArg,cb:(reply:ArticleBinderReply)=>void):void{if(AppFuncTs.get_ctx().authority_man.is_logged_in()){ this.get_icommu().send_obj({msg_type:'MsgArticleBinder',msg_value:arg},cb) } }
+article_list(arg:ArticleListArg,cb:(reply:ArticleListReply)=>void):void{ this.get_icommu().send_obj({msg_type:'MsgArticleList',msg_value:arg},cb)  }
 
 }

@@ -2,56 +2,29 @@
 
 ![image-20220309214521213](https://hanbaoaaa.xyz/tuchuang/images/2022/03/09/image-20220309214521213.png)
 
-考研途中发现笔记软件总是没法完全满足我的需要
+panote是我自己开发的一个个人笔记软件，将知识平铺开，并用线条关联。我相信知识是相互关联错综复杂的，而工具可以拓宽我们的视野，使我们对知识的整理，检索，复习更高效。
 
-- marginnote这类的笔记软件可以较好的整理思路框架
+#### Dev Records
 
-  1 其复习卡片的功能做的过于鸡肋，也没有anki好用
+[paNote dev log - 飞书云文档 (feishu.cn)](https://bojagybyoq.feishu.cn/docx/JvN1dXL8To0sqZxdRl6cRZSQnYe)
 
-  2 marginnote的布局会自己变动, 不利于位置记忆和复盘
+#### User Manual
 
-- anki有较好的复习策略，但是平台限制 以及 笔记形式太局限
+[paNote docs - 飞书云文档 (feishu.cn)](https://bojagybyoq.feishu.cn/docx/WXcHdQRQyoGtBUxALp5cQgM7nue)
 
----
+#### Features
 
-In the process of  preparing for the Postgraduate entrance examination, the note apps always can't fit my requirements
+- 脑图结构，知识间之间用线连接
+- 无限笔记区域，路径间快捷跳转
+- 当前主要开发版本在 pa_note_web，网页化使软件的使用途径更旷阔，我也将其作为了个人博客
 
--  Note softwares like marginnote can help us  organize the frame of mind
-  - but its review card function does not work as well as anki's
-  - the layout of marginnote changes itself, which is not good for position memory
-- 
+#### Improvement Space
 
-
-
-#### 目前构思/Current design
-
-- 笔记形式采取类似marginnote的
-- 创建记忆卡片需要变得更加无缝，
-  - 可以直接将笔记的分块拖入卡片
-  - 也可以直接将某个笔记快变成卡片标题
-- 卡片标签继承自笔记块，筛选的时候可以利用标签筛选
-
-----
-
-- We took the similar note format of marginnote
-- The process of creating review card should be more fluent
-  - Available to drag the note bar into a card
-  - Available to turn a note bar into a card's title
-- Card's tag should be extended from note bar，(tag will be used for filtrate the review card)
-
-
-
-#### 目前最大的瓶颈/The biggest bottleneck right now
-
-- Anki的算法比较难啃，暂时考虑用插件的形式来做
-
----
-
-- It's hard to reproduce the anki's review algorithm. (anki-addon is the temporary solution
-
-
+- use canvas to speed up the render of components
 
 #### Todo
+
+- 作为个人博客，需要一个归档列表列出主要文章
 
 - ~~画布拖拽~~
 
@@ -125,7 +98,7 @@ In the process of  preparing for the Postgraduate entrance examination, the note
     - [ ] 文本样式
       - [ ] 调色
     - [ ] 背景色调色
-  
+
 - 5.存储（先本地（electron））
 
   - [x] ~~暂用localstorage（假装存储）~~ 已废弃

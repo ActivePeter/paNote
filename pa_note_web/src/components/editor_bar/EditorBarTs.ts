@@ -532,6 +532,9 @@ export namespace EditorBarTs {
                             // }
 
                         })
+                        .add_one_selection("创建文章标题并加入文章列表",()=>{
+                            AppFuncTs.get_ctx().uiman_rightmenu
+                        })
                 }
                 AppFuncTs.get_ctx().uiman_rightmenu.if_right_click_then_open(
                     e,content
