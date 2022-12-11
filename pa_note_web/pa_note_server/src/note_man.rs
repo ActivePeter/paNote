@@ -948,7 +948,7 @@ impl ApiHandler for NoteManager{
                 eprintln!("articlelist collecting bar not found;")
             }
         }
-        collect_noteinfos.sort_by(|v1,v2|{
+        collect_noteinfos.sort_by(|v2,v1|{
              v1.as_object().unwrap().get("edittime").unwrap().as_u64().unwrap()
                  .cmp(&v2.as_object().unwrap().get("edittime").unwrap().as_u64().unwrap())
         });
