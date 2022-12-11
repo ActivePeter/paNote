@@ -366,14 +366,20 @@ export namespace EditorBarTs {
                 this.focus_add(ebid)
             }
         }
-
+        on_editor_bar_lose_focus(ebid:string){
+            AppFuncTs.get_ctx().uiman_article.cancel();
+        }
         focus_del(ebid: string) {
             if (ebid in this.focused_ebids) {
                 delete this.focused_ebids[ebid]
+                this.on_editor_bar_lose_focus(ebid)
             }
         }
 
         focus_clear() {
+            for( const ebid in this.focused_ebids){
+                this.on_editor_bar_lose_focus(ebid)
+            }
             this.focused_ebids = {}
         }
 
@@ -533,7 +539,10 @@ export namespace EditorBarTs {
 
                         })
                         .add_one_selection("创建文章标题并加入文章列表",()=>{
-                            AppFuncTs.get_ctx().uiman_rightmenu
+                            AppFuncTs.get_ctx().logic_articleman
+                                .start_set_bar_article(
+                                    comproxy.ebid,
+                                    this.canvasproxy().get_content_manager().notehandle)
                         })
                 }
                 AppFuncTs.get_ctx().uiman_rightmenu.if_right_click_then_open(

@@ -17,6 +17,7 @@ import LoginPanel from "@/components/LoginPanel.vue";
 import {AuthorityMan} from "@/logic/authority";
 import {ArticleUiMan} from "@/components/article/article_ui";
 import ArticleList from "@/components/article/ArticleList.vue";
+import {_article} from "@/logic/note/article";
 
 
 export class AppRefsGetter{
@@ -47,6 +48,7 @@ export class AppRefsGetter{
 
 export module AppFuncTs{
     import LinkingInfo = EditorBarViewListFunc.LinkingInfo;
+    import ArticleManager = _article.ArticleManager;
 
     class ContextGetter{
         review_part_man():ReviewPartFunc.ReviewPartManager{
@@ -115,6 +117,9 @@ export module AppFuncTs{
             })
             this.ctx.authority_man.verify_token_when_first_load()
         }
+        on_note_handle_first_hold(notehandle:note.NoteHandle){
+            this.ctx.logic_articleman.load_article_list_and_update_ui(notehandle.note_id)
+        }
         constructor(private ctx:Context) {
         }
     }
@@ -124,7 +129,8 @@ export module AppFuncTs{
          */
         app:any
         // _storage_manager:_store.IStorageManager|undefined
-        private notelistman=new NoteListFuncTs.NoteListManager()
+        private logic_notelistman=new NoteListFuncTs.NoteListManager()
+        logic_articleman=new ArticleManager()
         get storage_manager():_store.IStorageManager{
             //@ts-ignore
             return undefined
@@ -139,6 +145,7 @@ export module AppFuncTs{
             this.ui_refs().main_canvasproxy().get_editorbar_man().add_editor_bar_in_center()
         }
         start_open_note(noteid:string){
+
             //1.获取笔记元信息
             this.api_caller.get_note_mata(
                 new GetNoteMataArg(
@@ -174,7 +181,10 @@ export module AppFuncTs{
                 console.log("notehandle multi hold",this._noteid_2_notehandle[handle.note_id][0]++)
             }
             this._noteid_2_notehandle[handle.note_id][1]=handle
+
+            this.event_center.on_note_handle_first_hold(handle)
         }
+
         //一个窗口切换或关闭是，unhold note
         unhold_notehandle(handle:note.NoteHandle,contentman:NoteCanvasTs.ContentManager){
             handle.remove_holder(contentman)
@@ -215,7 +225,7 @@ export module AppFuncTs{
             return new ContextElement()
         }
         get_notelist_manager():NoteListFuncTs.NoteListManager|null{
-            return this.notelistman
+            return this.logic_notelistman
             // if(this.app){
                 // return this.app.app_ref_getter.get_note_list(this.app).notelist_manager
             // }

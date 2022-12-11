@@ -94,10 +94,7 @@ public noteid:string){}
 }
 
 export class ArticleListArg{
-constructor(public bind_unbind_rename:string,
-public article_name:string,
-public barid:string,
-public noteid:string){}
+constructor(public noteid:string){}
 }
 
 export class GetNotesMataReply{

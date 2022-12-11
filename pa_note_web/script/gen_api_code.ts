@@ -192,9 +192,6 @@ const apis=[
     new ApiDiscription(
         "article_list",
         {
-            bind_unbind_rename:new lan.ValueType(lan.BasicValueType.String),
-            article_name:new lan.ValueType(lan.BasicValueType.String),
-            barid:new lan.ValueType(lan.BasicValueType.String),
             noteid:new lan.ValueType(lan.BasicValueType.String)
         },{
             if_success:new lan.ValueType(lan.BasicValueType.Int),
