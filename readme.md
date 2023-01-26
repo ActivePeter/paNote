@@ -6,7 +6,7 @@ panote是我自己开发的一个个人笔记软件，将知识平铺开，并�
 
 #### Dev Records
 
-[paNote dev log - 飞书云文档 (feishu.cn)](https://bojagybyoq.feishu.cn/docx/JvN1dXL8To0sqZxdRl6cRZSQnYe)
+[paNote dev log](https://hanbaoaaa.xyz/?noteid=2&x=261&y=180)
 
 #### User Manual
 
