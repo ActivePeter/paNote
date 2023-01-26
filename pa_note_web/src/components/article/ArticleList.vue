@@ -6,10 +6,13 @@
   >
   </EditArticleBarDiag>
   文章列表
-  <div class="article_list_bar" v-for="(item, i) in article_list"
-    @click="locate(item.barid)"
-  >
-    {{item.artname}}
+  <div style="height: 10px;"></div>
+  <div class="article_list_layout">
+    <div class="article_list_bar" v-for="(item, i) in article_list"
+         @click="locate(item.barid)"
+    >
+      {{item.artname}}
+    </div>
   </div>
 
 </template>
@@ -18,7 +21,7 @@
 import {Options, Vue} from 'vue-class-component';
 import EditArticleBarDiag from "@/components/article/EditArticleBarDiag.vue";
 import {note} from "@/logic/note/note";
-import { AppFuncTs } from '@/logic/AppFunc';
+import { AppFuncTs } from '@/logic/app_func';
 
 
 @Options({
@@ -57,11 +60,15 @@ export default class ArticleList extends Vue {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .article_list_bar{
-  padding: 10px;
+  padding: 0 10px 10px 10px;
   cursor: pointer;
 }
 .article_list_bar:hover{
   color: #3a8ee6;
+}
+.article_list_layout{
+  height: 100%;
+  overflow-y: scroll;
 }
 /*.cmd_name {*/
 /*  display: inline-block;*/

@@ -13,7 +13,7 @@
 import {Options, Vue} from 'vue-class-component';
 import SideBarSwitch from "@/components/SideBarSwitch.vue";
 import NoteOutline from "@/components/NoteOutline.vue";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 import {SideBarSwitchTs} from "@/components/SideBarSwitchTs";
 
 // import {SideBarSwitchTs} from "@/components/SideBarSwitchTs";

@@ -3,7 +3,7 @@ import {ElMessage} from "element-plus";
 import EditorBarFunc, {EditorBar, EditorBarChange} from "@/components/editor_bar/EditorBarFunc";
 import {Gradient} from "@/components/reuseable/Gradient";
 import {LinkCanvasBarToListView} from "@/components/LinkCanvasBarToListView";
-import {AppFuncTs, AppRefsGetter} from "@/logic/AppFunc";
+import {AppFuncTs, AppRefsGetter} from "@/logic/app_func";
 import PathFunc, {PathChange} from "@/components/PathFunc";
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 import {ReviewPartFunc} from "@/components/review_part/ReviewPartFunc";
@@ -20,6 +20,8 @@ import {NoteLog} from "@/logic/log";
 import Path from "@/components/Path.vue";
 import {EditorToolTs} from "@/components/EditorToolTs";
 import {CanvasPathsProxyMan} from "@/components/PathTS";
+import {_bridge_gui_canvas_handle} from "@/logic/bridge_gui/canvas_handle";
+import {_route} from "@/logic/route";
 
 export module NoteCanvasTs{
     const CHUNK_WIDTH=300;
@@ -602,11 +604,14 @@ return this
             this.begin_scale_offy+=dy
         }
         on_scale_change(){
+
             const canvas=this.ui.canvas.notecanvas
+            this.ui.event_rangemiddle_canvaspos_change()
             if (canvas.moving_obj) {
                 this.ui.drag_bar_helper.update_moving_obj_pos()
                 // this.update_moving_obj_pos();
             }
+
         }
         on_scale_over(){
             if(this.flag_paddingchange_when_scaling){
@@ -831,6 +836,7 @@ return this
         }
 
         event_canvas_move(from_scroll_bar:boolean,e:Event){
+            this.event_rangemiddle_canvaspos_change()
             if(this.flag_canvas_scrollbar_move_ignore){
 
                 console.log("event_canvas_move flag_canvas_scrollbar_move_ignore",e)
@@ -962,6 +968,10 @@ return this
                 canvas.editor_bar_manager.on_mouse_up();
             }
         }
+        event_rangemiddle_canvaspos_change(){
+            let pos=this.pos_get_rangemiddle_canvaspos()
+            _route.update_middle_pos(pos)
+        }
 
         //scroll
         scroll_get_gradient_scroll():Gradient.Common{
@@ -1039,7 +1049,7 @@ return this
                 canvas.scale_offy
             )
         }
-        //pos
+        /// client pos
         pos_get_content_origin_pos():_PaUtilTs.Pos2D{
             const canvas=this.canvas.notecanvas
             const canvas_off=this.pos_get_canvas_off()
@@ -1075,7 +1085,20 @@ return this
                 origin_pos.y ;
             return new _PaUtilTs.Pos2D(tarx/this.canvas.get_scale(),tary/this.canvas.get_scale())
         }
-
+        /// 获取canvas窗口中心的canvas坐标
+        pos_get_rangemiddle_canvaspos(){
+            const range_ref=this.canvas.getref_range_ref()
+            const range_rec = range_ref.getBoundingClientRect() ;
+            //区域中心 client坐标
+            const mid_y = (range_rec.top + range_rec.bottom) / 2;
+            const mid_x = (range_rec.left + range_rec.right) / 2;
+            const origin_pos = this.pos_get_content_origin_pos()
+            return {
+                x:(mid_x-origin_pos.x)/this.canvas.get_scale(),
+                y:(mid_y-origin_pos.y)/this.canvas.get_scale()
+            }
+        }
+        /// 定位到某个canvas坐标
         locate_pos(x:number,y:number){
 // console.log("locate_editor_bar",editor_bar_id)
             const range_ref=this.canvas.getref_range_ref()
@@ -1171,17 +1194,26 @@ return this
         }
         constructor(public cmanager:ContentManager) {
             this.tick=window.setInterval(()=>{
-                if(cmanager.notehandle.syncrange_if_chunkrange_changed()){
+                let opehandle=_bridge_gui_canvas_handle.Canvas2Handle.new()
+                if(opehandle.updatehandle_range_if_changed(cmanager.notehandle)){
                     cmanager.chunkhelper.set_chunk_range_by_notehandle(cmanager.notehandle)
                 }
-                cmanager.notehandle.tick_load(this.get_canvas_view_chunk_range())
-                cmanager.notehandle.for_each_chunk((ck)=>{
-                    if(true){//如果chunk在视野内，就绑定到gui上
-                        cmanager.set_chunk_to_render(ck)
-                    }else{//移除render
+                opehandle.tick_load(cmanager.notehandle,this.get_canvas_view_chunk_range())
+                opehandle.consume_got_notebars(cmanager.notehandle,(bid,info)=>{
 
-                    }
+                    this.cmanager.canvas.get_editorbar_man().set_editor_bar(bid,
+                        EditorBarTs.EditorBar_create(info.x,info.y,info.w,info.h,info.formatted,info.connected.map(
+                            (v)=>{
+                                let ebids=v.split("_")
+                                return ebids[0]+","+ebids[1]
+                            }
+                        ),info.epoch))
+                    info.connected.forEach((v)=>{
+                        let ebids=v.split("_")
+                        this.cmanager.canvas.get_paths_proxy_man().gen_path_render_if_2eb_all_rendered(ebids[0],ebids[1])
+                    })
                 })
+
             },100)
         }
         unmount(){
@@ -1200,25 +1232,10 @@ return this
         chunkhelper
         chunkloader:undefined|ChunkLoader=undefined
         hold_notehandle_id=-1
-        set_chunk_to_render(ck:note.NoteChunk){
-            ck.foreach_notebar((bid,info)=>{
-                if(!(bid in this.canvas.get_editor_bars())){
-                    // @ts-ignore
-                    this.canvas.get_editorbar_man().set_editor_bar(bid,
-                        EditorBarTs.EditorBar_create(info.x,info.y,info.w,info.h,info.formatted,info.connected.map(
-                            (v)=>{
-                                let ebids=v.split("_")
-                                return ebids[0]+","+ebids[1]
-                            }
-                        )))
-                    info.connected.forEach((v)=>{
-                        let ebids=v.split("_")
-                        this.canvas.get_paths_proxy_man().gen_path_render_if_2eb_all_rendered(ebids[0],ebids[1])
-                    })
-                }
-            })
-            // this.render_chunks[ck.posx+"_"+ck.posy]=ck;
-        }
+        // set_chunk_to_render(ck:note.NoteChunk){
+        //
+        //     // this.render_chunks[ck.posx+"_"+ck.posy]=ck;
+        // }
         // canvas:any
         constructor(canvas:any) {
             this.canvas=canvas.data_reacher
@@ -1326,8 +1343,10 @@ return this
             {//复习界面
                 // AppFuncTs.appctx.get_reviewpart_man()?.sync_from_canvas(this.canvas)
             }
-
-            this.user_interact.locate_pos(0,0)
+            {
+                let routeinfo=_route.get_route_info()
+                this.user_interact.locate_pos(routeinfo.x,routeinfo.y)
+            }
         }
         // _backend_set_curnote_newedit_flag(ctx:AppFuncTs.Context){
         //     const nlman= ctx.get_notelist_manager()

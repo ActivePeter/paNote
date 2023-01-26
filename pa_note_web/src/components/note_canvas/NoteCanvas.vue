@@ -163,7 +163,7 @@
                        @hide="content_manager.user_interact.hide_pathjumpbtn()"
           >
           </PathJumpBtn>
-          <NoteCanvasSelectRange class="select_range" ref="select_range"/>
+          <NoteCanvasSelectRange ref="select_range"/>
         </div>
       </div>
 
@@ -199,7 +199,7 @@ import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 // import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
 import NoteCanvasSelectRange from "@/components/note_canvas/NoteCanvasSelectRange";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 import Path from "@/components/Path";
 import PathJumpBtn from "@/components/PathJumpBtn";
 import CanvasLinkBarHolder from "@/components/note_canvas/CanvasLinkBarHolder";

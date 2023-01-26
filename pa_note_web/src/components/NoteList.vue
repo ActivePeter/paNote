@@ -36,7 +36,7 @@ import NoteListBar from "@/components/NoteListBar";
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 //import {bus_events} from "@/bus";
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 
 export default {
   name: "NodeList",
@@ -81,6 +81,7 @@ export default {
       // this.notelist_manager.delete_note(this.context,note_list_bar.id);
     },
     note_list_bar_change_name(bar){
+      this.get_manager().rename_note(bar.id,bar.editing_name)
       // console.log("note_list_bar_change_name")
       // this.notelist_manager.change_note_name(this.context,bar.id,bar.editing_name)
     }

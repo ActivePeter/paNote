@@ -42,7 +42,7 @@ import { note } from '@/logic/note/note';
 import {EditorBar} from "@/components/editor_bar/EditorBarFunc";
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {_path} from "@/logic/note/path";
-import { AppFuncTs } from '@/logic/AppFunc';
+import { AppFuncTs } from '@/logic/app_func';
 // import {_PaUtilTs} from "@/3rd/pa_util_ts";
 
 

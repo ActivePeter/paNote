@@ -20,7 +20,7 @@
 <script lang="ts">
 import {Options, Vue} from 'vue-class-component';
 import {NoteOutlineTs} from "@/components/NoteOutlineTs";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 // import { RightMenuFuncTs } from './RightMenuFuncTs';
 // import {Watch} from "vue-property-decorator";
 // import {EditorBarTs} from "@/components/EditorBarTs";

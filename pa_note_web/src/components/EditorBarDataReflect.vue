@@ -14,7 +14,7 @@
 
 <script>
 import QuillEditor from "@/components/QuillEditor";
-import AppFunc, {AppFuncTs} from "@/logic/AppFunc";
+import AppFunc, {AppFuncTs} from "@/logic/app_func";
 import { Search } from '@element-plus/icons-vue'
 
 export default {

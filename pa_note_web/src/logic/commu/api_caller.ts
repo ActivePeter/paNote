@@ -1,5 +1,5 @@
 import {ICommu, WebCommu} from "@/logic/commu/icommu";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 
 export class GetNotesMataArg{
 constructor(){}
@@ -22,6 +22,11 @@ public notebarid:string){}
 
 export class CreateNewNoteArg{
 constructor(){}
+}
+
+export class RenameNoteArg{
+constructor(public noteid:string,
+public name:string){}
 }
 
 export class CreateNewBarArg{
@@ -97,6 +102,10 @@ export class ArticleListArg{
 constructor(public noteid:string){}
 }
 
+export class FetchAllNoteBarsEpochArg{
+constructor(public noteid:string){}
+}
+
 export class GetNotesMataReply{
 constructor(public node_id_name_list:any[]){}
 }
@@ -120,10 +129,15 @@ public w:number,
 public h:number,
 public text:string,
 public formatted:string,
-public connected:any[]){}
+public connected:any[],
+public epoch:number){}
 }
 
 export class CreateNewNoteReply{
+constructor(){}
+}
+
+export class RenameNoteReply{
 constructor(){}
 }
 
@@ -134,11 +148,12 @@ public noteids:any[]){}
 }
 
 export class UpdateBarContentReply{
-constructor(){}
+constructor(public new_epoch:number){}
 }
 
 export class UpdateBarTransformReply{
-constructor(public chunk_maxx:number,
+constructor(public new_epoch:number,
+public chunk_maxx:number,
 public chunk_minx:number,
 public chunk_maxy:number,
 public chunk_miny:number,
@@ -151,7 +166,9 @@ public redovalue:any){}
 }
 
 export class AddPathReply{
-constructor(){}
+constructor(public _1succ_0fail:number,
+public new_epoch_from:number,
+public new_epoch_to:number){}
 }
 
 export class GetPathInfoReply{
@@ -163,7 +180,8 @@ constructor(){}
 }
 
 export class RemovePathReply{
-constructor(){}
+constructor(public new_epoch_to:number,
+public new_epoch_from:number){}
 }
 
 export class DeleteBarReply{
@@ -192,6 +210,10 @@ constructor(public if_success:number,
 public list:any[]){}
 }
 
+export class FetchAllNoteBarsEpochReply{
+constructor(public bars_id_and_epoch:any[]){}
+}
+
 
 
 export class ApiCaller{
@@ -208,6 +230,7 @@ get_note_mata(arg:GetNoteMataArg,cb:(reply:GetNoteMataReply)=>void):void{ this.g
 get_chunk_note_ids(arg:GetChunkNoteIdsArg,cb:(reply:GetChunkNoteIdsReply)=>void):void{ this.get_icommu().send_obj({msg_type:'MsgGetChunkNoteIds',msg_value:arg},cb)  }
 get_note_bar_info(arg:GetNoteBarInfoArg,cb:(reply:GetNoteBarInfoReply)=>void):void{ this.get_icommu().send_obj({msg_type:'MsgGetNoteBarInfo',msg_value:arg},cb)  }
 create_new_note(arg:CreateNewNoteArg,cb:(reply:CreateNewNoteReply)=>void):void{if(AppFuncTs.get_ctx().authority_man.is_logged_in()){ this.get_icommu().send_obj({msg_type:'MsgCreateNewNote',msg_value:arg},cb) } }
+rename_note(arg:RenameNoteArg,cb:(reply:RenameNoteReply)=>void):void{if(AppFuncTs.get_ctx().authority_man.is_logged_in()){ this.get_icommu().send_obj({msg_type:'MsgRenameNote',msg_value:arg},cb) } }
 create_new_bar(arg:CreateNewBarArg,cb:(reply:CreateNewBarReply)=>void):void{if(AppFuncTs.get_ctx().authority_man.is_logged_in()){ this.get_icommu().send_obj({msg_type:'MsgCreateNewBar',msg_value:arg},cb) } }
 update_bar_content(arg:UpdateBarContentArg,cb:(reply:UpdateBarContentReply)=>void):void{if(AppFuncTs.get_ctx().authority_man.is_logged_in()){ this.get_icommu().send_obj({msg_type:'MsgUpdateBarContent',msg_value:arg},cb) } }
 update_bar_transform(arg:UpdateBarTransformArg,cb:(reply:UpdateBarTransformReply)=>void):void{if(AppFuncTs.get_ctx().authority_man.is_logged_in()){ this.get_icommu().send_obj({msg_type:'MsgUpdateBarTransform',msg_value:arg},cb) } }
@@ -221,5 +244,6 @@ login(arg:LoginArg,cb:(reply:LoginReply)=>void):void{ this.get_icommu().send_obj
 verify_token(arg:VerifyTokenArg,cb:(reply:VerifyTokenReply)=>void):void{ this.get_icommu().send_obj({msg_type:'MsgVerifyToken',msg_value:arg},cb)  }
 article_binder(arg:ArticleBinderArg,cb:(reply:ArticleBinderReply)=>void):void{if(AppFuncTs.get_ctx().authority_man.is_logged_in()){ this.get_icommu().send_obj({msg_type:'MsgArticleBinder',msg_value:arg},cb) } }
 article_list(arg:ArticleListArg,cb:(reply:ArticleListReply)=>void):void{ this.get_icommu().send_obj({msg_type:'MsgArticleList',msg_value:arg},cb)  }
+fetch_all_note_bars_epoch(arg:FetchAllNoteBarsEpochArg,cb:(reply:FetchAllNoteBarsEpochReply)=>void):void{ this.get_icommu().send_obj({msg_type:'MsgFetchAllNoteBarsEpoch',msg_value:arg},cb)  }
 
 }

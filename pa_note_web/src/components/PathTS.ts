@@ -1,7 +1,7 @@
 import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
 import {EditorBar} from "@/components/editor_bar/EditorBarFunc";
 import {PathStruct} from "@/components/note_canvas/NoteCanvasFunc";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 import {GetPathInfoArg} from "@/logic/commu/api_caller";
 export class PathStructProxy{
     static create(eb:PathStruct){

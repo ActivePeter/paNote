@@ -23,6 +23,9 @@ pub notebarid:String}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateNewNoteArg{}
 #[derive(Serialize, Deserialize, Debug)]
+pub struct RenameNoteArg{pub noteid:String,
+pub name:String}
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateNewBarArg{pub noteid:String,
 pub x:f32,
 pub y:f32}
@@ -70,6 +73,8 @@ pub noteid:String}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ArticleListArg{pub noteid:String}
 #[derive(Serialize, Deserialize, Debug)]
+pub struct FetchAllNoteBarsEpochArg{pub noteid:String}
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GetNotesMataReply{pub node_id_name_list:Vec<serde_json::Value>}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetNoteMataReply{pub next_noteid:i32,
@@ -86,17 +91,21 @@ pub w:f32,
 pub h:f32,
 pub text:String,
 pub formatted:String,
-pub connected:Vec<serde_json::Value>}
+pub connected:Vec<serde_json::Value>,
+pub epoch:i32}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateNewNoteReply{}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RenameNoteReply{}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateNewBarReply{pub chunkx:i32,
 pub chunky:i32,
 pub noteids:Vec<serde_json::Value>}
 #[derive(Serialize, Deserialize, Debug)]
-pub struct UpdateBarContentReply{}
+pub struct UpdateBarContentReply{pub new_epoch:i32}
 #[derive(Serialize, Deserialize, Debug)]
-pub struct UpdateBarTransformReply{pub chunk_maxx:i32,
+pub struct UpdateBarTransformReply{pub new_epoch:i32,
+pub chunk_maxx:i32,
 pub chunk_minx:i32,
 pub chunk_maxy:i32,
 pub chunk_miny:i32,
@@ -105,13 +114,16 @@ pub chunk_change:Vec<serde_json::Value>}
 pub struct RedoReply{pub redotype:String,
 pub redovalue:serde_json::Map<String,serde_json::Value>}
 #[derive(Serialize, Deserialize, Debug)]
-pub struct AddPathReply{}
+pub struct AddPathReply{pub _1succ_0fail:i32,
+pub new_epoch_from:i32,
+pub new_epoch_to:i32}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetPathInfoReply{pub type_:i32}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SetPathInfoReply{}
 #[derive(Serialize, Deserialize, Debug)]
-pub struct RemovePathReply{}
+pub struct RemovePathReply{pub new_epoch_to:i32,
+pub new_epoch_from:i32}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DeleteBarReply{pub chunk_maxx:i32,
 pub chunk_minx:i32,
@@ -128,6 +140,8 @@ pub struct ArticleBinderReply{pub if_success:i32}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ArticleListReply{pub if_success:i32,
 pub list:Vec<serde_json::Value>}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct FetchAllNoteBarsEpochReply{pub bars_id_and_epoch:Vec<serde_json::Value>}
 pub trait ApiHandler{
 
     type GetNotesMataFuture: Future<Output=()>;
@@ -144,6 +158,9 @@ pub trait ApiHandler{
 
     type CreateNewNoteFuture: Future<Output=()>;
     fn api_create_new_note(&self,arg:CreateNewNoteArg,taskid:String,sender:ToClientSender)->Self::CreateNewNoteFuture;
+
+    type RenameNoteFuture: Future<Output=()>;
+    fn api_rename_note(&self,arg:RenameNoteArg,taskid:String,sender:ToClientSender)->Self::RenameNoteFuture;
 
     type CreateNewBarFuture: Future<Output=()>;
     fn api_create_new_bar(&self,arg:CreateNewBarArg,taskid:String,sender:ToClientSender)->Self::CreateNewBarFuture;
@@ -183,6 +200,9 @@ pub trait ApiHandler{
 
     type ArticleListFuture: Future<Output=()>;
     fn api_article_list(&self,arg:ArticleListArg,taskid:String,sender:ToClientSender)->Self::ArticleListFuture;
+
+    type FetchAllNoteBarsEpochFuture: Future<Output=()>;
+    fn api_fetch_all_note_bars_epoch(&self,arg:FetchAllNoteBarsEpochArg,taskid:String,sender:ToClientSender)->Self::FetchAllNoteBarsEpochFuture;
 
 }
 
@@ -239,6 +259,15 @@ let (value,taskid)=get_obj_and_taskid(msg_value);            let arg=serde_json:
 let (value,taskid)=get_obj_and_taskid(msg_value);            let arg=serde_json::from_value::<CreateNewNoteArg>(value);
             if let Ok(arg)=arg{
                  NoteManager::get().api_create_new_note(
+                     arg,taskid,sender
+                 ).await;
+            }
+}
+
+"MsgRenameNote"=>{
+let (value,taskid)=get_obj_and_taskid(msg_value);            let arg=serde_json::from_value::<RenameNoteArg>(value);
+            if let Ok(arg)=arg{
+                 NoteManager::get().api_rename_note(
                      arg,taskid,sender
                  ).await;
             }
@@ -356,6 +385,15 @@ let (value,taskid)=get_obj_and_taskid(msg_value);            let arg=serde_json:
 let (value,taskid)=get_obj_and_taskid(msg_value);            let arg=serde_json::from_value::<ArticleListArg>(value);
             if let Ok(arg)=arg{
                  NoteManager::get().api_article_list(
+                     arg,taskid,sender
+                 ).await;
+            }
+}
+
+"MsgFetchAllNoteBarsEpoch"=>{
+let (value,taskid)=get_obj_and_taskid(msg_value);            let arg=serde_json::from_value::<FetchAllNoteBarsEpochArg>(value);
+            if let Ok(arg)=arg{
+                 NoteManager::get().api_fetch_all_note_bars_epoch(
                      arg,taskid,sender
                  ).await;
             }

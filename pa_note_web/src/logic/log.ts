@@ -4,7 +4,7 @@ import {EditorBar} from "@/components/editor_bar/EditorBarFunc";
 import {ReviewPartFunc} from "@/components/review_part/ReviewPartFunc";
 import {NoteOutlineTs} from "@/components/NoteOutlineTs";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
-import {AppFuncTs} from "./AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 import {PathStruct} from "@/components/note_canvas/NoteCanvasFunc";
 import {
     AddPathArg,
@@ -134,8 +134,8 @@ export namespace NoteLog {
                     ),(r)=>{
                         console.log("send trans succ",r)
                         if(r.chunk_change.length==2){
-                            handle.move_chunk_ebid_from_one_to_other(this.ebid,r.chunk_change[0],r.chunk_change[1])
-                            handle.set_chunkrange(r.chunk_minx,r.chunk_maxx,r.chunk_miny,r.chunk_maxy,true)
+                            handle.noteloader.move_chunk_ebid_from_one_to_other(this.ebid,r.chunk_change[0],r.chunk_change[1])
+                            handle.noteloader.set_chunkrange(r.chunk_minx,r.chunk_maxx,r.chunk_miny,r.chunk_maxy,true)
                         }
                     }
                 )
@@ -205,7 +205,7 @@ export namespace NoteLog {
                 this.rec_conn = new EbDisConn(this.ebdata.conns)
                 AppFuncTs.get_ctx().api_caller
                     .delete_bar(new DeleteBarArg(handle.note_id,this.ebid),(r)=>{
-                        handle.set_chunkrange(r.chunk_minx,r.chunk_maxx,r.chunk_miny,r.chunk_maxy,true)
+                        handle.noteloader.set_chunkrange(r.chunk_minx,r.chunk_maxx,r.chunk_miny,r.chunk_maxy,true)
                         // @ts-ignore
                         handle.remove_ebid_in_chunk(this.ebid,this.ebdata)
                         //先断开路径
@@ -267,7 +267,11 @@ export namespace NoteLog {
                     handle.pathman().setpath(pathkey,pathp.path)
                     AppFuncTs.get_ctx().api_caller.add_path(new AddPathArg(
                         handle.note_id,ebid1,ebid2
-                    ),(_r)=>{})
+                    ),(_r)=>{
+                        if(_r._1succ_0fail==0){
+                            console.error("fail add")
+                        }
+                    })
                 })
             }
 

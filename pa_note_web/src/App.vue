@@ -40,14 +40,17 @@
             :on_left="false"
         >
           <template v-slot:sidebar>
-            <RightPart ref="right_part">
+            <div style="height:calc(100vh - 100px) ;">
               <ArticleList ref="article_list_ref"> </ArticleList>
+            </div>
+<!--            <RightPart ref="right_part">-->
+
 <!--              <ReviewPart-->
 <!--                  class="review_part"-->
 <!--                  ref="review_part_ref"-->
 <!--                  @request_for_conttext="handle_request_for_conttext"-->
 <!--              ></ReviewPart>-->
-            </RightPart>
+<!--            </RightPart>-->
           </template>
           <template v-slot:content>
             <div class="note_canvas_border content">
@@ -71,7 +74,7 @@
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
-import { AppFuncTs } from './logic/AppFunc';
+import { AppFuncTs } from './logic/app_func';
 import HelloWorld from './components/HelloWorld.vue';
 import SideBarContainer from "@/components/reuseable/SideBarContainer.vue";
 import NoteCanvas from "./components/note_canvas/NoteCanvas.vue";
@@ -103,6 +106,10 @@ export default class App extends Vue {
     this.context.init();
     this.context.app = this;
     AppFuncTs.set_ctx(this.context)
+  }
+  mounted(){
+    let a:any=this
+    console.log("App Mounted",a.$route)
   }
   add_editor_bar(){
     this.context?.add_editor_bar()

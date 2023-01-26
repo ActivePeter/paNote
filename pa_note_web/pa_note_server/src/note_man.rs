@@ -3,14 +3,15 @@ use tokio::io::AsyncReadExt;
 use tokio::sync::RwLock;
 use std::ops::DerefMut;
 use std::collections::{HashSet, HashMap};
-use serde_json::{Deserializer, Serializer, Value, Error};
+use serde_json::{Deserializer, Serializer, Value, Error, Number};
 // use crate::server::{ApiGetNoteBarInfoArg, ApiGetChunkNoteIdsArg, ApiGetNoteMetaArg};
 use std::future::Future;
 use pakv_kernel::PaKVCtx;
 use serde::{Serialize, Deserialize};
 
+use crate::conv;
 use crate::server::ToClientSender;
-use crate::gen_distribute::{ApiHandler, GetNoteMataArg, GetChunkNoteIdsArg, GetNoteBarInfoArg, GetNotesMataArg, GetNotesMataReply, CreateNewNoteArg, CreateNewNoteReply, GetNoteMataReply, GetChunkNoteIdsReply, CreateNewBarArg, GetNoteBarInfoReply, CreateNewBarReply, UpdateBarContentArg, UpdateBarTransformArg, RedoArg, UpdateBarTransformReply, UpdateBarContentReply, AddPathArg, AddPathReply, DeleteBarArg, DeleteBarReply, GetPathInfoArg, SetPathInfoArg, GetPathInfoReply, SetPathInfoReply, RemovePathArg, RemovePathReply, LoginArg, VerifyTokenArg, LoginReply, VerifyTokenReply, ArticleBinderArg, ArticleListArg, ArticleBinderReply, ArticleListReply};
+use crate::gen_distribute::{ApiHandler, GetNoteMataArg, GetChunkNoteIdsArg, GetNoteBarInfoArg, GetNotesMataArg, GetNotesMataReply, CreateNewNoteArg, CreateNewNoteReply, GetNoteMataReply, GetChunkNoteIdsReply, CreateNewBarArg, GetNoteBarInfoReply, CreateNewBarReply, UpdateBarContentArg, UpdateBarTransformArg, RedoArg, UpdateBarTransformReply, UpdateBarContentReply, AddPathArg, AddPathReply, DeleteBarArg, DeleteBarReply, GetPathInfoArg, SetPathInfoArg, GetPathInfoReply, SetPathInfoReply, RemovePathArg, RemovePathReply, LoginArg, VerifyTokenArg, LoginReply, VerifyTokenReply, ArticleBinderArg, ArticleListArg, ArticleBinderReply, ArticleListReply, FetchAllNoteBarsEpochArg, FetchAllNoteBarsEpochReply, RenameNoteArg, RenameNoteReply};
 use crate::gen_send;
 use crate::gen_distribute;
 use crate::authority::AuthorityMan;
@@ -130,9 +131,26 @@ pub struct NoteBarInfo{
     pub formatted:String,
     pub connected:Vec<serde_json::Value>,
     pub edit_time:Option<u64>,
-    pub create_time:Option<u64>
+    pub create_time:Option<u64>,
+    pub epoch:Option<u64>
 }
 impl NoteBarInfo{
+    pub fn epoch_i32(&self) -> i32 {
+        self.epoch.unwrap() as i32
+    }
+    pub fn epoch_addup(&mut self){
+        if self.epoch.unwrap()==i32::MAX as u64{
+            self.epoch.replace(0);
+        }else{
+            let old=self.epoch.unwrap();
+            self.epoch.replace(old+1);
+        }
+    }
+    pub fn fix_old(&mut self){
+        if self.epoch.is_none(){
+            self.epoch=Some(0);
+        }
+    }
     pub fn update_edit_time(&mut self){
         self.edit_time=Some(time_stamp_ms_u64());
     }
@@ -144,7 +162,8 @@ impl NoteBarInfo{
             h: self.h,
             text: self.text,
             formatted: self.formatted,
-            connected: self.connected
+            connected: self.connected,
+            epoch: self.epoch.unwrap() as i32
         }
     }
 }
@@ -268,7 +287,6 @@ impl NoteManager{
             }
         }
     }
-
     pub fn get_note_chunk_ids(&self,connid:i32,arg:GetChunkNoteIdsArg) -> GetChunkNoteIdsReply {
         let chunkid=self.chunkpos_to_chunkid(arg.chunkx, arg.chunky);
         {//try read from mem
@@ -459,7 +477,8 @@ impl NoteManager{
                 formatted: "".to_string(),
                 connected: vec![],
                 edit_time: Some(time),
-                create_time: Some(time)
+                create_time: Some(time),
+                epoch:Some(0),
             };//保存笔记信息
             let key = format!("{}|bar|{}", noteid, next);
             self.kernel.set(key,
@@ -499,7 +518,9 @@ impl NoteManager{
                 None
             }
             Some(s) => {
-                Some(serde_json::from_str::<NoteBarInfo>(&s).unwrap())
+                let mut fix=serde_json::from_str::<NoteBarInfo>(&s).unwrap();
+                fix.fix_old();
+                Some(fix)
             }
         }
     }
@@ -540,7 +561,7 @@ impl NoteManager{
         meta
     }
 
-    pub fn add_path(&self,noteid:&str,ebid1:&str,ebid2:&str){
+    pub fn add_path(&self, noteid:&str, ebid1:&str, ebid2:&str) -> Option<(i32, i32)> {
         if let (Some(mut n1),Some(mut n2))=
             (self.get_notebar_info(noteid.to_string(), ebid1.to_string()),
              self.get_notebar_info(noteid.to_string(),ebid2.to_string())){
@@ -548,13 +569,18 @@ impl NoteManager{
             //  检查是否已经有path
             n1.connected.push(Value::String(format!("{}_{}",ebid1,ebid2)));
             n2.connected.push(Value::String(format!("{}_{}",ebid1,ebid2)));
+            n1.epoch_addup();
+            n2.epoch_addup();
             self.set_notebar_info(noteid,ebid1,&n1);
             self.set_notebar_info(noteid,ebid2,&n2);
+            let ret=Some((n1.epoch_i32(),n2.epoch_i32()));
             self.set_note_path_info(noteid, &*format!("{}_{}", ebid1, ebid2), &PathInfo { pathtype: 0 });
             // let v1=Value::String()
             // n1.connected.binary_search(&)
+            ret
         }else{
-            eprintln!("error, add path ebid not found")
+            eprintln!("error, add path ebid not found");
+            None
         }
     }
     fn get_note_path_info(&self,noteid:&str,pathid:&str)->Option<PathInfo>{
@@ -570,6 +596,10 @@ impl NoteManager{
     fn set_note_path_info(&self,noteid:&str,pathid:&str,info:&PathInfo){
         let key=format!("{}|path|{}",noteid,pathid);
         self.kernel.set(key,serde_json::to_string(info).unwrap());
+    }
+    pub fn remove_note_path_info(&self,noteid:&str,pathid:&str){
+        let key=format!("{}|path|{}",noteid,pathid);
+        self.kernel.del(key);
     }
     fn get_article_list(&self, noteid:&str) ->ArticleList{
         let key=format!("{}|articlelist",noteid);
@@ -599,10 +629,6 @@ impl NoteManager{
         let key=format!("{}|articlelist",noteid);
         self.kernel.set(key.clone(),serde_json::to_string(article_list).unwrap());
         println!("set article list {}",self.kernel.get(key).unwrap());
-    }
-    pub fn remove_note_path_info(&self,noteid:&str,pathid:&str){
-        let key=format!("{}|path|{}",noteid,pathid);
-        self.kernel.del(key);
     }
     pub fn delete_bar(&self, connid:i32, noteid:&str, ebid:&str) -> GetNoteMataReply {
         let mut meta=self.get_note_meta(noteid);
@@ -714,6 +740,25 @@ impl ApiHandler for NoteManager{
         }
     }
 
+    type RenameNoteFuture = impl Future<Output=()>;
+
+    fn api_rename_note(&self, arg: RenameNoteArg, taskid: String, sender: ToClientSender) -> Self::RenameNoteFuture {
+        let mut notelist =self.get_note_list();
+        for id_name in &mut notelist{
+            let id_name=id_name.as_array_mut().unwrap();
+            if id_name[0].as_str().unwrap()==arg.noteid{
+                id_name[1]=Value::String(arg.name);
+                break;
+            }
+        }
+        self.set_notelist(notelist);
+
+        async move{
+            gen_send::send_rename_note_reply(sender,taskid,RenameNoteReply{}).await;
+            ()
+        }
+    }
+
     type CreateNewBarFuture = impl Future<Output=()>;
 
     fn api_create_new_bar(&self, arg: CreateNewBarArg, taskid: String, sender: ToClientSender) -> Self::CreateNewBarFuture {
@@ -741,9 +786,11 @@ impl ApiHandler for NoteManager{
         nb.formatted=arg.formatted;
         nb.text=arg.text;
         nb.update_edit_time();
+        nb.epoch_addup();
         self.set_notebar_info(&*(arg.noteid),&*(arg.barid),&nb);
+
         async move{
-            gen_send::send_update_bar_content_reply(sender,taskid,UpdateBarContentReply{}).await;
+            gen_send::send_update_bar_content_reply(sender,taskid,UpdateBarContentReply{ new_epoch: nb.epoch_i32() }).await;
             ()
         }
     }
@@ -761,8 +808,10 @@ impl ApiHandler for NoteManager{
             (vec![],self.get_note_meta(&*arg.noteid))
         };
         nb.x=arg.x; nb.y=arg.y; nb.w=arg.w; nb.h=arg.h;
+        nb.epoch_addup();
         self.set_notebar_info(&*(arg.noteid),&*(arg.barid),&nb);
         let resp=UpdateBarTransformReply{
+            new_epoch: nb.epoch_i32(),
             chunk_maxx: meta.max_chunkx,
             chunk_minx: meta.min_chunkx,
             chunk_maxy: meta.max_chunky,
@@ -786,11 +835,19 @@ impl ApiHandler for NoteManager{
     type AddPathFuture = impl Future<Output=()>;
 
     fn api_add_path(&self, arg: AddPathArg, taskid: String, sender: ToClientSender) -> Self::AddPathFuture {
-        self.add_path(&*(arg.noteid),&*(arg.from),&*(arg.to));
-        async move{
-            gen_send::send_add_path_reply(sender,taskid,AddPathReply{ }).await;
-            ()
-        }
+            let res=self.add_path(&*(arg.noteid),&*(arg.from),&*(arg.to));
+            async move{
+                if let Some((from_epoch,to_epoch))=res{
+                    gen_send::send_add_path_reply(
+                        sender,taskid,AddPathReply{ _1succ_0fail: 1, new_epoch_from: from_epoch, new_epoch_to: to_epoch }).await;
+                    ()
+                }else{
+                    gen_send::send_add_path_reply(sender,taskid,AddPathReply{ _1succ_0fail: 0, new_epoch_from: 0, new_epoch_to: 0 }).await;
+                    ()
+                }
+            }
+
+
     }
 
     type GetPathInfoFuture = impl Future<Output=()>;
@@ -822,14 +879,17 @@ impl ApiHandler for NoteManager{
         let b=split.next().unwrap().to_string();
         let mut ainfo=self.get_notebar_info(arg.noteid.clone(),a.clone()).unwrap();
         note_bar_info_funcs::remove_path_in_info(&*(arg.pathid_with_line),&mut ainfo);
+        ainfo.epoch_addup();
         self.set_notebar_info(&*(arg.noteid),&*a,&ainfo);
         let mut binfo=self.get_notebar_info(arg.noteid.clone(),b.clone()).unwrap();
         note_bar_info_funcs::remove_path_in_info(&*(arg.pathid_with_line),&mut binfo);
+        binfo.epoch_addup();
         self.set_notebar_info(&*(arg.noteid),&*b,&binfo);
         // 移除path
         self.remove_note_path_info(&*(arg.noteid),&*(arg.pathid_with_line));
         async move{
-            gen_send::send_remove_path_reply(sender,taskid,RemovePathReply{}).await;
+            gen_send::send_remove_path_reply(sender,taskid,RemovePathReply{
+                new_epoch_to: binfo.epoch.unwrap() as i32, new_epoch_from: ainfo.epoch.unwrap() as i32 }).await;
             ()
         }
     }
@@ -959,6 +1019,39 @@ impl ApiHandler for NoteManager{
                 if_success: 1,
                 list: collect_noteinfos
             }).await;
+        }
+    }
+
+    type FetchAllNoteBarsEpochFuture = impl Future<Output=()>;
+
+    fn api_fetch_all_note_bars_epoch(&self, arg: FetchAllNoteBarsEpochArg, taskid: String, sender: ToClientSender) -> Self::FetchAllNoteBarsEpochFuture {
+        let note_meta=self.get_note_meta(arg.noteid.as_str());
+        let mut res=vec![];
+        for x in note_meta.min_chunkx..note_meta.max_chunkx+1{
+            for y in note_meta.min_chunky..note_meta.max_chunky+1{
+                let ids=self.get_note_chunk_ids(sender.get_connid(),GetChunkNoteIdsArg{
+                    noteid: arg.noteid.clone(),
+                    chunkx: x,
+                    chunky: y
+                });
+                let mut notes =conv::get_chunk_note_ids_reply_to_noteids_strvec(ids);
+                while let Some(noteid)=notes.pop() {
+                    let mut onepair =vec![];
+                    onepair.reserve(2);
+                    let info=self.get_notebar_info(arg.noteid.clone(),noteid.clone());
+                    onepair.push(Value::String(noteid));
+                    onepair.push(Value::Number(Number::from(info.unwrap().epoch.unwrap())));
+                    res.push(Value::Array(onepair));
+                }
+            }
+        }
+        async move{
+            gen_send::send_fetch_all_note_bars_epoch_reply(
+                sender,taskid,FetchAllNoteBarsEpochReply{
+                    bars_id_and_epoch:res
+                }
+            ).await;
+            ()
         }
     }
 }

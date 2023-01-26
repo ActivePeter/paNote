@@ -20,7 +20,7 @@ import {NoteOutlineTs} from "@/components/NoteOutlineTs";
 // import {NoteContentData} from "@/components/NoteCanvasFunc";
 // import {EditorBar} from "@/components/EditorBarFunc";
 import NoteOutlineNode from "@/components/NoteOutlineNode.vue";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {note} from "@/logic/note/note";
 import NoteContentData = note.NoteContentData;

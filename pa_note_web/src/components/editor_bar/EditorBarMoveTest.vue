@@ -8,6 +8,7 @@
     @mouseleave="handle_mouse_leave"
     :style="{height: height+'px',width:width+'px',opacity:opacity_str}"
     :id="'editor_'+ebid"
+    class="textselectable"
   >
 <!--    {{ebid}}-->
 <!--    <div style="position: relative">-->
@@ -19,6 +20,7 @@
 <!--      {{fake_select_style}}-->
     </div>
     <EditorBarFloatSet
+        class="textnotselectable"
         v-if="ebid===editing_ebid&&this.floatset!==floatsettypes.no"
         :ebcomp="proxy"
         :type="floatset"
@@ -27,14 +29,14 @@
     <quill-editor
       :value="content"
       :options="editorOption"
-      :disabled="ebid!==editing_ebid||
+      :disabled="(!editing)||
         floatset!==floatsettypes.no||
         toolbar_on"
       @update:value="content_change"
       @eb_enable="quill_enable"
       ref="quill_editor_ref"
     />
-    <div class="tool_line" v-show="mouse_over">
+    <div class="tool_line textnotselectable" v-show="mouse_over">
       <div class="editor_drag rb tool_line_bar"
 
            @mousedown="corner_drag_helper.handle_mouse_drag_down"
@@ -46,7 +48,7 @@
           v-show="ebid===editing_ebid||mouse_over"
           class="tool_line_bar">
 
-        {{ ebid===editing_ebid ? "done" : "edit" }}
+        {{ editing ? "done" : "edit" }}
       </div>
     </div>
   </div>
@@ -60,7 +62,7 @@ import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
 import {EditorBarFloatSetTs} from "@/components/editor_bar/EditorBarFloatSetTs";
 import EditorBarFloatSet from "@/components/editor_bar/EditorBarFloatSet";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 // import RightMenuFunc from "@/components/RightMenuFunc";
 
 // import $ from "jquery"
@@ -95,6 +97,9 @@ export default {
     }
   },
   computed:{
+    editing(){
+      return this.ebid===this.editing_ebid
+    },
     fake_select_show(){
       return this.fakeselect_show&&(this.toolbar_on||this.floatset!==this.floatsettypes.no)
         && this.proxy.ebman.canvasproxy().get_content_manager().user_interact.
@@ -169,7 +174,6 @@ export default {
           toolbar: false,
         },
       },
-      editing: false,
       mouse_over:false,
 
       right_menu_helper:new EditorBarFunc.EditorBarRightMenuHelper(),
@@ -278,19 +282,57 @@ export default {
 
 <style scoped>
 .editor_bar.selected{
-  border-width: 4px;
+  /*border-width: 4px;*/
+  border: 3px solid #000;
   margin-left: -3px;
   margin-top: -3px;
 }
 .editor_bar .ql-editor{
   padding: 8px;
+  border-radius: 10px;
 }
 .editor_bar {
-  background: rgba(235, 234, 234,90%);
+  box-shadow: 2px 2px 2px #eeeeee;
+  background: rgba(255, 254, 254,90%);
   /*width: 280px;*/
   /*height: 380px;*/
   /*box-sizing: border-box;*/
-  border: 1px solid #000;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+.textnotselectable {
+
+
+  -webkit-user-select: none; /* Chrome/Safari/Opera */
+
+  -khtml-user-select: none; /* Konqueror */
+
+  -moz-user-select: none; /* Firefox */
+
+  -ms-user-select: none; /* Internet Explorer/Edge */
+
+  user-select: none;
+  /* Non-prefixed version, currently
+
+ not supported by any browser */
+
+}
+.textselectable {
+
+
+  -webkit-user-select: text; /* Chrome/Safari/Opera */
+
+  -khtml-user-select: text; /* Konqueror */
+
+  -moz-user-select: text; /* Firefox */
+
+  -ms-user-select: text; /* Internet Explorer/Edge */
+
+  user-select: text;
+  /* Non-prefixed version, currently
+
+ not supported by any browser */
+
 }
 .editor {
   height: 100%;

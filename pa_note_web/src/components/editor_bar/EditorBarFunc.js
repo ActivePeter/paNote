@@ -3,7 +3,7 @@ import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {NoteLog} from "@/logic/log";
 // import {EditorBarCompProxy} from "@/components/editor_bar/EditorBarTs";
 import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 
 export class CornerDragHelper{
     editor_bar=null
@@ -50,6 +50,9 @@ export class EditorBar{
     height=150
     content=""
     conns= []
+    epoch=0
+    need_update=false
+
     constructor(x,y) {
         this.pos_x=x;
         this.pos_y=y;

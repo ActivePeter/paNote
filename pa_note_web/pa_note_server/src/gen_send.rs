@@ -32,6 +32,12 @@ pub async fn send_create_new_note_reply(mut sender:ToClientSender, taskid:String
     obj.insert("msg_value".to_string(),serde_json::to_value(reply).unwrap());
     obj.insert("taskid".to_string(),serde_json::Value::String(taskid));    sender.send(&obj).await;
 }
+pub async fn send_rename_note_reply(mut sender:ToClientSender, taskid:String, reply:gen_distribute::RenameNoteReply){
+    let mut obj=Map::new();
+    obj.insert("msg_type".to_string(),serde_json::Value::String("RenameNoteReply".to_string()));
+    obj.insert("msg_value".to_string(),serde_json::to_value(reply).unwrap());
+    obj.insert("taskid".to_string(),serde_json::Value::String(taskid));    sender.send(&obj).await;
+}
 pub async fn send_create_new_bar_reply(mut sender:ToClientSender, taskid:String, reply:gen_distribute::CreateNewBarReply){
     let mut obj=Map::new();
     obj.insert("msg_type".to_string(),serde_json::Value::String("CreateNewBarReply".to_string()));
@@ -107,6 +113,12 @@ pub async fn send_article_binder_reply(mut sender:ToClientSender, taskid:String,
 pub async fn send_article_list_reply(mut sender:ToClientSender, taskid:String, reply:gen_distribute::ArticleListReply){
     let mut obj=Map::new();
     obj.insert("msg_type".to_string(),serde_json::Value::String("ArticleListReply".to_string()));
+    obj.insert("msg_value".to_string(),serde_json::to_value(reply).unwrap());
+    obj.insert("taskid".to_string(),serde_json::Value::String(taskid));    sender.send(&obj).await;
+}
+pub async fn send_fetch_all_note_bars_epoch_reply(mut sender:ToClientSender, taskid:String, reply:gen_distribute::FetchAllNoteBarsEpochReply){
+    let mut obj=Map::new();
+    obj.insert("msg_type".to_string(),serde_json::Value::String("FetchAllNoteBarsEpochReply".to_string()));
     obj.insert("msg_value".to_string(),serde_json::to_value(reply).unwrap());
     obj.insert("taskid".to_string(),serde_json::Value::String(taskid));    sender.send(&obj).await;
 }

@@ -5,13 +5,15 @@ import {EditorBar} from "@/components/editor_bar/EditorBarFunc";
 import {PathStruct} from "@/components/note_canvas/NoteCanvasFunc";
 import {ReviewPartFunc} from "@/components/review_part/ReviewPartFunc";
 import {NoteOutlineTs} from "@/components/NoteOutlineTs";
-import {AppFuncTs} from "../AppFunc";
+;
 import {NoteLog} from "../log";
 // import {NetPackRecv} from "@/net_pack_recv";
 import {_path} from "./path";
 import {ElMessage} from "element-plus/es";
 import {GetChunkNoteIdsArg, GetNoteBarInfoArg, GetNoteBarInfoReply} from "@/logic/commu/api_caller";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
+import {_bridge_gui_canvas_handle} from "@/logic/bridge_gui/canvas_handle";
+import {AppFuncTs} from "@/logic/app_func";
 
 export namespace note{
     import OutlineStorageStruct = NoteOutlineTs.OutlineStorageStruct;
@@ -423,7 +425,7 @@ export namespace note{
                     const check_loaded=()=>{
                         if(this.noteids.length==Object.keys(this.fetchedids).length){
                             // console.log("   loaded ",this.posx+","+this.posy)
-                            handle.chunk_loaded(this)
+                            handle.noteloader.chunk_loaded(this)
                         }else{
                             // console.log("chunk not loaded",this.noteids.length,Object.keys(this.fetchedids).length)
                         }
@@ -436,6 +438,7 @@ export namespace note{
                             ),(r)=>{
                                 console.log("receive note bar info")
                                 this.fetchedids[v]=r
+                                handle.noteloader.latest_loaded_notebar_map[v]=r
                                 console.log("fetched",this.fetchedids)
                                 check_loaded()
                             }
@@ -481,50 +484,17 @@ export namespace note{
             }
         }
     }
-    //笔记加载即有，关闭就释放
-    // 对笔记的管理核心
-    export class NoteHandle{
+    export class NoteLoader{
         constructor(
-            public note_id:string,
-            public content_data:NoteContentData
+            public handle:NoteHandle
         ) {
-        }
-
-        pathman():NoteHandlePathMan{
-            return new NoteHandlePathMan(this)
-        }
-        ebman():NoteHandleEbMan{
-            return new NoteHandleEbMan(this)
-        }
-        rvman():NoteHandleReviewMan{
-            return new NoteHandleReviewMan(this)
-        }
-        olman():NoteHandleOutlineMan{
-            return new NoteHandleOutlineMan(this)
-        }
-        static create(
-            note_id:string,
-            content_data:NoteContentData):NoteHandle{
-            return new NoteHandle(note_id,content_data)
-        }
-        private holders:any={}
-        add_holder(contentman:NoteCanvasTs.ContentManager){
-            this.holders[contentman.hold_notehandle_id]=contentman
-        }
-        remove_holder(contentman:NoteCanvasTs.ContentManager){
-            delete this.holders[contentman.hold_notehandle_id]
-        }
-        foreach_holders(cb:(contentman:NoteCanvasTs.ContentManager)=>void){
-            for(const key in this.holders){
-                cb(this.holders[key])
-            }
         }
         //要有in view chunks，
         private loaded_chunks:any={
 
         }
-        private loading_chunks:undefined|NoteChunk[]=undefined
-        private chunk_range_change_flag:undefined|{minx:number,maxx:number,miny:number,maxy:number}=undefined
+        loading_chunks:undefined|NoteChunk[]=undefined
+        chunk_range_change_flag:undefined|{minx:number,maxx:number,miny:number,maxy:number}=undefined
         chunk_loaded(chunk:NoteChunk){
             let x=chunk.posx
             let y=chunk.posy
@@ -536,6 +506,12 @@ export namespace note{
                 this.loading_chunks=undefined
             }
             console.log("chunk_"+x+"_"+y,"loaded")
+        }
+        get_chunk(x:number,y:number):NoteChunk|undefined{
+            if (x+"_"+y in this.loaded_chunks){
+                return this.loaded_chunks[x+"_"+y]
+            }
+            return undefined
         }
         is_chunk_loaded(x:number,y:number){
             if (x+"_"+y in this.loaded_chunks){
@@ -549,21 +525,21 @@ export namespace note{
         set_chunk_dirty(x:number,y:number){
             let range_changed=false
             let rangechange_flag={
-                minx:this.content_data.chunkminx,
-                maxx:this.content_data.chunkmaxx,
-                miny:this.content_data.chunkminy,
-                maxy:this.content_data.chunkmaxy}
-            if(x>this.content_data.chunkmaxx){
+                minx:this.handle.content_data.chunkminx,
+                maxx:this.handle.content_data.chunkmaxx,
+                miny:this.handle.content_data.chunkminy,
+                maxy:this.handle.content_data.chunkmaxy}
+            if(x>this.handle.content_data.chunkmaxx){
                 rangechange_flag.maxx=x
                 range_changed=true
-            }else if(x<this.content_data.chunkminx){
+            }else if(x<this.handle.content_data.chunkminx){
                 rangechange_flag.minx=x
                 range_changed=true
             }
-            if(y>this.content_data.chunkmaxy){
+            if(y>this.handle.content_data.chunkmaxy){
                 rangechange_flag.maxy=y
                 range_changed=true
-            }else if(y<this.content_data.chunkminy){
+            }else if(y<this.handle.content_data.chunkminy){
                 rangechange_flag.miny=y
                 range_changed=true
             }
@@ -572,26 +548,19 @@ export namespace note{
             }
             delete this.loaded_chunks[x+"_"+y]
         }
+        // called by tick
         syncrange_if_chunkrange_changed(){
             if(this.chunk_range_change_flag){
-                this.content_data.chunkmaxx=this.chunk_range_change_flag.maxx
-                this.content_data.chunkmaxy=this.chunk_range_change_flag.maxy
-                this.content_data.chunkminx=this.chunk_range_change_flag.minx
-                this.content_data.chunkminy=this.chunk_range_change_flag.miny
+                this.handle.content_data.chunkmaxx=this.chunk_range_change_flag.maxx
+                this.handle.content_data.chunkmaxy=this.chunk_range_change_flag.maxy
+                this.handle.content_data.chunkminx=this.chunk_range_change_flag.minx
+                this.handle.content_data.chunkminy=this.chunk_range_change_flag.miny
                 this.chunk_range_change_flag=undefined
                 return true
             }
             return false
         }
-        for_each_chunk(cb:(chunk:NoteChunk)=>void){
-            for(let i=this.content_data.chunkminx;i<=this.content_data.chunkmaxx;i++){
-                for(let j=this.content_data.chunkminy;j<=this.content_data.chunkmaxy;j++){
-                    if(this.is_chunk_loaded(i,j)){
-                        cb(this.loaded_chunks[i+"_"+j]);
-                    }
-                }
-            }
-        }
+
         push_new_loading_chunk(ck:NoteChunk):boolean{
             if(this.loading_chunks==undefined){
                 this.loading_chunks=[]
@@ -600,41 +569,73 @@ export namespace note{
 
             return this.loading_chunks.length==10
         }
-        //传入chunkrange，优先扫描chunkrange是否加载
-        tick_load(chunk_range:_PaUtilTs.Rect){//每100ms调用，检查是否有未load完的chunk
-            if(this.loading_chunks){
-                return;
-            }
-            //先扫描视野区块，视野未加载完，先加载视野
-            // console.log("view ck range",chunk_range)
-            for(let i=chunk_range.x;i<=chunk_range.right();i++){
-                for(let j=chunk_range.y;j<=chunk_range.bottom();j++){
-                    if(!this.is_chunk_loaded(i,j)){
-                        let newchunk=new NoteChunk(i,j)
-                        const ret=this.push_new_loading_chunk(newchunk)
-                        newchunk.load(this)
-                        console.log("load in view chunk",i,j)
-                        if(ret){
-                            return
-                        }
-                    }
-                }
-            }
-            for(let i=this.content_data.chunkminx;i<=this.content_data.chunkmaxx;i++){
-                for(let j=this.content_data.chunkminy;j<=this.content_data.chunkmaxy;j++){
-                    if(!this.is_chunk_loaded(i,j)){
-                        let newchunk=new NoteChunk(i,j)
-                        const ret=this.push_new_loading_chunk(newchunk)
-                        newchunk.load(this)
-                        console.log("load all range chunk",i,j)
 
-                        if(ret){
-                            return
+        latest_loaded_notebar_map:any={}
+        try_get_one_latest_loaded():undefined|[string,GetNoteBarInfoReply]{
+            let pop:undefined|[string,GetNoteBarInfoReply]=undefined
+            for(const key_ in this.latest_loaded_notebar_map){
+                pop=[key_,this.latest_loaded_notebar_map[key_]]
+                delete this.latest_loaded_notebar_map[key_]
+                break;
+            }
+            return pop
+        }
+
+        need_refresh_bars:string[]=[]
+        tick_refresh_expire_bars_cnt=0
+        tick_refresh_expire_bars(){
+            while (true){
+                let pop=this.need_refresh_bars.pop()
+                if(pop){
+                    this.tick_refresh_expire_bars_cnt++
+                    AppFuncTs.get_ctx().api_caller.get_note_bar_info(
+                        new GetNoteBarInfoArg(this.handle.note_id,pop),
+                        (res)=>{
+                            // @ts-ignore
+                            this.latest_loaded_notebar_map[pop]=res
                         }
+                    )
+                    if(this.tick_refresh_expire_bars_cnt==10){
+                        break
                     }
+                }else{
+                    break;
                 }
             }
         }
+        check_all_note_bars_by_epoch(allbars:any[][]){
+            // let need_refresh_bars=[]
+            let allbarsmap:any={}
+            allbars.forEach((bar)=>{
+                const id=bar[0]
+                const epoch=bar[1]
+                allbarsmap[id]=1
+                let ebdata:undefined|EditorBar=this.handle.content_data.editor_bars[id]
+                if(ebdata){
+                    // younger than server
+                    // need update
+                    if(ebdata.epoch!=epoch){
+                        ebdata.need_update=true
+                        this.need_refresh_bars.push(id)
+                            // [id]=1
+                    }
+                }
+                else{
+                    this.need_refresh_bars.push(id)
+                        // [id]=1
+                }
+            })
+            let removed=[]
+            for(const key in this.handle.content_data.editor_bars){
+                if(allbarsmap[key]==undefined){
+                    removed.push(key)
+                }
+            }
+            removed.forEach((k)=>{
+                delete this.handle.content_data.editor_bars[k]
+            })
+        }
+
         remove_ebid_in_chunk(ebid:string,ebdata:EditorBar){
             let ck=NoteChunk.calc_chunk_pos(ebdata.pos_x,ebdata.pos_y)
             const ck_=this.get_loaded_chunk(ck.cx+"_"+ck.cy)
@@ -654,10 +655,10 @@ export namespace note{
             }
         }
         set_chunkrange(minx:number,maxx:number,miny:number,maxy:number,sync_canvas:boolean=false){
-            this.content_data.chunkmaxy=maxy
-            this.content_data.chunkmaxx=maxx
-            this.content_data.chunkminy=miny
-            this.content_data.chunkminx=minx
+            this.handle.content_data.chunkmaxy=maxy
+            this.handle.content_data.chunkmaxx=maxx
+            this.handle.content_data.chunkminy=miny
+            this.handle.content_data.chunkminx=minx
             let deleted=[]
             for(const key in this.loaded_chunks){
                 let ckpos=NoteChunk.chunk_key_to_x_y(key)
@@ -669,11 +670,89 @@ export namespace note{
                 delete this.loaded_chunks[v]
             })
             if(sync_canvas){
-                this.foreach_holders((cm)=>{
-                    cm.chunkhelper.set_chunk_range_by_notehandle(this)
-                })
+                _bridge_gui_canvas_handle.Handle2Canvas.new()
+                    .sync_chunk_range(this.handle)
             }
             return this
+        }
+    }
+    //笔记加载即有，关闭就释放
+    // 对笔记的管理核心
+    export class NoteHandle{
+        noteloader:NoteLoader
+        constructor(
+            public note_id:string,
+            public content_data:NoteContentData
+        ) {
+            this.noteloader=new NoteLoader(this)
+        }
+        static create(
+            note_id:string,
+            content_data:NoteContentData):NoteHandle{
+            return new NoteHandle(note_id,content_data)
+        }
+        pathman():NoteHandlePathMan{
+            return new NoteHandlePathMan(this)
+        }
+        ebman():NoteHandleEbMan{
+            return new NoteHandleEbMan(this)
+        }
+        rvman():NoteHandleReviewMan{
+            return new NoteHandleReviewMan(this)
+        }
+        olman():NoteHandleOutlineMan{
+            return new NoteHandleOutlineMan(this)
+        }
+
+        //canvases hold this handle
+        private holders:any={}
+        add_holder(contentman:NoteCanvasTs.ContentManager){
+            this.holders[contentman.hold_notehandle_id]=contentman
+        }
+        remove_holder(contentman:NoteCanvasTs.ContentManager){
+            delete this.holders[contentman.hold_notehandle_id]
+        }
+        foreach_holders(cb:(contentman:NoteCanvasTs.ContentManager)=>void){
+            for(const key in this.holders){
+                cb(this.holders[key])
+            }
+        }
+
+        brige_gui_from_canvas_tickload(chunk_range: _PaUtilTs.Rect){
+            this.noteloader.tick_refresh_expire_bars()
+            this.noteloader.syncrange_if_chunkrange_changed()
+            if(this.noteloader.loading_chunks){
+                return;
+            }
+            //先扫描视野区块，视野未加载完，先加载视野
+            // console.log("view ck range",chunk_range)
+            for(let i=chunk_range.x;i<=chunk_range.right();i++){
+                for(let j=chunk_range.y;j<=chunk_range.bottom();j++){
+                    if(!this.noteloader.is_chunk_loaded(i,j)){
+                        let newchunk=new note.NoteChunk(i,j)
+                        const ret=this.noteloader.push_new_loading_chunk(newchunk)
+                        newchunk.load(this)
+                        console.log("load in view chunk",i,j)
+                        if(ret){
+                            return
+                        }
+                    }
+                }
+            }
+            for(let i=this.content_data.chunkminx;i<=this.content_data.chunkmaxx;i++){
+                for(let j=this.content_data.chunkminy;j<=this.content_data.chunkmaxy;j++){
+                    if(!this.noteloader.is_chunk_loaded(i,j)){
+                        let newchunk=new NoteChunk(i,j)
+                        const ret=this.noteloader.push_new_loading_chunk(newchunk)
+                        newchunk.load(this)
+                        console.log("load all range chunk",i,j)
+
+                        if(ret){
+                            return
+                        }
+                    }
+                }
+            }
         }
     }
     //会被直接序列化到文件中的结构

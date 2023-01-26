@@ -1,4 +1,4 @@
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 import {LoginArg, VerifyTokenArg} from "@/logic/commu/api_caller";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {ElNotification} from "element-plus";

@@ -2,7 +2,7 @@
 import $ from "jquery";
 // import AppFunc from "@/logic/AppFunc";
 import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 
 module EditorBarViewListFunc{
      export class EditorBarViewListHelper{

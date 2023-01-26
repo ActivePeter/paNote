@@ -4,7 +4,7 @@
 
     <div
         v-show="show_range"
-        class="select_rect"
+        class="select_rect select_range"
         :style="rectstyle"
     >
 
@@ -36,7 +36,8 @@ export default class NoteCanvasSelectRange extends Vue {
       left:this.rectx+"px",
       top:this.recty+"px",
       width:this.rectw+"px",
-      height:this.recth+"px"
+      height:this.recth+"px",
+      opacity: "50%"
     }
   }
   get rectx(){
@@ -190,7 +191,7 @@ t<!-- Add "scoped" attribute to limit CSS to this component only -->
 .select_range{
   background: #8cc5ff;
   /*visibility: hidden;*/
-  opacity: 50%;
+
   position: absolute;
   top: 0;
   /*right: 0;*/

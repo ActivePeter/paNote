@@ -1,4 +1,4 @@
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 import {ArticleBinderArg, ArticleListArg} from "@/logic/commu/api_caller";
 import {note} from "@/logic/note/note";
 import App from "@/App.vue";

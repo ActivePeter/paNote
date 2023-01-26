@@ -1,6 +1,6 @@
 import {NoteLog} from "@/logic/log";
 import {note} from "@/logic/note/note";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 import {SetPathInfoArg} from "@/logic/commu/api_caller";
 
 export namespace _path{

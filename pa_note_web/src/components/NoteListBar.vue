@@ -58,7 +58,7 @@ import NoteListFunc from "@/components/NoteListFunc";
 import ClickDetector from "@/components/ClickDetector";
 import {Loading, Finished,Link} from "@element-plus/icons-vue";
 import {NoteListBarTs} from "@/components/NoteListBarTs";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 
 export default {
   name: "NoteListBar",

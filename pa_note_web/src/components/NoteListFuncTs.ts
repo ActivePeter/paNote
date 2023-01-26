@@ -1,4 +1,4 @@
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 //import {_ipc} from "@/ipc";
 import {ipcRenderer} from "electron";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
@@ -7,6 +7,7 @@ import {Buffer} from "buffer";
 // import {bus, bus_event_names} from "@/bus";
 // import Storage from "@/storage/Storage";
 import {note} from "@/logic/note/note";
+import {RenameNoteArg} from "@/logic/commu/api_caller";
 // import {NoteContentData} from "@/components/NoteCanvasFunc";
 // import {NoteStoreToFileStruct} from "@/storage/Storage";
 
@@ -41,11 +42,27 @@ export namespace NoteListFuncTs {
 
     export class NoteListManager {
         uibind={
-            notelist:[] as any[]
+            notelist:[] as any[] //[[id,name],....]
         }
         update_notelist(notelist:any[]){
             this.uibind.notelist=notelist
             // console.log(this.uibind)
+        }
+        rename_note(noteid:string,newname:string){
+            for(const key in this.uibind.notelist){
+                let id_name=this.uibind.notelist[key]
+                if(id_name[0]==noteid){
+                    if(id_name[1]!=newname){
+                        AppFuncTs.get_ctx().api_caller.rename_note(
+                            new RenameNoteArg(noteid,newname),
+                            (res)=>{
+                                id_name[1]=newname
+                            }
+                        )
+                    }
+                    return
+                }
+            }
         }
         //不要直接修改数据结构，通过notelist manager修改
         data_to_storage = new NoteListDataToStore()

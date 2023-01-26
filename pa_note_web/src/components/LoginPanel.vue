@@ -16,7 +16,7 @@
 
 <script lang="ts">
 import {Options, Vue} from 'vue-class-component';
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 import { ElNotification } from 'element-plus';
 
 

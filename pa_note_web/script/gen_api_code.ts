@@ -1,6 +1,6 @@
 
 import {lan} from "./paTools/ts/lan_maker"
-import {AppFuncTs} from "../src/logic/AppFunc";
+import {AppFuncTs} from "../src/logic/app_func";
 
 class ApiDiscription{
 
@@ -23,10 +23,10 @@ const apis=[
         },
         {
             next_noteid:new lan.ValueType(lan.BasicValueType.Int),
-            max_chunkx:new lan.ValueType(lan.BasicValueType.Int),
-            max_chunky:new lan.ValueType(lan.BasicValueType.Int),
-            min_chunkx:new lan.ValueType(lan.BasicValueType.Int),
-            min_chunky:new lan.ValueType(lan.BasicValueType.Int),
+            max_chunkx:new lan.ValueType(lan.BasicValueType.Int),// 两个边界都取得到
+            max_chunky:new lan.ValueType(lan.BasicValueType.Int),// 两个边界都取得到
+            min_chunkx:new lan.ValueType(lan.BasicValueType.Int),// 两个边界都取得到
+            min_chunky:new lan.ValueType(lan.BasicValueType.Int),// 两个边界都取得到
         },
         false
     ),
@@ -55,11 +55,21 @@ const apis=[
             text:new lan.ValueType(lan.BasicValueType.String),
             formatted:new lan.ValueType(lan.BasicValueType.String),
             connected:new lan.ValueType(lan.BasicValueType.Array),//[id1,id2...]
+            epoch:new lan.ValueType(lan.BasicValueType.Int)
         },false
     ),
+
     new ApiDiscription(
         "create_new_note",
         {},
+        {},true
+    ),
+    new ApiDiscription(
+        "rename_note",
+        {
+            noteid:new lan.ValueType(lan.BasicValueType.String),
+            name:new lan.ValueType(lan.BasicValueType.String)
+         },
         {},true
     ),
     new ApiDiscription(
@@ -83,7 +93,7 @@ const apis=[
             text:new lan.ValueType(lan.BasicValueType.String),
             formatted:new lan.ValueType(lan.BasicValueType.String),
         },{
-
+            new_epoch:new lan.ValueType(lan.BasicValueType.Int),
         },true
     ),
     new ApiDiscription(
@@ -96,10 +106,11 @@ const apis=[
             w:new lan.ValueType(lan.BasicValueType.Float),
             h:new lan.ValueType(lan.BasicValueType.Float),
         },{//移动可能导致区块范围变化
-            chunk_maxx:new lan.ValueType(lan.BasicValueType.Int),
-            chunk_minx:new lan.ValueType(lan.BasicValueType.Int),
-            chunk_maxy:new lan.ValueType(lan.BasicValueType.Int),
-            chunk_miny:new lan.ValueType(lan.BasicValueType.Int),
+            new_epoch:new lan.ValueType(lan.BasicValueType.Int),
+            chunk_maxx:new lan.ValueType(lan.BasicValueType.Int),// 两个边界都取得到
+            chunk_minx:new lan.ValueType(lan.BasicValueType.Int),// 两个边界都取得到
+            chunk_maxy:new lan.ValueType(lan.BasicValueType.Int),// 两个边界都取得到
+            chunk_miny:new lan.ValueType(lan.BasicValueType.Int),// 两个边界都取得到
             chunk_change:new lan.ValueType(lan.BasicValueType.Array)//从区块0->区块1
         },true
     ),
@@ -119,6 +130,10 @@ const apis=[
             from:new lan.ValueType(lan.BasicValueType.String),
             to:new lan.ValueType(lan.BasicValueType.String)
         },{
+            _1succ_0fail:new lan.ValueType(lan.BasicValueType.Int),
+
+            new_epoch_from:new lan.ValueType(lan.BasicValueType.Int),
+            new_epoch_to:new lan.ValueType(lan.BasicValueType.Int),
         },true
     ),
     new ApiDiscription(
@@ -145,6 +160,8 @@ const apis=[
             noteid:new lan.ValueType(lan.BasicValueType.String),
             pathid_with_line:new lan.ValueType(lan.BasicValueType.String),
         },{
+            new_epoch_to:new lan.ValueType(lan.BasicValueType.Int),
+            new_epoch_from:new lan.ValueType(lan.BasicValueType.Int),
         },true
     ),
     new ApiDiscription(
@@ -198,6 +215,14 @@ const apis=[
             list:new lan.ValueType(lan.BasicValueType.Array)
         },false
     ),
+    new ApiDiscription(
+        "fetch_all_note_bars_epoch",
+        {
+            noteid:new lan.ValueType(lan.BasicValueType.String)
+        },{
+            bars_id_and_epoch:new lan.ValueType(lan.BasicValueType.Array)
+        },false
+    )
 ]
 
 

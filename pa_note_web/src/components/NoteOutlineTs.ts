@@ -1,6 +1,6 @@
 import {EditorBarTs} from "@/components/editor_bar/EditorBarTs";
 // import {StorageInterface} from "@/storage/StorageInterface";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 
 export namespace NoteOutlineTs {
     export class OutlineStorageStructOneTreeNode {

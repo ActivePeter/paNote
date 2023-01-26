@@ -50,7 +50,7 @@
 import {Options, Vue} from 'vue-class-component';
 import {NoteListFuncTs} from "@/components/NoteListFuncTs";
 
-import  {AppFuncTs} from "@/logic/AppFunc";
+import  {AppFuncTs} from "@/logic/app_func";
 // import ipcMain = Electron.Main.ipcMain;
 // import ipcRenderer = Electron.Renderer.ipcRenderer;
 //import {_ipc} from "@/ipc";

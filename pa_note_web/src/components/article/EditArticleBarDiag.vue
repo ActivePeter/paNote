@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts">
-import { AppFuncTs } from '@/logic/AppFunc';
+import { AppFuncTs } from '@/logic/app_func';
 import { note } from '@/logic/note/note';
 import {Options, Vue} from 'vue-class-component';
 

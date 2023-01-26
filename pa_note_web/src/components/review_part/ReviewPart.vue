@@ -126,7 +126,7 @@ import ReviewPartAddNewCard from "./ReviewPartAddNewCard"
 // import {ElMessage} from "element-plus";
 import ReviewPartCard from "@/components/review_part/ReviewPartCard"
 // //import {bus_events} from "@/bus";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 //import {_ipc} from "@/ipc";
 import electron_net from "@/electron_net";
 import {TalkPacker} from "@/talk_packer";

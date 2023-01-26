@@ -1,6 +1,6 @@
 //import {bus_events} from "@/bus";
 
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 
 export namespace RightMenuFuncTs{
     export class Ope{

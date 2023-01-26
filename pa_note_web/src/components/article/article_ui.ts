@@ -1,4 +1,4 @@
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 import {note} from "@/logic/note/note";
 
 export class ArticleUiMan{

@@ -1,5 +1,5 @@
 import {ICommu, WebCommu} from "@/logic/commu/icommu";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 
 [api_classes]
 

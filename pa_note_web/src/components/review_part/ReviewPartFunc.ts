@@ -1,4 +1,4 @@
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 // import RightMenuFunc from "@/components/RightMenuFunc";
 import EditorBarViewListFunc from "@/components/reuseable/EditorBarViewListFunc";
 import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";

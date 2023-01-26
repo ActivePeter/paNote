@@ -1,5 +1,9 @@
 # pa_note_web
 
+## Develop Record
+
+https://bojagybyoq.feishu.cn/docx/JvN1dXL8To0sqZxdRl6cRZSQnYe
+
 ## Code Specification
 
 There's been a chaos in my code, so I decide to make up a standard

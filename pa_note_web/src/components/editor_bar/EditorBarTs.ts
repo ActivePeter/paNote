@@ -1,7 +1,7 @@
 import EditorBarFunc, {CornerDragHelper, EditorBar, EditorBarChange} from "@/components/editor_bar/EditorBarFunc";
 import {_PaUtilTs} from "@/3rd/pa_util_ts";
 import {NoteCanvasTs} from "@/components/note_canvas/NoteCanvasTs";
-import {AppFuncTs} from "@/logic/AppFunc";
+import {AppFuncTs} from "@/logic/app_func";
 import NoteCanvasFunc from "@/components/note_canvas/NoteCanvasFunc";
 import {RightMenuFuncTs} from "@/components/RightMenuFuncTs";
 import {ElMessage} from "element-plus";
@@ -13,6 +13,7 @@ import EditorBarFloatSetType = EditorBarFloatSetTs.EditorBarFloatSetType;
 import editor from "@/3rd/quill-1.3.7/core/editor";
 import {CreateNewBarArg} from "@/logic/commu/api_caller";
 import App from "@/App.vue";
+import {_route} from "@/logic/route";
 
 export namespace EditorBarTs {
     export const CursorMode = {
@@ -20,12 +21,13 @@ export namespace EditorBarTs {
         drag: '拖拽',
         conline: '连线'
     }
-    export function EditorBar_create(pos_x:number,pos_y:number,width:number,height:number,content:string,conns:any[]){
+    export function EditorBar_create(pos_x:number,pos_y:number,width:number,height:number,content:string,conns:any[],epoch:number){
         let ret=new EditorBar(pos_x,pos_y)
         ret.height=height
         ret.width=width
         ret.content=content
         ret.conns=conns
+        ret.epoch=epoch
 
         return ret
     }
@@ -355,9 +357,7 @@ export namespace EditorBarTs {
 
         //选择功能-->
         focused_ebids: any = {}//选中的editor bar id
-        focus_add(ebid: string) {
-            this.focused_ebids[ebid] = 1
-        }
+
 
         focus_swap(ebid: string) {
             if (ebid in this.focused_ebids) {
@@ -369,10 +369,17 @@ export namespace EditorBarTs {
         on_editor_bar_lose_focus(ebid:string){
             AppFuncTs.get_ctx().uiman_article.cancel();
         }
+        focus_add(ebid: string) {
+            if(!this.focused_ebids[ebid]){
+                this.focused_ebids[ebid] = 1
+                // _route.update_route_when_selection_change(Object.keys(this.focused_ebids))
+            }
+        }
         focus_del(ebid: string) {
             if (ebid in this.focused_ebids) {
                 delete this.focused_ebids[ebid]
                 this.on_editor_bar_lose_focus(ebid)
+                // _route.update_route_when_selection_change(Object.keys(this.focused_ebids))
             }
         }
 
@@ -381,6 +388,7 @@ export namespace EditorBarTs {
                 this.on_editor_bar_lose_focus(ebid)
             }
             this.focused_ebids = {}
+            // _route.update_route_when_selection_change([])
         }
 
         focused_cnt(): number {
@@ -679,7 +687,7 @@ export namespace EditorBarTs {
                     newx,newy
                     ),(r)=>{
                     console.log("created new bar",r);
-                    this.canvasproxy().get_content_manager().notehandle.set_chunk_dirty(
+                    this.canvasproxy().get_content_manager().notehandle.noteloader.set_chunk_dirty(
                         r.chunkx,r.chunky
                     )
                 }
