@@ -15,12 +15,12 @@ jobs:
           # cache: yarn
       - name: Install dependencies
         run: |
-          set NODE_OPTIONS=--openssl-legacy-provider
+          export NODE_OPTIONS=--openssl-legacy-provider
           cd ./pa_note_web
           npm install
       - name: Build website
         run: |
-          set NODE_OPTIONS=--openssl-legacy-provider
+          export NODE_OPTIONS=--openssl-legacy-provider
           cd ./pa_note_web
           npm run build
       - name: Scp to server
