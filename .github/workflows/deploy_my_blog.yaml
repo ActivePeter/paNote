@@ -16,11 +16,11 @@ jobs:
       - name: Install dependencies
         run: |
           cd ./pa_note_web
-          yarn install --frozen-lockfile
+          npm install
       - name: Build website
         run: |
           cd ./pa_note_web
-          yarn build
+          npm build
       - name: Scp to server
         uses: garygrossgarten/github-action-scp@release
         with:
