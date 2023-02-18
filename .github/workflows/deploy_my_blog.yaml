@@ -39,7 +39,7 @@ jobs:
         with:
           command: |
             cd /www/wwwroot/127.0.0.1
-            ls
+            sh ./redeploy.sh
           host: ${{ secrets.HOST }}
           username: root
           port: ${{ secrets.PORT }}
