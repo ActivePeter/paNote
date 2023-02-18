@@ -20,7 +20,7 @@ jobs:
       - name: Build website
         run: |
           cd ./pa_note_web
-          npm build
+          npm run build
       - name: Scp to server
         uses: garygrossgarten/github-action-scp@release
         with:
