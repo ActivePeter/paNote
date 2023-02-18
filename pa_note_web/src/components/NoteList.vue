@@ -81,7 +81,7 @@ export default {
       // this.notelist_manager.delete_note(this.context,note_list_bar.id);
     },
     note_list_bar_change_name(bar){
-      this.get_manager().rename_note(bar.id,bar.editing_name)
+      this.get_manager().rename_note(bar.id,bar.editing_name,this)
       // console.log("note_list_bar_change_name")
       // this.notelist_manager.change_note_name(this.context,bar.id,bar.editing_name)
     }

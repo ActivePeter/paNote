@@ -1,0 +1,44 @@
+name: deploy_my_blog
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: deploy_my_blog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          # cache: yarn
+      - name: Install dependencies
+        run: |
+          cd ./pa_note_web
+          yarn install --frozen-lockfile
+      - name: Build website
+        run: |
+          cd ./pa_note_web
+          yarn build
+      - name: Scp to server
+        uses: garygrossgarten/github-action-scp@release
+        with:
+          local: pa_note_web/dist
+          remote: /www/wwwroot/127.0.0.1/pa_note_web_dist
+          # 涉及偏安全隐私的信息，不要明文暴露在此文件中，因为repo很可能是公开的，会被所有人看见
+          # ${{ ... }} 会应用你在对应项目设置中，配置的对应serets的键值信息，从而保护私密信息不被看到
+          host: ${{ secrets.HOST }}
+          port: ${{secrets.PORT}}
+          username: root
+          privateKey: ${{ secrets.PRIVATE_KEY }}
+      - name: SSH update
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          command: |
+            cd /www/wwwroot/127.0.0.1
+            ls
+          host: ${{ secrets.HOST }}
+          username: root
+          port: ${{ secrets.PORT }}
+          privateKey: ${{ secrets.PRIVATE_KEY}}

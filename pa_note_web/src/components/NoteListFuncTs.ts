@@ -48,7 +48,7 @@ export namespace NoteListFuncTs {
             this.uibind.notelist=notelist
             // console.log(this.uibind)
         }
-        rename_note(noteid:string,newname:string){
+        rename_note(noteid:string,newname:string,listcomp:any){
             for(const key in this.uibind.notelist){
                 let id_name=this.uibind.notelist[key]
                 if(id_name[0]==noteid){
@@ -56,7 +56,9 @@ export namespace NoteListFuncTs {
                         AppFuncTs.get_ctx().api_caller.rename_note(
                             new RenameNoteArg(noteid,newname),
                             (res)=>{
-                                id_name[1]=newname
+                                this.uibind.notelist[key][1]=newname
+                                listcomp.$forceUpdate();
+                                console.log("hhh")
                             }
                         )
                     }
