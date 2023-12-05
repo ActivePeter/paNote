@@ -1,6 +1,6 @@
 #![feature(generic_associated_types)]
 #![feature(type_alias_impl_trait)]
-
+#![feature(impl_trait_in_assoc_type)]
 
 pub mod note_man;
 pub mod server;
@@ -11,16 +11,13 @@ pub mod util;
 mod conv;
 
 use axum::{
-    extract::{
-        ws::{Message, WebSocket, WebSocketUpgrade},
-        TypedHeader,
-    },
+    extract::{ ws::{ Message, WebSocket, WebSocketUpgrade }, TypedHeader },
     http::StatusCode,
     response::IntoResponse,
-    routing::{get, get_service},
+    routing::{ get, get_service },
     Router,
 };
-use std::{net::SocketAddr, path::PathBuf};
+use std::{ net::SocketAddr, path::PathBuf };
 use crate::authority::AuthorityMan;
 use std::borrow::BorrowMut;
 
@@ -34,19 +31,11 @@ async fn main() {
         // top since it matches all routes
         .route("/ws", get(ws_handler));
 
-
     // run it with hyper
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3004));
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    let addr = SocketAddr::from(([0, 0, 0, 0], 3004));
+    axum::Server::bind(&addr).serve(app.into_make_service()).await.unwrap();
 }
 
-async fn ws_handler(
-    ws: WebSocketUpgrade,
-) -> impl IntoResponse {
-
+async fn ws_handler(ws: WebSocketUpgrade) -> impl IntoResponse {
     ws.on_upgrade(server::handle_socket)
 }
-

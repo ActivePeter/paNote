@@ -1,0 +1,14 @@
+FROM panote_server_builder:v1 AS builder
+
+FROM rust:1.70 AS server
+
+
+COPY --from=builder /src/target/release/pa_note_server /etc/server/pa_note_server
+COPY docker/authority_config.json /etc/server
+
+WORKDIR /etc/server
+# RUN rustup default nightly
+RUN chmod 775 ./pa_note_server
+
+EXPOSE 3004
+ENTRYPOINT ["./pa_note_server"]

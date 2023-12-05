@@ -1,0 +1,1 @@
+docker build -f docker/Dockerfile.Server -t panote_server:v1 . --no-cache

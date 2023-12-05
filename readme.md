@@ -22,6 +22,10 @@ panote是我自己开发的一个个人笔记软件，将知识平铺开，并�
 
 - use canvas to speed up the render of components
 
+#### Setup
+
+- git submodule update --init
+
 #### Todo
 
 - 作为个人博客，需要一个归档列表列出主要文章

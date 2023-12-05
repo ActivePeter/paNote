@@ -1,0 +1,1 @@
+docker build -f docker/Dockerfile.Front -t panote_front:v1 . --no-cache
