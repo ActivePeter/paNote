@@ -1,8 +1,15 @@
 .DS_Store
 node_modules
 /dist
+Dockerfile
+docker-compose.yml
+docker_run_dev_entry.sh
 
+pnpm-lock.yaml
+.pnpm-store
 
+# package-lock.json
+# yarn.lock
 # local env files
 .env.local
 .env.*.local
