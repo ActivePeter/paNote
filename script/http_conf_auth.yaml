@@ -1,0 +1,35 @@
+backend:
+    dir: "../pa_note_server.wasm/panote_auth/src/gen_api.rs"
+    lan: "rs"
+    header: "use crate::general::network::http_handler::ApiHandlerImpl;"
+
+frontend:
+    dir: "../pa_note_front/src/logic/gen_api_auth.ts"
+    lan: "ts"
+    header: 'import axios from "axios"'
+    http_call: 'await axios.post("/api/{}", {})'
+
+structs:
+
+
+api_list:
+    login:
+        req:
+            id: String
+            pw: String
+        resp_dispatch:
+            Succ:
+                token: String
+            Fail:
+                msg: String
+        root: false
+
+    verify_token:
+        req:
+            token: String
+        resp_dispatch:
+            Succ:
+                new_token: String
+            Fail:
+                msg: String
+        root: false

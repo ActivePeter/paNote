@@ -1,0 +1,183 @@
+backend:
+    dir: "../pa_note_server.wasm/panote_content/src/gen_api.rs"
+    lan: "rs"
+    header: "use crate::general::network::http_handler::ApiHandlerImpl;"
+
+frontend:
+    dir: "../pa_note_front/src/logic/gen_api_content.ts"
+    lan: "ts"
+    header: 'import axios from "axios"'
+    http_call: 'await axios.post("/api/{}", {})'
+
+structs:
+
+
+api_list:
+
+    get_note_mata:
+        req:
+            noteid: String
+        resp_dispatch:
+            Succ:
+                next_noteid: Int
+                max_chunkx: Int # 两个边界都取得到
+                max_chunky: Int # 两个边界都取得到
+                min_chunkx: Int # 两个边界都取得到
+                min_chunky: Int # 两个边界都取得到
+        root: false
+
+    get_chunk_note_ids:
+        req:
+            noteid: String
+            chunkx: Int
+            chunky: Int
+        resp_dispatch:
+            Succ:
+                noteids: [Array,String]
+        root: false
+
+    get_note_bar_info:
+        req:
+            noteid: String
+            notebarid: String
+        resp_dispatch:
+            Exist:
+                x: Float
+                y: Float
+                w: Float
+                h: Float
+                text: String
+                formatted: String
+                connected: [Array,String] # [id1,id2...]
+                epoch: Int
+        root: false
+
+    create_new_bar:
+        req:
+            noteid: String
+            x: Float
+            y: Float
+        resp_dispatch:
+            Succ:
+                chunkx: Int
+                chunky: Int
+                noteids: [Array,String]
+        root: false
+
+    update_bar_content:
+        req:
+            noteid: String
+            barid: String
+            text: String
+            formatted: String
+        resp_dispatch:
+            Succ:
+                new_epoch: Int
+        root: false
+
+    update_bar_transform:
+        req:
+            noteid: String
+            barid: String
+            x: Float
+            y: Float
+            w: Float
+            h: Float
+        resp_dispatch:
+            Succ:
+                new_epoch: Int
+                chunk_maxx: Int # 两个边界都取得到
+                chunk_minx: Int # 两个边界都取得到
+                chunk_maxy: Int # 两个边界都取得到
+                chunk_miny: Int # 两个边界都取得到
+                chunk_change: [Array,String] # 从区块0->区块1
+        root: false
+    
+    redo:
+        req:
+            noteid: String
+        resp_dispatch:
+            Succ:
+                redotype: String
+                redovalue: Obj
+        root: true
+
+    add_path:
+        req:
+            noteid: String
+            from: String
+            to: String
+        resp_dispatch:
+            Succ:
+                new_epoch_from: Int
+                new_epoch_to: Int
+            Fail:
+        root: true
+
+    get_path_info:
+        req:
+            noteid: String
+            pathid_with_line: String
+        resp_dispatch:
+            Succ:
+                type_: Int
+        root: false
+    
+    set_path_info:
+        req:
+            noteid: String
+            pathid_with_line: String
+            type_: Int
+        resp_dispatch:
+            Succ:
+        root: true
+
+    remove_path:
+        req:
+            noteid: String
+            pathid_with_line: String
+        resp_dispatch:
+            Succ:
+                new_epoch_from: Int
+                new_epoch_to: Int
+        root: true
+
+    delete_bar:
+        req:
+            noteid: String
+            barid: String
+        resp_dispatch:
+            Succ:
+                chunk_maxx: Int
+                chunk_minx: Int
+                chunk_maxy: Int
+                chunk_miny: Int
+        root: true
+
+    article_binder:
+        req:
+            bind_unbind_rename: String
+            article_name: String
+            barid: String
+            noteid: String
+        resp_dispatch:
+            Succ: 
+            Fail:
+        root: true
+
+    article_list:
+        req:
+            noteid: String 
+        resp_dispatch:
+            Succ:
+                list: [Array,String]
+            Fail:
+        root: false
+
+    fetch_all_note_bars_epoch:
+        req:
+            noteid: String
+        resp_dispatch:
+            Succ:
+                bars_id_and_epoch: [Array,String]
+        root: false

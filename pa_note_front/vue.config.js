@@ -2,12 +2,13 @@ module.exports = {
     devServer: {
         proxy: {
             '/api': {
-                target: 'http://192.168.232.129:2501',
+                target: 'http://127.0.0.1:2701',
                 changeOrigin: true,
                 pathRewrite: {
                     '^/api': ''
                 }
             }
-        }
+        },
+        allowedHosts: ['hanbaoaaa.xyz']
     }
 }

@@ -1,0 +1,7 @@
+panote_auth:
+  login:
+    http.post:
+      call: direct
+  verify_token:
+    http.post:
+      call: direct

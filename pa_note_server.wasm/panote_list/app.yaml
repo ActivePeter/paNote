@@ -1,0 +1,7 @@
+panote_list:
+  create_new_note:
+    http.post: {call: direct}
+  get_notes_mata:
+    http.post: {call: direct}
+  rename_note:
+    http.post: {call: direct}
