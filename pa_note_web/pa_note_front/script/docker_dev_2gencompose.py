@@ -4,6 +4,7 @@ import sys
 
 CUR_FPATH = os.path.abspath(__file__)
 CUR_FDIR = os.path.dirname(CUR_FPATH)
+os.chdir(CUR_FDIR)
 os.chdir("..")
 
 
@@ -23,20 +24,21 @@ def os_system(command):
 
 
 
-DOCKERFILE="""
-# 基于 Node.js 的 Docker 镜像
-FROM node:18
-
-# 设置工作目录
-WORKDIR /usr/src/app
-
-# 安装 pnpm
-RUN npm install -g pnpm
-
-RUN npm install -g vite
+ENTRY="""
+pnpm install --save clone deep-equal eventemitter3 extend parchment quill-delta@3.6.0 tslib
+pnpm install
+pnpm run serve
 """
 
-with open("Dockerfile", "w") as f:
-    f.write(DOCKERFILE)
-
-os_system_sure("docker build -t panote_ui_dev .")
+COMPOSE="""
+version: '3'
+services:
+  panote_ui_dev:
+    image: panote_ui_dev
+    # 使用 host 网络模式
+    network_mode: host
+    # 挂载项目目录到容器中
+    volumes:
+      - .:/usr/src/app
+    command: bash docker_run_dev_entry.sh
+"""
