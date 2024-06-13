@@ -42,3 +42,9 @@ services:
       - .:/usr/src/app
     command: bash docker_run_dev_entry.sh
 """
+
+with open("docker_run_dev_entry.sh","w") as f:
+    f.write(ENTRY)
+
+with open("docker-compose.yml","w") as f:
+    f.write(COMPOSE)
