@@ -1,0 +1,31 @@
+panote_content:
+  add_path:
+    http.post: {call: direct}
+  article_binder:
+    http.post: {call: direct}
+  article_list:
+    http.post: {call: direct}
+  create_new_bar:
+    http.post: {call: direct}
+  delete_bar:
+    http.post: {call: direct}
+  fetch_all_note_bars_epoch:
+    http.post: {call: direct}
+  get_chunk_note_ids:
+    http.post: {call: direct}
+  get_note_bar_info:
+    http.post: {call: direct}
+  get_note_mata:
+    http.post: {call: direct}
+  get_path_info:
+    http.post: {call: direct}
+  redo:
+    http.post: {call: direct}
+  remove_path:
+    http.post: {call: direct}
+  set_path_info:
+    http.post: {call: direct}
+  update_bar_content:
+    http.post: {call: direct}
+  update_bar_transform:
+    http.post: {call: direct}

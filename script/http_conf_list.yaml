@@ -1,0 +1,57 @@
+backend:
+    dir: "../pa_note_server.wasm/panote_list/src/gen_api.rs"
+    lan: "rs"
+    header: "use crate::general::network::http_handler::ApiHandlerImpl;"
+
+frontend:
+    dir: "../pa_note_front/src/logic/gen_api_list.ts"
+    lan: "ts"
+    header: 'import axios from "axios"'
+    http_call: 'await axios.post("/api/{}", {})'
+
+structs:
+    NodeBasic:
+        name: String
+        online: Bool
+        ip: String
+        ssh_port: String
+        cpu_sum: Float
+        cpu_cur: Float
+        mem_sum: Float
+        mem_cur: Float 
+        passwd: String # only valid when set
+        system: String
+    
+    Action:
+        name: String
+        cmd: String
+
+    ServiceBasic:
+        name: String # left empty to get template
+        node: String
+        dir: String
+        actions: [Array , Action]
+
+
+api_list:
+
+    get_notes_mata:
+        req:
+        resp_dispatch:
+            Succ:
+                node_id_name_list: [Array,String]
+        root: false
+
+    create_new_note:
+        req:
+        resp_dispatch:
+            Succ:
+        root: true
+
+    rename_note:
+        req:
+            noteid: String
+            name: String
+        resp_dispatch:
+            Succ:
+        root: true

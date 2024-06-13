@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "panote_auth"
+		},
+		{
+			"path": "panote_content"
+		},
+		{
+			"path": "panote_list"
+		},
+		{
+			"path": "_wasm_serverless_lib"
+		}
+	],
+	"settings": {}
+}
