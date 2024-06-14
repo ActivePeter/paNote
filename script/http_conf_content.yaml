@@ -1,13 +1,31 @@
 backend:
     dir: "../pa_note_server.wasm/panote_content/src/gen_api.rs"
     lan: "rs"
-    header: "use crate::general::network::http_handler::ApiHandlerImpl;"
+    specs: ["no_async"]
+    header: ""
+    transform: |
+        #[no_mangle]
+        fn {{}}(http_json_ptr: i32, http_json_len: i32) {
+            let json_str = unsafe {
+                String::from_raw_parts(
+                    http_json_ptr as *mut u8,
+                    http_json_len as usize,
+                    http_json_len as usize,
+                )
+            };
+            if let Ok(req) = serde_json::from_str(&json_str) {
+                let resp = super::Impl.handle_{{}}(req).serialize();
+                let resp_str = serde_json::to_string(&resp).unwrap();
+                unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+            }
+        }
+
 
 frontend:
     dir: "../pa_note_front/src/logic/gen_api_content.ts"
     lan: "ts"
     header: 'import axios from "axios"'
-    http_call: 'await axios.post("/api/{}", {})'
+    http_call: 'await axios.post("/api/panote_content/{}", {})'
 
 structs:
 
@@ -99,7 +117,7 @@ api_list:
         resp_dispatch:
             Succ:
                 redotype: String
-                redovalue: Obj
+                redovalue: Any
         root: true
 
     add_path:
@@ -170,7 +188,7 @@ api_list:
             noteid: String 
         resp_dispatch:
             Succ:
-                list: [Array,String]
+                list: [Array,Any]
             Fail:
         root: false
 
@@ -179,5 +197,5 @@ api_list:
             noteid: String
         resp_dispatch:
             Succ:
-                bars_id_and_epoch: [Array,String]
+                bars_id_and_epoch: [Array,Any]
         root: false

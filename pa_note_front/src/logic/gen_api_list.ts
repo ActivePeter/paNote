@@ -1,41 +1,10 @@
 import axios from "axios"
 
 
-export class NodeBasic {
-    constructor(
-        public name:string,
-        public online:boolean,
-        public ip:string,
-        public ssh_port:string,
-        public cpu_sum:number,
-        public cpu_cur:number,
-        public mem_sum:number,
-        public mem_cur:number,
-        public passwd:string,
-        public system:string,
-    ){}
-}
-
-export class Action {
-    constructor(
-        public name:string,
-        public cmd:string,
-    ){}
-}
-
-export class ServiceBasic {
-    constructor(
-        public name:string,
-        public node:string,
-        public dir:string,
-        public actions:Action[],
-    ){}
-}
-
 
 export class GetNotesMataRespSucc {
     constructor(
-        public node_id_name_list:string[],
+        public node_id_name_list:string[][],
     ){}
 }
 
@@ -55,9 +24,15 @@ export class GetNotesMataResp{
 }
 
 
+export class GetNotesMataReq {
+    constructor(
+
+    ){}
+}
+
 export namespace apis {
-    export async function get_notes_mata():Promise<GetNotesMataResp>{
-        let res:any = await axios.post("/api/get_notes_mata", )
+    export async function get_notes_mata(req:GetNotesMataReq):Promise<GetNotesMataResp>{
+        let res:any = await axios.post("/api/panote_list/get_notes_mata", req)
         return new GetNotesMataResp(res.data.kernel,res.data.id)
     }
 }
@@ -87,9 +62,15 @@ export class CreateNewNoteResp{
 }
 
 
+export class CreateNewNoteReq {
+    constructor(
+
+    ){}
+}
+
 export namespace apis {
-    export async function create_new_note():Promise<CreateNewNoteResp>{
-        let res:any = await axios.post("/api/create_new_note", )
+    export async function create_new_note(req:CreateNewNoteReq):Promise<CreateNewNoteResp>{
+        let res:any = await axios.post("/api/panote_list/create_new_note", req)
         return new CreateNewNoteResp(res.data.kernel,res.data.id)
     }
 }
@@ -128,7 +109,7 @@ export class RenameNoteReq {
 
 export namespace apis {
     export async function rename_note(req:RenameNoteReq):Promise<RenameNoteResp>{
-        let res:any = await axios.post("/api/rename_note", req)
+        let res:any = await axios.post("/api/panote_list/rename_note", req)
         return new RenameNoteResp(res.data.kernel,res.data.id)
     }
 }

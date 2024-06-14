@@ -86,6 +86,36 @@ pub trait ApiHandler {
             
 }
 
+#[no_mangle]
+fn login(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_login(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn verify_token(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_verify_token(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
 
 
 

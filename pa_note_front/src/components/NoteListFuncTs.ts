@@ -1,13 +1,13 @@
-import {AppFuncTs} from "@/logic/app_func";
+import { AppFuncTs } from "@/logic/app_func";
 //import {_ipc} from "@/ipc";
-import {ipcRenderer} from "electron";
-import {_PaUtilTs} from "@/3rd/pa_util_ts";
-import {ElMessageBox} from "element-plus";
-import {Buffer} from "buffer";
+import { ipcRenderer } from "electron";
+import { _PaUtilTs } from "@/3rd/pa_util_ts";
+import { ElMessageBox } from "element-plus";
+import { Buffer } from "buffer";
 // import {bus, bus_event_names} from "@/bus";
 // import Storage from "@/storage/Storage";
-import {note} from "@/logic/note/note";
-import {RenameNoteArg} from "@/logic/commu/api_caller";
+import { note } from "@/logic/note/note";
+import { CreateNewNoteReq, RenameNoteReq, apis } from "@/logic/gen_api_list";
 // import {NoteContentData} from "@/components/NoteCanvasFunc";
 // import {NoteStoreToFileStruct} from "@/storage/Storage";
 
@@ -41,26 +41,25 @@ export namespace NoteListFuncTs {
     }
 
     export class NoteListManager {
-        uibind={
-            notelist:[] as any[] //[[id,name],....]
+        uibind = {
+            notelist: [] as any[] //[[id,name],....]
         }
-        update_notelist(notelist:any[]){
-            this.uibind.notelist=notelist
+        update_notelist(notelist: any[]) {
+            this.uibind.notelist = notelist
             // console.log(this.uibind)
         }
-        rename_note(noteid:string,newname:string,listcomp:any){
-            for(const key in this.uibind.notelist){
-                let id_name=this.uibind.notelist[key]
-                if(id_name[0]==noteid){
-                    if(id_name[1]!=newname){
-                        AppFuncTs.get_ctx().api_caller.rename_note(
-                            new RenameNoteArg(noteid,newname),
-                            (res)=>{
-                                this.uibind.notelist[key][1]=newname
-                                listcomp.$forceUpdate();
-                                console.log("hhh")
-                            }
-                        )
+        rename_note(noteid: string, newname: string, listcomp: any) {
+            for (const key in this.uibind.notelist) {
+                let id_name = this.uibind.notelist[key]
+                if (id_name[0] == noteid) {
+                    if (id_name[1] != newname) {
+                        apis.rename_note(new RenameNoteReq(noteid, newname)).then(r => {
+                            let res = r.succ()
+                            if (!res) return
+                            this.uibind.notelist[key][1] = newname
+                            listcomp.$forceUpdate();
+                            console.log("rename_note succ")
+                        })
                     }
                     return
                 }
@@ -120,11 +119,9 @@ export namespace NoteListFuncTs {
         }
 
         add_new_note() {
-            AppFuncTs.get_ctx().api_caller.create_new_note({},()=>{
-                console.log("created new note");
+            apis.create_new_note(new CreateNewNoteReq()).then(r => {
+                console.log("created new note", r)
             })
-
-            // return newid;
         }
 
         delete_note(ctx: AppFuncTs.Context, note_id: string) {
@@ -137,7 +134,7 @@ export namespace NoteListFuncTs {
 
         async open_note(ctx: AppFuncTs.Context, noteid: string) {
             // console.log("id compare", ctx.cur_open_note_id, noteid);
-            if (!ctx.cur_canvasproxy||
+            if (!ctx.cur_canvasproxy ||
                 ctx.cur_canvasproxy.get_content_manager().cur_note_id !== noteid) {
                 // ctx.cur_open_note_id = noteid
                 console.log("open_note", ctx, noteid);
@@ -148,10 +145,10 @@ export namespace NoteListFuncTs {
                     // console.log("conf",conf)
                     if (conf) {
                         let _note = await ctx.storage_manager.load_note_all(noteid, conf)
-                        if(!_note){
-                            _note=note.NoteContentData.get_default()
+                        if (!_note) {
+                            _note = note.NoteContentData.get_default()
                         }
-                        const handle=note.NoteHandle.create(noteid,_note)
+                        const handle = note.NoteHandle.create(noteid, _note)
                         // ctx.note_loaded_and_open(handle)
                         // ctx.cur_open_note_content=note
                         // if (note)

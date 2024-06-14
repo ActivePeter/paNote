@@ -36,7 +36,7 @@ export class GetNoteMataReq {
 
 export namespace apis {
     export async function get_note_mata(req:GetNoteMataReq):Promise<GetNoteMataResp>{
-        let res:any = await axios.post("/api/get_note_mata", req)
+        let res:any = await axios.post("/api/panote_content/get_note_mata", req)
         return new GetNoteMataResp(res.data.kernel,res.data.id)
     }
 }
@@ -76,7 +76,7 @@ export class GetChunkNoteIdsReq {
 
 export namespace apis {
     export async function get_chunk_note_ids(req:GetChunkNoteIdsReq):Promise<GetChunkNoteIdsResp>{
-        let res:any = await axios.post("/api/get_chunk_note_ids", req)
+        let res:any = await axios.post("/api/panote_content/get_chunk_note_ids", req)
         return new GetChunkNoteIdsResp(res.data.kernel,res.data.id)
     }
 }
@@ -122,7 +122,7 @@ export class GetNoteBarInfoReq {
 
 export namespace apis {
     export async function get_note_bar_info(req:GetNoteBarInfoReq):Promise<GetNoteBarInfoResp>{
-        let res:any = await axios.post("/api/get_note_bar_info", req)
+        let res:any = await axios.post("/api/panote_content/get_note_bar_info", req)
         return new GetNoteBarInfoResp(res.data.kernel,res.data.id)
     }
 }
@@ -164,7 +164,7 @@ export class CreateNewBarReq {
 
 export namespace apis {
     export async function create_new_bar(req:CreateNewBarReq):Promise<CreateNewBarResp>{
-        let res:any = await axios.post("/api/create_new_bar", req)
+        let res:any = await axios.post("/api/panote_content/create_new_bar", req)
         return new CreateNewBarResp(res.data.kernel,res.data.id)
     }
 }
@@ -205,7 +205,7 @@ export class UpdateBarContentReq {
 
 export namespace apis {
     export async function update_bar_content(req:UpdateBarContentReq):Promise<UpdateBarContentResp>{
-        let res:any = await axios.post("/api/update_bar_content", req)
+        let res:any = await axios.post("/api/panote_content/update_bar_content", req)
         return new UpdateBarContentResp(res.data.kernel,res.data.id)
     }
 }
@@ -253,7 +253,7 @@ export class UpdateBarTransformReq {
 
 export namespace apis {
     export async function update_bar_transform(req:UpdateBarTransformReq):Promise<UpdateBarTransformResp>{
-        let res:any = await axios.post("/api/update_bar_transform", req)
+        let res:any = await axios.post("/api/panote_content/update_bar_transform", req)
         return new UpdateBarTransformResp(res.data.kernel,res.data.id)
     }
 }
@@ -264,7 +264,7 @@ export namespace apis {
 export class RedoRespSucc {
     constructor(
         public redotype:string,
-        public redovalue:Obj,
+        public redovalue:any,
     ){}
 }
 
@@ -292,7 +292,7 @@ export class RedoReq {
 
 export namespace apis {
     export async function redo(req:RedoReq):Promise<RedoResp>{
-        let res:any = await axios.post("/api/redo", req)
+        let res:any = await axios.post("/api/panote_content/redo", req)
         return new RedoResp(res.data.kernel,res.data.id)
     }
 }
@@ -346,7 +346,7 @@ export class AddPathReq {
 
 export namespace apis {
     export async function add_path(req:AddPathReq):Promise<AddPathResp>{
-        let res:any = await axios.post("/api/add_path", req)
+        let res:any = await axios.post("/api/panote_content/add_path", req)
         return new AddPathResp(res.data.kernel,res.data.id)
     }
 }
@@ -385,7 +385,7 @@ export class GetPathInfoReq {
 
 export namespace apis {
     export async function get_path_info(req:GetPathInfoReq):Promise<GetPathInfoResp>{
-        let res:any = await axios.post("/api/get_path_info", req)
+        let res:any = await axios.post("/api/panote_content/get_path_info", req)
         return new GetPathInfoResp(res.data.kernel,res.data.id)
     }
 }
@@ -425,7 +425,7 @@ export class SetPathInfoReq {
 
 export namespace apis {
     export async function set_path_info(req:SetPathInfoReq):Promise<SetPathInfoResp>{
-        let res:any = await axios.post("/api/set_path_info", req)
+        let res:any = await axios.post("/api/panote_content/set_path_info", req)
         return new SetPathInfoResp(res.data.kernel,res.data.id)
     }
 }
@@ -465,7 +465,7 @@ export class RemovePathReq {
 
 export namespace apis {
     export async function remove_path(req:RemovePathReq):Promise<RemovePathResp>{
-        let res:any = await axios.post("/api/remove_path", req)
+        let res:any = await axios.post("/api/panote_content/remove_path", req)
         return new RemovePathResp(res.data.kernel,res.data.id)
     }
 }
@@ -507,7 +507,7 @@ export class DeleteBarReq {
 
 export namespace apis {
     export async function delete_bar(req:DeleteBarReq):Promise<DeleteBarResp>{
-        let res:any = await axios.post("/api/delete_bar", req)
+        let res:any = await axios.post("/api/panote_content/delete_bar", req)
         return new DeleteBarResp(res.data.kernel,res.data.id)
     }
 }
@@ -561,7 +561,7 @@ export class ArticleBinderReq {
 
 export namespace apis {
     export async function article_binder(req:ArticleBinderReq):Promise<ArticleBinderResp>{
-        let res:any = await axios.post("/api/article_binder", req)
+        let res:any = await axios.post("/api/panote_content/article_binder", req)
         return new ArticleBinderResp(res.data.kernel,res.data.id)
     }
 }
@@ -571,7 +571,7 @@ export namespace apis {
 
 export class ArticleListRespSucc {
     constructor(
-        public list:string[],
+        public list:any[],
     ){}
 }
 
@@ -612,7 +612,7 @@ export class ArticleListReq {
 
 export namespace apis {
     export async function article_list(req:ArticleListReq):Promise<ArticleListResp>{
-        let res:any = await axios.post("/api/article_list", req)
+        let res:any = await axios.post("/api/panote_content/article_list", req)
         return new ArticleListResp(res.data.kernel,res.data.id)
     }
 }
@@ -622,7 +622,7 @@ export namespace apis {
 
 export class FetchAllNoteBarsEpochRespSucc {
     constructor(
-        public bars_id_and_epoch:string[],
+        public bars_id_and_epoch:any[],
     ){}
 }
 
@@ -650,7 +650,7 @@ export class FetchAllNoteBarsEpochReq {
 
 export namespace apis {
     export async function fetch_all_note_bars_epoch(req:FetchAllNoteBarsEpochReq):Promise<FetchAllNoteBarsEpochResp>{
-        let res:any = await axios.post("/api/fetch_all_note_bars_epoch", req)
+        let res:any = await axios.post("/api/panote_content/fetch_all_note_bars_epoch", req)
         return new FetchAllNoteBarsEpochResp(res.data.kernel,res.data.id)
     }
 }

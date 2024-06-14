@@ -1,8 +1,12 @@
-use crate::r#struct::*;
+// use crate::r#struct::*;
+use crate::gen_api::*;
 use crate::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Number;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+mod kv;
+use kv::*;
 
 #[derive(Serialize, Deserialize)]
 struct ArticleListNode {
@@ -57,7 +61,7 @@ pub struct NoteBarInfo {
     pub h: f32,
     pub text: String,
     pub formatted: String,
-    pub connected: Vec<serde_json::Value>,
+    pub connected: Vec<String>,
     pub edit_time: Option<u64>,
     pub create_time: Option<u64>,
     pub epoch: Option<u64>,
@@ -83,11 +87,11 @@ impl NoteBarInfo {
         self.edit_time = Some(time_stamp_ms_u64());
     }
     pub fn to_reply(self) -> GetNoteBarInfoResp {
-        GetNoteBarInfoResp {
-            x: self.x,
-            y: self.y,
-            w: self.w,
-            h: self.h,
+        GetNoteBarInfoResp::Exist {
+            x: self.x as f64,
+            y: self.y as f64,
+            w: self.w as f64,
+            h: self.h as f64,
             text: self.text,
             formatted: self.formatted,
             connected: self.connected,
@@ -95,7 +99,7 @@ impl NoteBarInfo {
         }
     }
     pub fn remove_path(&mut self, pathid: &str) {
-        self.connected.retain(|s| s.as_str().unwrap() != pathid)
+        self.connected.retain(|s| s.as_str() != pathid)
     }
 }
 
@@ -128,11 +132,7 @@ fn note_pos_to_chunkpos(x: f32, y: f32) -> (i32, i32) {
     )
 }
 
-fn fitup_chunk_range_in_notemeta_for_newck(
-    ckx: i32,
-    cky: i32,
-    meta_: &mut GetNoteMataResp,
-) -> bool {
+fn fitup_chunk_range_in_notemeta_for_newck(ckx: i32, cky: i32, meta_: &mut NoteMataKv) -> bool {
     let mut changed = false;
     if meta_.max_chunkx < ckx {
         meta_.max_chunkx = ckx;
@@ -163,9 +163,9 @@ impl NoteMan {
         noteid: &str,
         ckx: i32,
         cky: i32,
-        meta_: &mut GetNoteMataResp,
+        meta_: &mut NoteMataKv,
     ) -> bool {
-        fn y_empty(man: &NoteMan, x: i32, meta_: &GetNoteMataResp, noteid: &str) -> bool {
+        fn y_empty(man: &NoteMan, x: i32, meta_: &NoteMataKv, noteid: &str) -> bool {
             let mut line_empty = true;
             for y in meta_.min_chunky..meta_.max_chunky + 1 {
                 if man
@@ -185,7 +185,7 @@ impl NoteMan {
             }
             line_empty
         };
-        fn x_empty(man: &NoteMan, y: i32, meta_: &GetNoteMataResp, noteid: &str) -> bool {
+        fn x_empty(man: &NoteMan, y: i32, meta_: &NoteMataKv, noteid: &str) -> bool {
             let mut line_empty = true;
             for x in meta_.min_chunkx..meta_.max_chunkx + 1 {
                 if man
@@ -267,7 +267,7 @@ impl NoteMan {
         changed
     }
 
-    pub fn set_note_meta(&self, noteid: &str, meta: &GetNoteMataResp) {
+    pub fn set_note_meta(&self, noteid: &str, meta: &NoteMataKv) {
         // self.kernel.set(
         //     format!("{}|meta", noteid),
         //     serde_json::to_string(meta).unwrap(),
@@ -279,14 +279,14 @@ impl NoteMan {
             )
             .finally_call();
     }
-    fn get_note_meta(&self, noteid: &str) -> GetNoteMataResp {
+    fn get_note_meta(&self, noteid: &str) -> NoteMataKv {
         let s = KvBatch::new()
             .then_get(format!("{}|meta", noteid).as_bytes())
             .finally_call();
         let s = s.res_str();
         match s {
             None => {
-                let ret = GetNoteMataResp {
+                let ret = NoteMataKv {
                     next_noteid: 0,
                     max_chunkx: 0,
                     max_chunky: 0,
@@ -301,11 +301,11 @@ impl NoteMan {
                     .finally_call();
                 ret
             }
-            Some(s) => serde_json::from_str::<GetNoteMataResp>(&s).unwrap(),
+            Some(s) => serde_json::from_str(&s).unwrap(),
         }
     }
 
-    fn get_note_chunk_ids(&self, arg: GetChunkNoteIdsReq) -> GetChunkNoteIdsResp {
+    fn get_note_chunk_ids(&self, arg: GetChunkNoteIdsReq) -> ChunkNoteIdsKv {
         // let chunkid = chunkpos_to_chunkid(arg.chunkx, arg.chunky);
         // {//try read from mem
         //     let mut hold = self.locked_data.write();
@@ -323,7 +323,7 @@ impl NoteMan {
         let s = s.res_str();
         let kvres = match s {
             None => {
-                let ret = GetChunkNoteIdsResp {
+                let ret = ChunkNoteIdsKv {
                     noteids: Vec::new(),
                 };
                 // self.kernel.set(key, serde_json::to_string(&ret).unwrap());
@@ -335,7 +335,7 @@ impl NoteMan {
                     .finally_call();
                 ret
             }
-            Some(s) => serde_json::from_str::<GetChunkNoteIdsResp>(&s).unwrap(),
+            Some(s) => serde_json::from_str(&s).unwrap(),
         };
         // //save to mem store
         // {
@@ -351,7 +351,7 @@ impl NoteMan {
         noteid: &str,
         cx: i32,
         cy: i32,
-        ids: &GetChunkNoteIdsResp,
+        ids: &ChunkNoteIdsKv,
     ) {
         let chunkid = chunkpos_to_chunkid(cx, cy);
         // {
@@ -378,7 +378,7 @@ impl NoteMan {
         barid: &str,
         ck1: (i32, i32),
         ck2: (i32, i32),
-    ) -> GetNoteMataResp {
+    ) -> NoteMataKv {
         //改变两个chunk中的noteids
         //chunk1中移除
         let mut ck1data = self.get_note_chunk_ids(GetChunkNoteIdsReq {
@@ -400,9 +400,7 @@ impl NoteMan {
             chunkx: ck2.0,
             chunky: ck2.1,
         });
-        ck2data
-            .noteids
-            .push(serde_json::Value::String(barid.to_string()));
+        ck2data.noteids.push(barid.to_string());
         self.set_note_chunk_ids(noteid, ck1.0, ck1.1, &ck1data);
         self.set_note_chunk_ids(noteid, ck2.0, ck2.1, &ck2data);
 
@@ -484,7 +482,7 @@ impl NoteMan {
                 chunkx: cx,
                 chunky: cy,
             });
-            chunk_noteids.noteids.push(Value::String(next.to_string()));
+            chunk_noteids.noteids.push(next.to_string());
             self.set_note_chunk_ids(&noteid, cx, cy, &chunk_noteids);
         }
 
@@ -494,7 +492,7 @@ impl NoteMan {
 
         (ret, (cx, cy))
     }
-    pub fn delete_bar(&self, noteid: &str, ebid: &str) -> GetNoteMataResp {
+    pub fn delete_bar(&self, noteid: &str, ebid: &str) -> NoteMataKv {
         let mut meta = self.get_note_meta(noteid);
         if let Some(mut n1) = self.get_notebar_info(noteid.to_string(), ebid.to_string()) {
             let (cx, cy) = note_pos_to_chunkpos(n1.x, n1.y);
@@ -504,11 +502,11 @@ impl NoteMan {
                 chunky: cy,
             });
             //1.chunk 移除 bar
-            ck.noteids.retain(|v| v.as_str().unwrap() != ebid);
+            ck.noteids.retain(|v| v.as_str() != ebid);
             self.set_note_chunk_ids(noteid, cx, cy, &ck);
             //2.相连bar 移除
             for v in &n1.connected {
-                let mut sp = v.as_str().unwrap().split("_");
+                let mut sp = v.as_str().split("_");
                 let mut a = sp.next().unwrap().to_string();
                 let mut b = sp.next().unwrap().to_string();
                 if b == ebid {
@@ -517,11 +515,9 @@ impl NoteMan {
                 let mut notebar = self
                     .get_notebar_info(noteid.to_string(), b.clone())
                     .unwrap();
-                notebar
-                    .connected
-                    .retain(|v1| v1.as_str().unwrap() != v.as_str().unwrap());
+                notebar.connected.retain(|v1| v1.as_str() != v.as_str());
                 self.set_notebar_info(noteid, &*b, &notebar);
-                self.remove_note_path_info(noteid, v.as_str().unwrap());
+                self.remove_note_path_info(noteid, v.as_str());
             }
 
             if self.fitdown_chunk_range_in_notemeta_if_ck_is_on_edge(noteid, cx, cy, &mut meta) {
@@ -540,10 +536,8 @@ impl NoteMan {
         ) {
             // todo
             //  检查是否已经有path
-            n1.connected
-                .push(Value::String(format!("{}_{}", ebid1, ebid2)));
-            n2.connected
-                .push(Value::String(format!("{}_{}", ebid1, ebid2)));
+            n1.connected.push(format!("{}_{}", ebid1, ebid2));
+            n2.connected.push(format!("{}_{}", ebid1, ebid2));
             n1.epoch_addup();
             n2.epoch_addup();
             self.set_notebar_info(noteid, ebid1, &n1);
@@ -633,22 +627,28 @@ impl NoteMan {
         let mut al = self.get_article_list(&*noteid);
         match &*task_type {
             "bind" => {
-                let ret = ArticleBinderResp {
-                    if_success: if al.bind(arg) { 1 } else { 0 },
+                let ret = if al.bind(arg) {
+                    ArticleBinderResp::Succ {}
+                } else {
+                    ArticleBinderResp::Fail {}
                 };
                 self.set_article_list(&*noteid, &al);
                 ret
             }
             "unbind" => {
-                let ret = ArticleBinderResp {
-                    if_success: if al.unbind(arg) { 1 } else { 0 },
+                let ret = if al.unbind(arg) {
+                    ArticleBinderResp::Succ {}
+                } else {
+                    ArticleBinderResp::Fail {}
                 };
                 self.set_article_list(&noteid, &al);
                 ret
             }
             "rename" => {
-                let ret = ArticleBinderResp {
-                    if_success: if al.rename(arg) { 1 } else { 0 },
+                let ret = if al.rename(arg) {
+                    ArticleBinderResp::Succ {}
+                } else {
+                    ArticleBinderResp::Fail {}
                 };
                 self.set_article_list(&noteid, &al);
                 ret
@@ -661,40 +661,56 @@ impl NoteMan {
     }
 }
 
-impl ContentApi for Impl {
-    fn get_note_mata(&self, req: GetNoteMataReq) -> GetNoteMataResp {
-        NoteMan::new().get_note_meta(&req.noteid)
+impl ApiHandler for Impl {
+    fn handle_get_note_mata(&self, req: GetNoteMataReq) -> GetNoteMataResp {
+        let meta = NoteMan::new().get_note_meta(&req.noteid);
+        GetNoteMataResp::Succ {
+            next_noteid: meta.next_noteid,
+            max_chunkx: meta.max_chunkx,
+            max_chunky: meta.max_chunky,
+            min_chunkx: meta.min_chunkx,
+            min_chunky: meta.min_chunky,
+        }
     }
-    fn get_chunk_note_ids(&self, req: GetChunkNoteIdsReq) -> GetChunkNoteIdsResp {
-        NoteMan::new().get_note_chunk_ids(req)
+    fn handle_get_chunk_note_ids(&self, req: GetChunkNoteIdsReq) -> GetChunkNoteIdsResp {
+        GetChunkNoteIdsResp::Succ {
+            noteids: NoteMan::new().get_note_chunk_ids(req).noteids,
+        }
     }
-    fn get_note_bar_info(&self, req: GetNoteBarInfoReq) -> GetNoteBarInfoResp {
+    fn handle_get_note_bar_info(&self, req: GetNoteBarInfoReq) -> GetNoteBarInfoResp {
         let info = NoteMan::new().get_notebar_info(req.noteid, req.notebarid);
         if let Some(info) = info {
             info.to_reply()
         } else {
-            GetNoteBarInfoResp {
+            GetNoteBarInfoResp::Exist {
                 w: -1.0,
                 h: -1.0,
-                ..GetNoteBarInfoResp::default()
+
+                x: Default::default(),
+                y: Default::default(),
+                text: Default::default(),
+                formatted: Default::default(),
+                connected: Default::default(),
+                epoch: Default::default(),
             }
         }
     }
-    fn create_new_bar(&self, arg: CreateNewBarReq) -> CreateNewBarResp {
+    fn handle_create_new_bar(&self, arg: CreateNewBarReq) -> CreateNewBarResp {
         let note_man = NoteMan::new();
-        let (_created, (cx, cy)) = note_man.create_notebar(arg.x, arg.y, arg.noteid.clone());
+        let (_created, (cx, cy)) =
+            note_man.create_notebar(arg.x as f32, arg.y as f32, arg.noteid.clone());
         let ck_noteids = note_man.get_note_chunk_ids(GetChunkNoteIdsReq {
             noteid: arg.noteid,
             chunkx: cx,
             chunky: cy,
         });
-        CreateNewBarResp {
+        CreateNewBarResp::Succ {
             chunkx: cx,
             chunky: cy,
             noteids: ck_noteids.noteids,
         }
     }
-    fn update_bar_content(&self, arg: UpdateBarContentReq) -> UpdateBarContentResp {
+    fn handle_update_bar_content(&self, arg: UpdateBarContentReq) -> UpdateBarContentResp {
         let note_man = NoteMan::new();
         let mut nb = note_man
             .get_notebar_info(arg.noteid.clone(), arg.barid.clone())
@@ -705,17 +721,17 @@ impl ContentApi for Impl {
         nb.epoch_addup();
         note_man.set_notebar_info(&*(arg.noteid), &*(arg.barid), &nb);
 
-        UpdateBarContentResp {
+        UpdateBarContentResp::Succ {
             new_epoch: nb.epoch_i32(),
         }
     }
-    fn update_bar_transform(&self, arg: UpdateBarTransformReq) -> UpdateBarTransformResp {
+    fn handle_update_bar_transform(&self, arg: UpdateBarTransformReq) -> UpdateBarTransformResp {
         let note_man = NoteMan::new();
         let mut nb = note_man
             .get_notebar_info(arg.noteid.clone(), arg.barid.clone())
             .unwrap();
-        let (oldcx, oldcy) = note_pos_to_chunkpos(nb.x, nb.y);
-        let (newcx, newcy) = note_pos_to_chunkpos(arg.x, arg.y);
+        let (oldcx, oldcy) = note_pos_to_chunkpos(nb.x as f32, nb.y as f32);
+        let (newcx, newcy) = note_pos_to_chunkpos(arg.x as f32, arg.y as f32);
         let (chunk_change, meta) = if oldcx != newcx || oldcy != newcy {
             let meta = note_man.change_notebar_chunk(
                 &*(arg.noteid),
@@ -725,21 +741,21 @@ impl ContentApi for Impl {
             ); //变更区块下的信息
             (
                 vec![
-                    Value::String(chunkpos_to_chunkid(oldcx, oldcy)),
-                    Value::String(chunkpos_to_chunkid(newcx, newcy)),
+                    chunkpos_to_chunkid(oldcx, oldcy),
+                    chunkpos_to_chunkid(newcx, newcy),
                 ],
                 meta,
             )
         } else {
             (vec![], note_man.get_note_meta(&*arg.noteid))
         };
-        nb.x = arg.x;
-        nb.y = arg.y;
-        nb.w = arg.w;
-        nb.h = arg.h;
+        nb.x = arg.x as f32;
+        nb.y = arg.y as f32;
+        nb.w = arg.w as f32;
+        nb.h = arg.h as f32;
         nb.epoch_addup();
         note_man.set_notebar_info(&*(arg.noteid), &*(arg.barid), &nb);
-        UpdateBarTransformResp {
+        UpdateBarTransformResp::Succ {
             new_epoch: nb.epoch_i32(),
             chunk_maxx: meta.max_chunkx,
             chunk_minx: meta.min_chunkx,
@@ -748,37 +764,33 @@ impl ContentApi for Impl {
             chunk_change,
         }
     }
-    fn redo(&self, req: RedoReq) -> RedoResp {
-        RedoResp::default()
+    fn handle_redo(&self, req: RedoReq) -> RedoResp {
+        unreachable!()
+        // RedoResp::Succ { redotype: todo!(), redovalue: todo!() }
     }
-    fn add_path(&self, arg: AddPathReq) -> AddPathResp {
+    fn handle_add_path(&self, arg: AddPathReq) -> AddPathResp {
         let note_man = NoteMan::new();
         let res = note_man.add_path(&*(arg.noteid), &*(arg.from), &*(arg.to));
 
         if let Some((from_epoch, to_epoch)) = res {
-            AddPathResp {
-                _1succ_0fail: 1,
+            AddPathResp::Succ {
                 new_epoch_from: from_epoch,
                 new_epoch_to: to_epoch,
             }
         } else {
-            AddPathResp {
-                _1succ_0fail: 0,
-                new_epoch_from: 0,
-                new_epoch_to: 0,
-            }
+            AddPathResp::Fail {}
         }
     }
-    fn get_path_info(&self, arg: GetPathInfoReq) -> GetPathInfoResp {
+    fn handle_get_path_info(&self, arg: GetPathInfoReq) -> GetPathInfoResp {
         let note_man = NoteMan::new();
         let info = note_man
             .get_note_path_info(&*(arg.noteid), &*(arg.pathid_with_line))
             .unwrap();
-        GetPathInfoResp {
+        GetPathInfoResp::Succ {
             type_: info.pathtype,
         }
     }
-    fn set_path_info(&self, arg: SetPathInfoReq) -> SetPathInfoResp {
+    fn handle_set_path_info(&self, arg: SetPathInfoReq) -> SetPathInfoResp {
         let note_man = NoteMan::new();
         note_man.set_note_path_info(
             &*(arg.noteid),
@@ -787,9 +799,9 @@ impl ContentApi for Impl {
                 pathtype: arg.type_,
             },
         );
-        SetPathInfoResp::default()
+        SetPathInfoResp::Succ {}
     }
-    fn remove_path(&self, arg: RemovePathReq) -> RemovePathResp {
+    fn handle_remove_path(&self, arg: RemovePathReq) -> RemovePathResp {
         let note_man = NoteMan::new();
         // 对应editor bar 中的信息变更
         let mut split = arg.pathid_with_line.split("_");
@@ -810,25 +822,25 @@ impl ContentApi for Impl {
         // 移除path
         note_man.remove_note_path_info(&*(arg.noteid), &*(arg.pathid_with_line));
 
-        RemovePathResp {
+        RemovePathResp::Succ {
             new_epoch_to: binfo.epoch.unwrap() as i32,
             new_epoch_from: ainfo.epoch.unwrap() as i32,
         }
     }
-    fn delete_bar(&self, arg: DeleteBarReq) -> DeleteBarResp {
+    fn handle_delete_bar(&self, arg: DeleteBarReq) -> DeleteBarResp {
         let note_man = NoteMan::new();
         let meta = note_man.delete_bar(&*(arg.noteid), &*(arg.barid));
-        DeleteBarResp {
+        DeleteBarResp::Succ {
             chunk_maxx: meta.max_chunkx,
             chunk_minx: meta.min_chunkx,
             chunk_maxy: meta.max_chunky,
             chunk_miny: meta.min_chunky,
         }
     }
-    fn article_binder(&self, req: ArticleBinderReq) -> ArticleBinderResp {
+    fn handle_article_binder(&self, req: ArticleBinderReq) -> ArticleBinderResp {
         NoteMan::new().article_binder(req)
     }
-    fn article_list(&self, mut arg: ArticleListReq) -> ArticleListResp {
+    fn handle_article_list(&self, mut arg: ArticleListReq) -> ArticleListResp {
         let note_man = NoteMan::new();
 
         let mut noteid = String::new();
@@ -880,12 +892,11 @@ impl ContentApi for Impl {
 
         println!("artile list collected {}", collect_noteinfos.len());
 
-        ArticleListResp {
-            if_success: 1,
+        ArticleListResp::Succ {
             list: collect_noteinfos,
         }
     }
-    fn fetch_all_note_bars_epoch(
+    fn handle_fetch_all_note_bars_epoch(
         &self,
         arg: FetchAllNoteBarsEpochReq,
     ) -> FetchAllNoteBarsEpochResp {
@@ -901,11 +912,11 @@ impl ContentApi for Impl {
                     chunky: y,
                 });
                 fn get_chunk_note_ids_reply_to_noteids_strvec(
-                    mut reply: GetChunkNoteIdsResp,
+                    mut reply: ChunkNoteIdsKv,
                 ) -> Vec<String> {
                     let mut res = vec![];
                     while let Some(noteid) = reply.noteids.pop() {
-                        res.push(noteid.as_str().unwrap().to_owned());
+                        res.push(noteid.as_str().to_owned());
                     }
                     res
                 }
@@ -920,7 +931,7 @@ impl ContentApi for Impl {
                 }
             }
         }
-        FetchAllNoteBarsEpochResp {
+        FetchAllNoteBarsEpochResp::Succ {
             bars_id_and_epoch: res,
         }
     }

@@ -1,8 +1,8 @@
 
 use serde_json::{json,Value};
 use serde::{Serialize, Deserialize};
-use async_trait::async_trait;
-use crate::general::network::http_handler::ApiHandlerImpl;
+
+
 
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -233,7 +233,7 @@ pub struct UpdateBarTransformReq {
 pub enum RedoResp{
     Succ{
        redotype:String,
-       redovalue:Obj,
+       redovalue:Value,
 },
 
 }
@@ -480,7 +480,7 @@ pub struct ArticleBinderReq {
 #[serde(untagged)]
 pub enum ArticleListResp{
     Succ{
-       list:Vec<String>,
+       list:Vec<Value>,
 },
     Fail{
 
@@ -516,7 +516,7 @@ pub struct ArticleListReq {
 #[serde(untagged)]
 pub enum FetchAllNoteBarsEpochResp{
     Succ{
-       bars_id_and_epoch:Vec<String>,
+       bars_id_and_epoch:Vec<Value>,
 },
 
 }
@@ -543,41 +543,266 @@ pub struct FetchAllNoteBarsEpochReq {
 }
 
 
-[async_trait]
+
 pub trait ApiHandler {
     
-    async fn handle_get_note_mata(&self, req:GetNoteMataReq)->GetNoteMataResp;
+     fn handle_get_note_mata(&self, req:GetNoteMataReq)->GetNoteMataResp;
             
-    async fn handle_get_chunk_note_ids(&self, req:GetChunkNoteIdsReq)->GetChunkNoteIdsResp;
+     fn handle_get_chunk_note_ids(&self, req:GetChunkNoteIdsReq)->GetChunkNoteIdsResp;
             
-    async fn handle_get_note_bar_info(&self, req:GetNoteBarInfoReq)->GetNoteBarInfoResp;
+     fn handle_get_note_bar_info(&self, req:GetNoteBarInfoReq)->GetNoteBarInfoResp;
             
-    async fn handle_create_new_bar(&self, req:CreateNewBarReq)->CreateNewBarResp;
+     fn handle_create_new_bar(&self, req:CreateNewBarReq)->CreateNewBarResp;
             
-    async fn handle_update_bar_content(&self, req:UpdateBarContentReq)->UpdateBarContentResp;
+     fn handle_update_bar_content(&self, req:UpdateBarContentReq)->UpdateBarContentResp;
             
-    async fn handle_update_bar_transform(&self, req:UpdateBarTransformReq)->UpdateBarTransformResp;
+     fn handle_update_bar_transform(&self, req:UpdateBarTransformReq)->UpdateBarTransformResp;
             
-    async fn handle_redo(&self, req:RedoReq)->RedoResp;
+     fn handle_redo(&self, req:RedoReq)->RedoResp;
             
-    async fn handle_add_path(&self, req:AddPathReq)->AddPathResp;
+     fn handle_add_path(&self, req:AddPathReq)->AddPathResp;
             
-    async fn handle_get_path_info(&self, req:GetPathInfoReq)->GetPathInfoResp;
+     fn handle_get_path_info(&self, req:GetPathInfoReq)->GetPathInfoResp;
             
-    async fn handle_set_path_info(&self, req:SetPathInfoReq)->SetPathInfoResp;
+     fn handle_set_path_info(&self, req:SetPathInfoReq)->SetPathInfoResp;
             
-    async fn handle_remove_path(&self, req:RemovePathReq)->RemovePathResp;
+     fn handle_remove_path(&self, req:RemovePathReq)->RemovePathResp;
             
-    async fn handle_delete_bar(&self, req:DeleteBarReq)->DeleteBarResp;
+     fn handle_delete_bar(&self, req:DeleteBarReq)->DeleteBarResp;
             
-    async fn handle_article_binder(&self, req:ArticleBinderReq)->ArticleBinderResp;
+     fn handle_article_binder(&self, req:ArticleBinderReq)->ArticleBinderResp;
             
-    async fn handle_article_list(&self, req:ArticleListReq)->ArticleListResp;
+     fn handle_article_list(&self, req:ArticleListReq)->ArticleListResp;
             
-    async fn handle_fetch_all_note_bars_epoch(&self, req:FetchAllNoteBarsEpochReq)->FetchAllNoteBarsEpochResp;
+     fn handle_fetch_all_note_bars_epoch(&self, req:FetchAllNoteBarsEpochReq)->FetchAllNoteBarsEpochResp;
             
 }
 
+#[no_mangle]
+fn get_note_mata(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_get_note_mata(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn get_chunk_note_ids(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_get_chunk_note_ids(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn get_note_bar_info(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_get_note_bar_info(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn create_new_bar(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_create_new_bar(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn update_bar_content(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_update_bar_content(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn update_bar_transform(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_update_bar_transform(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn redo(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_redo(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn add_path(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_add_path(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn get_path_info(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_get_path_info(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn set_path_info(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_set_path_info(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn remove_path(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_remove_path(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn delete_bar(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_delete_bar(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn article_binder(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_article_binder(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn article_list(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_article_list(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
+#[no_mangle]
+fn fetch_all_note_bars_epoch(http_json_ptr: i32, http_json_len: i32) {
+    let json_str = unsafe {
+        String::from_raw_parts(
+            http_json_ptr as *mut u8,
+            http_json_len as usize,
+            http_json_len as usize,
+        )
+    };
+    if let Ok(req) = serde_json::from_str(&json_str) {
+        let resp = super::Impl.handle_fetch_all_note_bars_epoch(req).serialize();
+        let resp_str = serde_json::to_string(&resp).unwrap();
+        unsafe { super::write_result(resp_str.as_ptr(), resp_str.len() as i32) }
+    }
+}
 
 
 
