@@ -1,7 +1,6 @@
 
 use serde_json::{json,Value};
 use serde::{Serialize, Deserialize};
-use axum::{http::StatusCode, routing::post, Json, Router};
 use async_trait::async_trait;
 use crate::general::network::http_handler::ApiHandlerImpl;
 
@@ -544,7 +543,7 @@ pub struct FetchAllNoteBarsEpochReq {
 }
 
 
-#[async_trait]
+[async_trait]
 pub trait ApiHandler {
     
     async fn handle_get_note_mata(&self, req:GetNoteMataReq)->GetNoteMataResp;
@@ -580,100 +579,5 @@ pub trait ApiHandler {
 }
 
 
-pub fn add_routers(mut router:Router)->Router
-{
-    
-    async fn get_note_mata(Json(req):Json<GetNoteMataReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_get_note_mata(req).await.serialize()))
-    }
-    router=router
-        .route("/get_note_mata", post(get_note_mata));
-                             
-    async fn get_chunk_note_ids(Json(req):Json<GetChunkNoteIdsReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_get_chunk_note_ids(req).await.serialize()))
-    }
-    router=router
-        .route("/get_chunk_note_ids", post(get_chunk_note_ids));
-                             
-    async fn get_note_bar_info(Json(req):Json<GetNoteBarInfoReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_get_note_bar_info(req).await.serialize()))
-    }
-    router=router
-        .route("/get_note_bar_info", post(get_note_bar_info));
-                             
-    async fn create_new_bar(Json(req):Json<CreateNewBarReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_create_new_bar(req).await.serialize()))
-    }
-    router=router
-        .route("/create_new_bar", post(create_new_bar));
-                             
-    async fn update_bar_content(Json(req):Json<UpdateBarContentReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_update_bar_content(req).await.serialize()))
-    }
-    router=router
-        .route("/update_bar_content", post(update_bar_content));
-                             
-    async fn update_bar_transform(Json(req):Json<UpdateBarTransformReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_update_bar_transform(req).await.serialize()))
-    }
-    router=router
-        .route("/update_bar_transform", post(update_bar_transform));
-                             
-    async fn redo(Json(req):Json<RedoReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_redo(req).await.serialize()))
-    }
-    router=router
-        .route("/redo", post(redo));
-                             
-    async fn add_path(Json(req):Json<AddPathReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_add_path(req).await.serialize()))
-    }
-    router=router
-        .route("/add_path", post(add_path));
-                             
-    async fn get_path_info(Json(req):Json<GetPathInfoReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_get_path_info(req).await.serialize()))
-    }
-    router=router
-        .route("/get_path_info", post(get_path_info));
-                             
-    async fn set_path_info(Json(req):Json<SetPathInfoReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_set_path_info(req).await.serialize()))
-    }
-    router=router
-        .route("/set_path_info", post(set_path_info));
-                             
-    async fn remove_path(Json(req):Json<RemovePathReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_remove_path(req).await.serialize()))
-    }
-    router=router
-        .route("/remove_path", post(remove_path));
-                             
-    async fn delete_bar(Json(req):Json<DeleteBarReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_delete_bar(req).await.serialize()))
-    }
-    router=router
-        .route("/delete_bar", post(delete_bar));
-                             
-    async fn article_binder(Json(req):Json<ArticleBinderReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_article_binder(req).await.serialize()))
-    }
-    router=router
-        .route("/article_binder", post(article_binder));
-                             
-    async fn article_list(Json(req):Json<ArticleListReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_article_list(req).await.serialize()))
-    }
-    router=router
-        .route("/article_list", post(article_list));
-                             
-    async fn fetch_all_note_bars_epoch(Json(req):Json<FetchAllNoteBarsEpochReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_fetch_all_note_bars_epoch(req).await.serialize()))
-    }
-    router=router
-        .route("/fetch_all_note_bars_epoch", post(fetch_all_note_bars_epoch));
-                             
-    
-    router
-}
+
 

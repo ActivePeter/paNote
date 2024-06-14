@@ -46,7 +46,7 @@ export class LoginReq {
 
 export namespace apis {
     export async function login(req:LoginReq):Promise<LoginResp>{
-        let res:any = await axios.post("/api/login", req)
+        let res:any = await axios.post("/api/panote_auth/login", req)
         return new LoginResp(res.data.kernel,res.data.id)
     }
 }
@@ -97,7 +97,7 @@ export class VerifyTokenReq {
 
 export namespace apis {
     export async function verify_token(req:VerifyTokenReq):Promise<VerifyTokenResp>{
-        let res:any = await axios.post("/api/verify_token", req)
+        let res:any = await axios.post("/api/panote_auth/verify_token", req)
         return new VerifyTokenResp(res.data.kernel,res.data.id)
     }
 }

@@ -1,9 +1,8 @@
 
 use serde_json::{json,Value};
 use serde::{Serialize, Deserialize};
-use axum::{http::StatusCode, routing::post, Json, Router};
-use async_trait::async_trait;
-use crate::general::network::http_handler::ApiHandlerImpl;
+
+
 
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -78,32 +77,15 @@ pub struct VerifyTokenReq {
 }
 
 
-#[async_trait]
+
 pub trait ApiHandler {
     
-    async fn handle_login(&self, req:LoginReq)->LoginResp;
+     fn handle_login(&self, req:LoginReq)->LoginResp;
             
-    async fn handle_verify_token(&self, req:VerifyTokenReq)->VerifyTokenResp;
+     fn handle_verify_token(&self, req:VerifyTokenReq)->VerifyTokenResp;
             
 }
 
 
-pub fn add_routers(mut router:Router)->Router
-{
-    
-    async fn login(Json(req):Json<LoginReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_login(req).await.serialize()))
-    }
-    router=router
-        .route("/login", post(login));
-                             
-    async fn verify_token(Json(req):Json<VerifyTokenReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_verify_token(req).await.serialize()))
-    }
-    router=router
-        .route("/verify_token", post(verify_token));
-                             
-    
-    router
-}
+
 

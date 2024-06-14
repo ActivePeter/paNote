@@ -1,7 +1,6 @@
 
 use serde_json::{json,Value};
 use serde::{Serialize, Deserialize};
-use axum::{http::StatusCode, routing::post, Json, Router};
 use async_trait::async_trait;
 use crate::general::network::http_handler::ApiHandlerImpl;
 
@@ -120,7 +119,7 @@ pub struct RenameNoteReq {
 }
 
 
-#[async_trait]
+[async_trait]
 pub trait ApiHandler {
     
     async fn handle_get_notes_mata(&self, )->GetNotesMataResp;
@@ -132,28 +131,5 @@ pub trait ApiHandler {
 }
 
 
-pub fn add_routers(mut router:Router)->Router
-{
-    
-    async fn get_notes_mata()-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_get_notes_mata().await.serialize()))
-    }
-    router=router
-        .route("/get_notes_mata", post(get_notes_mata));
-                             
-    async fn create_new_note()-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_create_new_note().await.serialize()))
-    }
-    router=router
-        .route("/create_new_note", post(create_new_note));
-                             
-    async fn rename_note(Json(req):Json<RenameNoteReq>)-> (StatusCode, Json<Value>){
-        (StatusCode::OK, Json(ApiHandlerImpl.handle_rename_note(req).await.serialize()))
-    }
-    router=router
-        .route("/rename_note", post(rename_note));
-                             
-    
-    router
-}
+
 
