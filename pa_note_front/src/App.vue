@@ -24,14 +24,20 @@
             <el-button @click="add_editor_bar">add note bar</el-button>
             <div style="width: 10px"></div>
             <el-radio-group v-model="cursor_mode_selected" >
+              <el-radio-button label="选择"></el-radio-button>
               <el-radio-button label="拖拽"></el-radio-button>
               <el-radio-button label="连线"></el-radio-button>
-              <!--            <el-radio-button label="选择"></el-radio-button>-->
             </el-radio-group>
             <div style="width: 10px"></div>
             <el-button v-show="showlogbtn" @click="show_log_panel">
               登录
             </el-button>
+            <div v-show="showlogbtn" style="width: 10px"></div>
+            <el-radio-group v-model="render_mode" >
+              <el-radio-button label="常规视图"></el-radio-button>
+              <el-radio-button label="文本渲染"></el-radio-button>
+              <!--            <el-radio-button label="选择"></el-radio-button>-->
+            </el-radio-group>
             <input v-if="file" type="file" ref="file_ref" style="display: none" @change="read_f">
           </el-row>
         </div>
@@ -98,9 +104,9 @@ import ArticleList from "@/components/article/ArticleList.vue";
 })
 export default class App extends Vue {
   context:undefined|AppFuncTs.Context
-  cursor_mode_selected=""
+  cursor_mode_selected="选择"
   showlogbtn=true
-
+  render_mode="常规视图"
   created() {
     this.context=new AppFuncTs.Context(this)
     this.context.init();

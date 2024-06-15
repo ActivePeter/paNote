@@ -938,7 +938,7 @@ export namespace EditorBarTs {
                 return
             }
             // if (canvas.cursor_mode === "拖拽")
-            else {
+            else if (canvas.cursor_mode === "拖拽") {
                 // console.log("开始拖拽")
                 if (canvas.editor_bar_manager.corner_drag_helper == null) {
                     canvas.moving_obj = eb;
